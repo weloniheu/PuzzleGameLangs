@@ -1,0 +1,247 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/puzzle.schema.json",
+  "title": "Puzzle",
+  "description": "The contract between the LLM (producer) and the engine (consumer). The engine never interprets `language`; it dispatches on `puzzle_type` and `validator_type` only.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "schema_version",
+    "language",
+    "puzzle_type",
+    "validator_type",
+    // "difficulty",
+    "prompt",
+    "payload",
+    "solution",
+    "hints",
+    "metadata"
+  ],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "schema_version": { "type": "string" },
+    "language": { "type": "string", "minLength": 1 },
+    "puzzle_type": {
+      "type": "string",
+      "enum": [
+        "match",
+        "fill_blank",
+        "reorder",
+        "sentence_build",
+        "combine",
+        "code_build",
+        "predict_output",
+        "fix_the_bug"
+      ]
+    },
+    "validator_type": {
+      "type": "string",
+      "enum": [
+        "exact_match",
+        "normalized_match",
+        "set_match",
+        "sequence_match",
+        "combine_match",
+        "code_match",
+        "mc_index",
+        "execution_match"
+      ]
+    },
+    "difficulty": { "type": "integer", "minimum": 1, "maximum": 5 },
+    "prompt": { "type": "string", "minLength": 1 },
+    "payload": { "type": "object" },
+    "solution": { "type": "object" },
+    "hints": { "type": "array", "items": { "type": "string" } },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["reviewed"],
+      "properties": {
+        "concept": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "generator": { "type": "string" },
+        "reviewed": { "type": "boolean" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "puzzle_type": { "const": "match" } } },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["pairs"],
+            "properties": {
+              "pairs": {
+                "type": "array",
+                "minItems": 2,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["left", "right"],
+                  "properties": {
+                    "left": { "type": "string" },
+                    "right": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "solution": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["mapping"],
+            "properties": {
+              "mapping": {
+                "type": "object",
+                "additionalProperties": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "puzzle_type": { "const": "sentence_build" } } },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["structure", "words"],
+            "properties": {
+              "structure": {
+                "type": "array",
+                "minItems": 2,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["role", "label"],
+                  "properties": {
+                    "role": { "type": "string" },
+                    "label": { "type": "string" }
+                  }
+                }
+              },
+              "words": {
+                "type": "array",
+                "minItems": 2,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["text", "role"],
+                  "properties": {
+                    "text": { "type": "string" },
+                    "role": { "type": "string" }
+                  }
+                }
+              },
+              "example": { "type": "string" }
+            }
+          },
+          "solution": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["order"],
+            "properties": {
+              "order": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "puzzle_type": { "const": "combine" } } },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["goal", "items", "recipes"],
+            "properties": {
+              "goal": { "type": "string" },
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["id", "label"],
+                  "properties": {
+                    "id": { "type": "string" },
+                    "label": { "type": "string" }
+                  }
+                }
+              },
+              "recipes": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["inputs", "result"],
+                  "properties": {
+                    "inputs": { "type": "array", "items": { "type": "string" }, "minItems": 2 },
+                    "result": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "solution": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["inputs"],
+            "properties": {
+              "inputs": { "type": "array", "items": { "type": "string" }, "minItems": 2 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "puzzle_type": { "const": "code_build" } } },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["scenario", "goal", "tokens"],
+            "properties": {
+              "scenario": { "type": "string" },
+              "goal": { "type": "string" },
+              "tokens": {
+                "type": "array",
+                "minItems": 2,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["text", "kind"],
+                  "properties": {
+                    "text": { "type": "string" },
+                    "kind": {
+                      "type": "string",
+                      "enum": ["function", "keyword", "string", "value", "punctuation", "decoy"]
+                    },
+                    "discovers": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "solution": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["output"],
+            "properties": {
+              "output": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

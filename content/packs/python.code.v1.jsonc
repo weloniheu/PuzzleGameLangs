@@ -1,0 +1,108 @@
+{
+  "pack_id": "python.code.v1",
+  "schema_version": "1.0.0",
+  "language": "python",
+  "puzzles": [
+    {
+      "id": "py-code-hello-001",
+      "schema_version": "1.0.0",
+      "language": "python",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 1,
+      "prompt": "Assemble one line of code to respond. Walk onto blocks and press Enter to build your line, then stand on ▶ Run.",
+      "payload": {
+        "scenario": "You look around and find yourself looking at a blue planet. You can barely see them — they wave at you and wait for you to respond.",
+        "goal": "Greet them. Make your program say: hello",
+        "tokens": [
+          { "text": "print", "kind": "function", "discovers": "print" },
+          { "text": "write", "kind": "decoy" },
+          { "text": "return", "kind": "decoy" },
+          { "text": "(", "kind": "punctuation" },
+          { "text": ")", "kind": "punctuation" },
+          { "text": "\"hello\"", "kind": "string" },
+          { "text": "\"goodbye\"", "kind": "string" }
+        ]
+      },
+      "solution": { "output": "hello" },
+      "hints": [
+        "Greet them.",
+        "The snake doesn't have hands to write, but it can use a printer.",
+        "Try building: print(\"hello\")"
+      ],
+      "metadata": {
+        "concept": "print() — your first command",
+        "tags": ["beginner", "python", "output"],
+        "generator": "human",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "py-code-name-002",
+      "schema_version": "1.0.0",
+      "language": "python",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 2,
+      "prompt": "Use what you discovered to introduce yourself.",
+      "payload": {
+        "scenario": "The aliens point at you, curious. A nameplate on your pod reads ‘Sam’. They want to know who you are.",
+        "goal": "Tell them your name. Make your program say: Sam",
+        "tokens": [
+          { "text": "print", "kind": "function", "discovers": "print" },
+          { "text": "return", "kind": "decoy" },
+          { "text": "(", "kind": "punctuation" },
+          { "text": ")", "kind": "punctuation" },
+          { "text": "\"Sam\"", "kind": "string" },
+          { "text": "\"name\"", "kind": "string" }
+        ]
+      },
+      "solution": { "output": "Sam" },
+      "hints": [
+        "You already know the command that shows text — check your Codex.",
+        "Put the right name inside the quotes.",
+        "Try: print(\"Sam\")"
+      ],
+      "metadata": {
+        "concept": "reuse a discovered command",
+        "tags": ["beginner", "python", "output"],
+        "generator": "human",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "py-code-open-003",
+      "schema_version": "1.0.0",
+      "language": "python",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 3,
+      "prompt": "A locked door panel is waiting for the right word.",
+      "payload": {
+        "scenario": "You reach a sealed door. A glowing panel listens for a single spoken word to release the lock.",
+        "goal": "Make the panel hear the word: open",
+        "tokens": [
+          { "text": "print", "kind": "function", "discovers": "print" },
+          { "text": "input", "kind": "decoy" },
+          { "text": "(", "kind": "punctuation" },
+          { "text": ")", "kind": "punctuation" },
+          { "text": "\"open\"", "kind": "string" },
+          { "text": "\"close\"", "kind": "string" },
+          { "text": "\"door\"", "kind": "string" }
+        ]
+      },
+      "solution": { "output": "open" },
+      "hints": [
+        "Same command as before — just a different word.",
+        "‘input’ asks for text; you want to SAY text.",
+        "Try: print(\"open\")"
+      ],
+      "metadata": {
+        "concept": "choosing the right argument",
+        "tags": ["beginner", "python", "output"],
+        "generator": "human",
+        "reviewed": true
+      }
+    }
+  ]
+}

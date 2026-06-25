@@ -1,0 +1,112 @@
+{
+  "pack_id": "hawaiian.match.v1",
+  "schema_version": "1.0.0",
+  "language": "hawaiian",
+  "puzzles": [
+    {
+      "id": "haw-match-001",
+      "schema_version": "1.0.0",
+      "language": "hawaiian",
+      "puzzle_type": "match",
+      "validator_type": "set_match",
+      "difficulty": 1,
+      "prompt": "Match each Hawaiian word to its English meaning.",
+      "payload": {
+        "pairs": [
+          { "left": "aloha", "right": "love / hello" },
+          { "left": "mahalo", "right": "thank you" },
+          { "left": "wai", "right": "water" }
+        ]
+      },
+      "solution": {
+        "mapping": {
+          "aloha": "love / hello",
+          "mahalo": "thank you",
+          "wai": "water"
+        }
+      },
+      "hints": [
+        "One of these is the word most people already know as a greeting.",
+        "'wai' appears in many place names — think of fresh water."
+      ],
+      "metadata": {
+        "concept": "common greetings & basics",
+        "tags": ["beginner", "vocabulary"],
+        "generator": "human",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "haw-match-002",
+      "schema_version": "1.0.0",
+      "language": "hawaiian",
+      "puzzle_type": "match",
+      "validator_type": "set_match",
+      "difficulty": 2,
+      "prompt": "Match each Hawaiian word to its English meaning.",
+      "payload": {
+        "pairs": [
+          { "left": "moana", "right": "ocean" },
+          { "left": "honu", "right": "sea turtle" },
+          { "left": "pua", "right": "flower" },
+          { "left": "lā", "right": "sun / day" }
+        ]
+      },
+      "solution": {
+        "mapping": {
+          "moana": "ocean",
+          "honu": "sea turtle",
+          "pua": "flower",
+          "lā": "sun / day"
+        }
+      },
+      "hints": [
+        "A honu is an animal you'd see in the moana.",
+        "'lā' carries a kahakō (macron) — a long vowel."
+      ],
+      "metadata": {
+        "concept": "nature words",
+        "tags": ["beginner", "vocabulary", "nature"],
+        "generator": "human",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "haw-match-003",
+      "schema_version": "1.0.0",
+      "language": "hawaiian",
+      "puzzle_type": "match",
+      "validator_type": "set_match",
+      "difficulty": 3,
+      "prompt": "Match each Hawaiian directional/word to its meaning.",
+      "payload": {
+        "pairs": [
+          { "left": "mauka", "right": "toward the mountain" },
+          { "left": "makai", "right": "toward the sea" },
+          { "left": "ʻohana", "right": "family" },
+          { "left": "ʻāina", "right": "land" },
+          { "left": "kai", "right": "sea / saltwater" }
+        ]
+      },
+      "solution": {
+        "mapping": {
+          "mauka": "toward the mountain",
+          "makai": "toward the sea",
+          "ʻohana": "family",
+          "ʻāina": "land",
+          "kai": "sea / saltwater"
+        }
+      },
+      "hints": [
+        "'mauka' and 'makai' are opposite directions used for giving directions in Hawaiʻi.",
+        "'kai' (sea) is hidden inside 'makai' (toward the sea)."
+      ],
+      "metadata": {
+        "concept": "directions & place",
+        "tags": ["intermediate", "vocabulary"],
+        "generator": "human",
+        "reviewed": true
+      }
+    }
+  ]
+}

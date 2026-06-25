@@ -1,0 +1,148 @@
+{
+  "pack_id": "english.grammar.v1",
+  "schema_version": "1.0.0",
+  "language": "english",
+  "puzzles": [
+    {
+      "id": "eng-match-pos-001",
+      "schema_version": "1.0.0",
+      "language": "english",
+      "puzzle_type": "match",
+      "validator_type": "set_match",
+      "difficulty": 1,
+      "prompt": "Match each word to the kind of word it is.",
+      "payload": {
+        "pairs": [
+          { "left": "cat", "right": "noun (a thing)" },
+          { "left": "run", "right": "verb (an action)" },
+          { "left": "happy", "right": "adjective (describes a thing)" },
+          { "left": "quickly", "right": "adverb (describes an action)" }
+        ]
+      },
+      "solution": {
+        "mapping": {
+          "cat": "noun (a thing)",
+          "run": "verb (an action)",
+          "happy": "adjective (describes a thing)",
+          "quickly": "adverb (describes an action)"
+        }
+      },
+      "hints": [
+        "A noun is a person, place, or thing.",
+        "If you can put 'is' or 'was' in front of it, it's probably an adjective."
+      ],
+      "metadata": {
+        "concept": "parts of speech",
+        "tags": ["beginner", "grammar"],
+        "generator": "human",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "eng-sentence-001",
+      "schema_version": "1.0.0",
+      "language": "english",
+      "puzzle_type": "sentence_build",
+      "validator_type": "sequence_match",
+      "difficulty": 1,
+      "prompt": "Build the sentence: “the dog barks”. Walk to each word and press Enter to place it in the right slot.",
+      "payload": {
+        "example": "the bird sings",
+        "structure": [
+          { "role": "subject", "label": "who?" },
+          { "role": "verb", "label": "does what?" }
+        ],
+        "words": [
+          { "text": "the dog", "role": "subject" },
+          { "text": "the cat", "role": "subject" },
+          { "text": "barks", "role": "verb" },
+          { "text": "sleeps", "role": "verb" }
+        ]
+      },
+      "solution": { "order": ["the dog", "barks"] },
+      "hints": [
+        "Every simple sentence starts with a subject — the who.",
+        "The action word goes second."
+      ],
+      "metadata": {
+        "concept": "subject + verb",
+        "tags": ["beginner", "grammar", "sentence-structure"],
+        "generator": "human",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "eng-sentence-002",
+      "schema_version": "1.0.0",
+      "language": "english",
+      "puzzle_type": "sentence_build",
+      "validator_type": "sequence_match",
+      "difficulty": 2,
+      "prompt": "Build the sentence: “the girl throws the ball”. Ignore the extra words.",
+      "payload": {
+        "example": "the boy kicks the ball",
+        "structure": [
+          { "role": "subject", "label": "who?" },
+          { "role": "verb", "label": "does what?" },
+          { "role": "object", "label": "to what?" }
+        ],
+        "words": [
+          { "text": "the girl", "role": "subject" },
+          { "text": "the boy", "role": "subject" },
+          { "text": "throws", "role": "verb" },
+          { "text": "kicks", "role": "verb" },
+          { "text": "the ball", "role": "object" }
+        ]
+      },
+      "solution": { "order": ["the girl", "throws", "the ball"] },
+      "hints": [
+        "Subject → verb → object: who does what to what?",
+        "Two of these words are decoys — you won't use them."
+      ],
+      "metadata": {
+        "concept": "subject + verb + object",
+        "tags": ["beginner", "grammar", "sentence-structure"],
+        "generator": "human",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "eng-sentence-003",
+      "schema_version": "1.0.0",
+      "language": "english",
+      "puzzle_type": "sentence_build",
+      "validator_type": "sequence_match",
+      "difficulty": 3,
+      "prompt": "Build the sentence: “the big dog runs”. Watch the word order of the describing word.",
+      "payload": {
+        "example": "the small cat jumps",
+        "structure": [
+          { "role": "article", "label": "the/a" },
+          { "role": "adjective", "label": "describing word" },
+          { "role": "noun", "label": "thing" },
+          { "role": "verb", "label": "action" }
+        ],
+        "words": [
+          { "text": "the", "role": "article" },
+          { "text": "big", "role": "adjective" },
+          { "text": "small", "role": "adjective" },
+          { "text": "dog", "role": "noun" },
+          { "text": "cat", "role": "noun" },
+          { "text": "runs", "role": "verb" },
+          { "text": "jumps", "role": "verb" }
+        ]
+      },
+      "solution": { "order": ["the", "big", "dog", "runs"] },
+      "hints": [
+        "In English the describing word comes BEFORE the thing it describes.",
+        "Order: article → adjective → noun → verb."
+      ],
+      "metadata": {
+        "concept": "adjective placement",
+        "tags": ["intermediate", "grammar", "sentence-structure"],
+        "generator": "human",
+        "reviewed": true
+      }
+    }
+  ]
+}

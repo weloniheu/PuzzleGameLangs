@@ -1,0 +1,111 @@
+{
+  "pack_id": "logic.combine.v1",
+  "schema_version": "1.0.0",
+  "language": "logic",
+  "puzzles": [
+    {
+      "id": "combine-rope-001",
+      "schema_version": "1.0.0",
+      "language": "logic",
+      "puzzle_type": "combine",
+      "validator_type": "combine_match",
+      "difficulty": 1,
+      "prompt": "A rope is tied across the path. Combine two things to get past it.",
+      "payload": {
+        "goal": "Cut the rope blocking the door.",
+        "items": [
+          { "id": "rope", "label": "🪢 rope" },
+          { "id": "scissors", "label": "✂️ scissors" },
+          { "id": "rock", "label": "🪨 rock" },
+          { "id": "water", "label": "💧 water" }
+        ],
+        "recipes": [
+          { "inputs": ["scissors", "rope"], "result": "✂️ snip! the rope is cut and the door swings open" },
+          { "inputs": ["rock", "rope"], "result": "the rope frays a little, but holds" },
+          { "inputs": ["water", "rope"], "result": "the rope just gets wet" }
+        ]
+      },
+      "solution": { "inputs": ["scissors", "rope"] },
+      "hints": [
+        "What is sharp enough to cut?",
+        "Scissors beat paper… and rope."
+      ],
+      "metadata": {
+        "concept": "tool + target (cut)",
+        "tags": ["beginner", "logic", "word-combo"],
+        "generator": "human",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "combine-fire-002",
+      "schema_version": "1.0.0",
+      "language": "logic",
+      "puzzle_type": "combine",
+      "validator_type": "combine_match",
+      "difficulty": 2,
+      "prompt": "A campfire blocks the cave mouth. Put it out.",
+      "payload": {
+        "goal": "Put out the campfire so you can pass.",
+        "items": [
+          { "id": "fire", "label": "🔥 campfire" },
+          { "id": "water", "label": "💧 water" },
+          { "id": "paper", "label": "📄 paper" },
+          { "id": "rock", "label": "🪨 rock" }
+        ],
+        "recipes": [
+          { "inputs": ["water", "fire"], "result": "💨 hiss… the fire goes out" },
+          { "inputs": ["paper", "fire"], "result": "🔥 the paper burns up and the fire grows!" },
+          { "inputs": ["rock", "fire"], "result": "the rock just sits in the flames" }
+        ]
+      },
+      "solution": { "inputs": ["water", "fire"] },
+      "hints": [
+        "Paper feeds a fire — don't make it worse.",
+        "What beats fire?"
+      ],
+      "metadata": {
+        "concept": "counter the obstacle",
+        "tags": ["beginner", "logic", "word-combo"],
+        "generator": "human",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "combine-shrink-003",
+      "schema_version": "1.0.0",
+      "language": "logic",
+      "puzzle_type": "combine",
+      "validator_type": "combine_match",
+      "difficulty": 3,
+      "prompt": "A boulder is too big to move. Change its size, don't fight it.",
+      "payload": {
+        "goal": "Get the giant boulder through the small gap in the wall.",
+        "items": [
+          { "id": "boulder", "label": "🪨 giant boulder" },
+          { "id": "small", "label": "🔽 small (shrink)" },
+          { "id": "big", "label": "🔼 big (grow)" },
+          { "id": "throw", "label": "🤾 throw" },
+          { "id": "water", "label": "💧 water" }
+        ],
+        "recipes": [
+          { "inputs": ["small", "boulder"], "result": "🪨→🪨 the boulder shrinks to a pebble and rolls through" },
+          { "inputs": ["big", "boulder"], "result": "the boulder grows — now it's really stuck" },
+          { "inputs": ["throw", "boulder"], "result": "you can't even lift it" },
+          { "inputs": ["water", "boulder"], "result": "the boulder just gets wet" }
+        ]
+      },
+      "solution": { "inputs": ["small", "boulder"] },
+      "hints": [
+        "The gap is small. Make the boulder match it.",
+        "‘small’ shrinks things; ‘big’ grows them."
+      ],
+      "metadata": {
+        "concept": "modifier + object (size)",
+        "tags": ["intermediate", "logic", "word-combo"],
+        "generator": "human",
+        "reviewed": true
+      }
+    }
+  ]
+}
