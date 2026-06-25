@@ -19,10 +19,10 @@ interface PackOption {
   url: string;
 }
 const PACKS: PackOption[] = [
-  { label: "🐍 Python — code blocks", url: "/content/packs/python.code.v1.json" },
-  { label: "🔤 English — grammar & sentences", url: "/content/packs/english.grammar.v1.json" },
-  { label: "🧩 Logic — word combos", url: "/content/packs/logic.combine.v1.json" },
-  { label: "🌺 Hawaiian — vocabulary", url: "/content/packs/hawaiian.match.v1.json" },
+  { label: "🐍 Python — code blocks", url: "/content/packs/python.code.v1.jsonc" },
+  { label: "🔤 English — grammar & sentences", url: "/content/packs/english.grammar.v1.jsonc" },
+  { label: "🧩 Logic — word combos", url: "/content/packs/logic.combine.v1.jsonc" },
+  { label: "🌺 Hawaiian — vocabulary", url: "/content/packs/hawaiian.match.v1.jsonc" },
 ];
 
 const app = document.getElementById("app")!;
