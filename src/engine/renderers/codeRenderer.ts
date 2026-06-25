@@ -27,6 +27,8 @@ function noteFor(tok: CodeToken): string {
 
 export const codeRenderer: PuzzleRenderer = {
   render(container, puzzle: Puzzle, onSubmit) {
+    // NOTE: room-based (world-layer) puzzles are mounted FULLSCREEN by main.ts and
+    // never reach this card renderer. This path is the card-based token board.
     const payload = puzzle.payload as CodeBuildPayload;
     const line: CodeToken[] = [];
 

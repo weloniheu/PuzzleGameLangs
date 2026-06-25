@@ -292,3 +292,360 @@ body {
 .codex-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.3rem; }
 .codex-list code { color: #6aa0e8; font-weight: 600; }
 .codex-list span { color: var(--muted); }
+
+/* --- room (code game's world layer; scoped .room-* / .tile-* / .slime) --- */
+/* Warm placeholder palette — see STYLE_TARGET.md for the intended Stardew look. */
+
+/* Fullscreen host: the code game IS the window (no #app card around it). */
+.game-root {
+  position: fixed; inset: 0; overflow: hidden;
+  background: radial-gradient(circle at 50% 28%, #2a2018, #130f0a);
+}
+.game-root[hidden] { display: none; }
+body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no page scroll */
+
+/* Top bar: hint on the left, gear on the right. Reserves the top UI band. */
+.room-topbar {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 0.75rem; box-sizing: border-box; padding: 0.4rem 0.75rem;
+}
+.room-hint { color: var(--muted); font-size: 0.85rem; }
+.room-gear {
+  flex: none; cursor: pointer;
+  width: 36px; height: 36px; border: none; border-radius: 8px;
+  font-size: 1.2rem; line-height: 1;
+  background: rgba(0, 0, 0, 0.35); color: #fff6e6;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+.room-gear:hover { background: rgba(0, 0, 0, 0.55); }
+
+/* Settings panel — MOUSE-driven (window management, not gameplay). */
+.room-settings-panel {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.5); outline: none;
+}
+.room-settings-panel[hidden] { display: none; } /* beat the explicit display:flex above */
+.room-settings-card {
+  min-width: 260px; max-width: 90vw;
+  background: #2f2418; color: #fff6e6;
+  padding: 1.25rem 1.5rem; border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(0, 0, 0, 0.4);
+}
+.room-settings-title { margin: 0 0 1rem; font-weight: 700; font-size: 1.1rem; }
+.room-settings-label {
+  margin: 0 0 0.4rem; color: var(--muted);
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.room-settings-schemes { display: flex; gap: 0.5rem; margin-bottom: 1.1rem; flex-wrap: wrap; }
+.room-scheme-btn {
+  cursor: pointer; padding: 0.4rem 0.75rem; border: none; border-radius: 8px;
+  font-weight: 600; background: #4a3b2c; color: #fff6e6;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+.room-scheme-btn.active { box-shadow: inset 0 0 0 2px var(--accent); }
+/* Controls list (moved out of the top-left of the window). */
+.room-controls { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 1.1rem; }
+.room-control-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; font-size: 0.85rem; }
+.room-control-row span { color: var(--muted); }
+.room-control-keys {
+  font-family: ui-monospace, monospace; font-size: 0.8rem; color: #fff6e6;
+  background: #4a3b2c; padding: 0.15rem 0.45rem; border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+
+/* Generic settings toggle button (room-size static/fill). */
+.room-settings-toggle {
+  display: block; width: 100%; margin-bottom: 1.1rem;
+  cursor: pointer; padding: 0.5rem; border: none; border-radius: 8px;
+  font-weight: 600; background: #4a3b2c; color: #fff6e6;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+.room-settings-toggle.active { box-shadow: inset 0 0 0 2px var(--accent); }
+
+/* Terminal font-size stepper. */
+.room-settings-font { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.1rem; }
+.room-font-btn {
+  cursor: pointer; border: none; border-radius: 8px; padding: 0.35rem 0.7rem;
+  font-weight: 700; background: #4a3b2c; color: #fff6e6;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+.room-font-readout { min-width: 48px; text-align: center; color: var(--muted); font-size: 0.9rem; }
+
+.room-settings-reset {
+  display: block; width: 100%; margin-bottom: 0.6rem;
+  cursor: pointer; padding: 0.55rem; border: none; border-radius: 8px;
+  font-weight: 600; background: #5a3b2c; color: #fff6e6;
+}
+.room-settings-close {
+  display: block; width: 100%; margin-top: 0.4rem;
+  cursor: pointer; padding: 0.55rem; border: none; border-radius: 8px;
+  background: #3a2c20; color: var(--muted);
+}
+
+/* Sub-tab header: back arrow + title. */
+.room-settings-head { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
+.room-settings-head .room-settings-title { margin: 0; }
+.room-settings-back {
+  flex: none; cursor: pointer; width: 30px; height: 30px; border: none; border-radius: 8px;
+  font-size: 1rem; line-height: 1; background: #4a3b2c; color: #fff6e6;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+.room-settings-back:hover { background: #5a4733; }
+
+/* Top-level menu entries. */
+.room-settings-menu { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.4rem; }
+.room-menu-entry {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  cursor: pointer; padding: 0.7rem 0.9rem; border: none; border-radius: 8px;
+  font-size: 0.95rem; font-weight: 600; text-align: left;
+  background: #4a3b2c; color: #fff6e6; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+.room-menu-entry:hover:not(:disabled) { background: #5a4733; }
+.room-menu-entry:disabled { opacity: 0.5; cursor: default; }
+.room-soon { font-size: 0.65rem; font-weight: 400; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* How-to-play text + terminal font sample. */
+.room-settings-help-text { margin: 0; color: var(--muted); font-size: 0.82rem; line-height: 1.5; }
+.room-font-sample {
+  margin-top: 0.2rem; padding: 0.6rem 0.75rem; border-radius: 8px;
+  background: #14110d; color: #7ec06a; font-family: ui-monospace, monospace;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Stage centers the viewport in the space the layout hands it (set via JS height).
+   When the terminal is docked, top-align so the band sits flush below the room. */
+.room-stage { display: flex; align-items: center; justify-content: center; width: 100%; position: relative; }
+.room-stage.docked { align-items: flex-start; }
+
+/* Terminal: an overlay in BOTH states. Docked = full-width bottom band (geometry set
+   by JS); popped = a free-floating, drag/resizable desktop-style window. */
+.room-terminal {
+  position: absolute; z-index: 40;
+  display: flex; flex-direction: column;
+  background: #14110d; color: #7ec06a;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+/* Docked band: reserve an 8px top gutter for the drag-grip so it sits ABOVE the
+   header (the full "pop out" button stays clickable). */
+.room-terminal.docked { border-top: 2px solid #2a2018; padding-top: 8px; }
+.room-terminal.popped { border: 1px solid #2a2018; border-radius: 10px; }
+.room-terminal-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  padding: 0.35rem 0.6rem; background: #1d160f; color: #cdbfae;
+  font-family: ui-monospace, monospace; font-size: 0.8rem; user-select: none;
+}
+.room-terminal.popped .room-terminal-header { cursor: move; }
+.room-terminal-title { letter-spacing: 0.05em; }
+.room-terminal-toggle {
+  flex: none; cursor: pointer; border: none; border-radius: 6px;
+  background: #3a2c20; color: #fff6e6; font-size: 0.72rem; padding: 0.2rem 0.55rem;
+}
+.room-terminal-toggle:hover { background: #4a3b2c; }
+.room-terminal-body {
+  flex: 1; overflow: auto; padding: 0.6rem 0.75rem;
+  font-family: ui-monospace, monospace; font-size: 0.85rem; line-height: 1.5; white-space: pre-wrap;
+}
+.room-terminal-body.term-success { color: #9fe1cb; }  /* mint — build/run succeeded */
+.room-terminal-body.term-error { color: #f0a98c; }    /* warm amber — a specific failure beat */
+.room-terminal-resize {
+  position: absolute; right: 0; bottom: 0; width: 18px; height: 18px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 0 45%, #6f5a3c 45% 55%, transparent 55% 70%, #6f5a3c 70% 80%, transparent 80%);
+}
+.room-terminal-resize[hidden] { display: none; }
+/* Docked band: drag the top edge up/down to set its height. */
+.room-terminal-dockgrip {
+  position: absolute; top: 0; left: 0; right: 0; height: 8px;
+  cursor: ns-resize; z-index: 1;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.12), transparent);
+}
+.room-terminal-dockgrip[hidden] { display: none; }
+
+.room-viewport {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #3a2c20;
+  box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.35), 0 8px 30px rgba(0, 0, 0, 0.4);
+  outline: none;
+}
+.room-viewport:focus-visible { box-shadow: inset 0 0 0 3px var(--accent), 0 8px 30px rgba(0, 0, 0, 0.4); }
+
+.room-world { position: relative; transition: transform 0.1s ease; }
+
+.tile-room { position: absolute; top: 0; left: 0; box-sizing: border-box; }
+.tile-floor { background: #caa472; box-shadow: inset 0 0 0 1px rgba(120, 86, 50, 0.35); }
+.tile-wall  { background: #6f4a2f; box-shadow: inset 0 0 0 2px rgba(40, 26, 15, 0.5); }
+.tile-door  {
+  background: #caa472;
+  box-shadow: inset 0 0 0 1px rgba(120, 86, 50, 0.35);
+}
+.tile-door::after {
+  content: "";
+  position: absolute; inset: 18%;
+  border-radius: 4px;
+  background: #8a5a2b;
+  box-shadow: inset 0 0 0 2px #5e3b18, 0 0 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Word pile: a warm crate the player faces to pick up. */
+.tile-pile {
+  display: flex; align-items: center; justify-content: center;
+  background: #b07a3c;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 2px #7a4f22, inset 0 -4px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.35);
+  z-index: 1;
+}
+.tile-pile-label {
+  font-size: 0.7rem; font-weight: 700; line-height: 1;
+  color: #fff6e6; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Placed token: a syntax-block dropped into the coding area (cooler than a pile). */
+.room-placed-layer { position: absolute; top: 0; left: 0; }
+.tile-placed {
+  display: flex; align-items: center; justify-content: center;
+  background: #2f5d8a;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 2px #1d3c5a, 0 2px 4px rgba(0, 0, 0, 0.35);
+  z-index: 1;
+}
+
+/* Coding-area zone: a subtle tinted, dashed-outlined region showing where tokens go.
+   One rectangle (no per-cell decoration), non-interactive, drawn above the floor. */
+.room-coding-zone {
+  position: absolute; top: 0; left: 0; pointer-events: none; box-sizing: border-box;
+  border: 2px dashed rgba(255, 226, 170, 0.55);
+  border-radius: 8px;
+  background: rgba(255, 210, 140, 0.10);
+  box-shadow: inset 0 0 22px rgba(255, 200, 120, 0.10);
+}
+.room-coding-zone[hidden] { display: none; }
+
+/* Build / Run objects: labeled, clearly distinct from piles (warm) and tokens (blue). */
+.room-control-layer { position: absolute; top: 0; left: 0; }
+.tile-control {
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px; z-index: 1;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.tile-control-build { background: #6a5acd; }            /* indigo — assemble the line */
+.tile-control-run { background: #3a9a55; }              /* green — run it */
+.tile-control-label {
+  font-weight: 800; line-height: 1; letter-spacing: 0.02em;
+  color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  text-transform: uppercase;
+}
+
+/* Hint giver's "?" marker (the only in-room dialogue marker; snake is portrait-only). */
+.room-marker-layer { position: absolute; top: 0; left: 0; }
+.tile-hint-marker { display: flex; align-items: center; justify-content: center; z-index: 1; border-radius: 8px; }
+.tile-hint-label { line-height: 1; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6)); }
+/* Outlined briefly when the snake says "the friend over there can help". */
+.tile-hint-marker.highlight { box-shadow: inset 0 0 0 3px var(--accent), 0 0 18px rgba(106, 160, 232, 0.75); }
+.tile-hint-marker.highlight .tile-hint-label { animation: hint-pulse 0.7s ease-in-out 3; }
+@keyframes hint-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+
+/* Dialogue presenter — portrait + box, shared by both speakers; slides in from the
+   speaker's side. The ONLY motion is this slide; keyboard-only (pointer-events: none). */
+.room-dialogue {
+  position: fixed; left: 0; right: 0; z-index: 50;
+  display: flex; align-items: flex-end; gap: 12px;
+  padding: 0 24px; pointer-events: none;
+  opacity: 0; transition: transform 0.22s ease, opacity 0.22s ease;
+}
+.room-dialogue[hidden] { display: none; }
+.room-dialogue.from-left { justify-content: flex-start; transform: translateX(-48px); }
+.room-dialogue.from-right { justify-content: flex-end; flex-direction: row-reverse; transform: translateX(48px); }
+.room-dialogue.shown { opacity: 1; transform: translateX(0); } /* later source order → wins when shown */
+.room-dialogue-portrait {
+  flex: none; width: 84px; height: 84px; font-size: 52px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  background: #1d160f; border-radius: 14px;
+  box-shadow: inset 0 0 0 2px #3a2c20, 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+.room-dialogue-portrait.talking { animation: dlg-talk 0.5s ease-in-out infinite; }
+@keyframes dlg-talk { 0%, 100% { transform: translateY(0) scaleY(1); } 50% { transform: translateY(1px) scaleY(0.93); } }
+.room-dialogue-box {
+  max-width: 520px; min-width: 240px;
+  background: #2f2418; color: #fff6e6; border-radius: 12px;
+  padding: 0.7rem 0.95rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(0, 0, 0, 0.4);
+}
+.room-dialogue.inside-terminal .room-dialogue-box { background: #14110d; } /* reads as inside the terminal */
+.room-dialogue-name { font-weight: 800; font-size: 0.78rem; color: #ffcf8a; margin-bottom: 0.25rem; }
+.room-dialogue-text { margin: 0; line-height: 1.45; }
+.room-dialogue-cue { margin-top: 0.4rem; text-align: right; color: var(--muted); font-size: 0.75rem; min-height: 1em; }
+
+/* Debug readout (toggle with `). */
+.room-debug {
+  max-width: 640px; margin: 0.5rem auto 0;
+  font-family: ui-monospace, monospace; font-size: 0.85rem;
+  color: #9fd0ff; background: #16202b;
+  padding: 0.4rem 0.6rem; border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+
+/* Inventory HUD — Minecraft-hotbar feel: always visible, overlaid (position set by JS),
+   slightly dimmed in room focus (still readable), brightened in inventory focus. */
+.room-inventory {
+  position: absolute; left: 0; right: 0; z-index: 30;
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  height: 48px; box-sizing: border-box; padding: 0 0.5rem;
+  opacity: 0.78; transition: opacity 0.1s ease; /* room-focus dim — an indicator, not a hide */
+}
+.room-inventory.focused { opacity: 1; }
+.room-inventory-label { color: var(--muted); font-size: 0.78rem; margin-right: 0.35rem; }
+.room-inventory.focused .room-inventory-label { color: #fff6e6; }
+.room-inventory-slot {
+  min-width: 52px; padding: 0.35rem 0.55rem; text-align: center;
+  border-radius: 6px; font-size: 0.8rem; font-weight: 700;
+  background: #4a3b2c; color: #fff6e6;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+.room-inventory-slot.empty { color: var(--muted); font-weight: 400; background: #2c241c; }
+/* Selected slot — the focus signal while navigating the hotbar. */
+.room-inventory-slot.selected { box-shadow: inset 0 0 0 2px var(--accent), 0 0 10px rgba(106, 160, 232, 0.5); }
+
+/* Keyboard-only inventory overlay. */
+.room-overlay {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+}
+.room-overlay[hidden] { display: none; } /* beat the explicit display:flex above */
+.room-overlay-panel {
+  background: #2f2418; color: #fff6e6;
+  padding: 1.25rem 1.5rem; border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(0, 0, 0, 0.4);
+  max-width: 90vw;
+}
+.room-overlay-title { margin: 0 0 0.9rem; font-weight: 700; text-align: center; }
+.room-overlay-slots { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+.room-overlay-slot {
+  min-width: 72px; padding: 0.6rem 0.6rem; text-align: center;
+  border-radius: 8px; font-weight: 700;
+  background: #4a3b2c; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+.room-overlay-slot.empty { color: var(--muted); font-weight: 400; background: #241d16; }
+.room-overlay-slot.selected { box-shadow: inset 0 0 0 3px var(--accent); }
+.room-overlay-help { margin: 0.9rem 0 0; text-align: center; color: var(--muted); font-size: 0.8rem; }
+
+.slime {
+  position: absolute; top: 0; left: 0;
+  z-index: 2;
+  pointer-events: none;
+  transition: transform 0.1s ease;
+  --slime: #7ad15a; /* recolorable */
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.7) 0 12%, transparent 22%),
+    var(--slime);
+  border: 2px solid rgba(40, 80, 30, 0.6);
+  border-radius: 45% 45% 40% 40% / 55% 55% 40% 40%;
+  box-sizing: border-box;
+  /* size + position are set inline by the renderer so the slime scales with the tile */
+}

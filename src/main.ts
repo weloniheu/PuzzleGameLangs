@@ -2,99 +2,95 @@ import "./style.css";
 import type { Pack, Puzzle } from "./schema/types";
 import { loadPack } from "./engine/packLoader";
 import { runPuzzle } from "./engine/puzzleRunner";
-import { resetCodex } from "./engine/codex";
+import { renderRoom } from "./engine/renderers/roomRenderer";
 
-// This is the END-TO-END MVP LOOP (roadmap Phase 5.3):
-// load curated pack -> run each puzzle -> render+validate from schema -> on solve, advance.
-// A real build replaces this driver with a top-down world (Phase 2.1) where
-// walking into a puzzle node calls runPuzzle().
+// The game boots STRAIGHT into the Python code pack — no selector. Pack/level
+// selection will move into an in-game entrance screen in a later phase.
+const CODE_PACK = "/content/packs/python.code.v1.json";
 
-// ---------------------------------------------------------------------------
-// Test harness: the set of packs you can load for playtesting. Each entry is a
-// pure DATA file — adding a new "language" to try means adding a line here and a
-// JSON pack, with ZERO engine changes. The dropdown lets a tester hot-swap them.
-// ---------------------------------------------------------------------------
-interface PackOption {
-  label: string;
-  url: string;
-}
-const PACKS: PackOption[] = [
-  { label: "🐍 Python — code blocks", url: "/content/packs/python.code.v1.jsonc" },
-  { label: "🔤 English — grammar & sentences", url: "/content/packs/english.grammar.v1.jsonc" },
-  { label: "🧩 Logic — word combos", url: "/content/packs/logic.combine.v1.jsonc" },
-  { label: "🌺 Hawaiian — vocabulary", url: "/content/packs/hawaiian.match.v1.jsonc" },
+// TEMPORARY dev-only switcher: with the dropdown gone, press 1–4 to load a pack's
+// first puzzle for testing (1 = code/fullscreen, 2–4 = the card games). Scaffolding
+// until the entrance screen lands; safe because gameplay never uses number keys.
+const DEV_PACKS = [
+  "/content/packs/python.code.v1.json",
+  "/content/packs/english.grammar.v1.json",
+  "/content/packs/logic.combine.v1.json",
+  "/content/packs/hawaiian.match.v1.json",
 ];
 
+// Two mount targets, chosen per-puzzle (see showPuzzle):
+//   • #app .stage  — the existing centered 720px CARD (match/sentence/combine).
+//   • .game-root   — a FULLSCREEN host; the room IS the page (code game).
 const app = document.getElementById("app")!;
+const stage = document.createElement("div");
+stage.className = "stage";
+app.appendChild(stage);
 
-async function main() {
-  // --- pack picker (testing convenience) ---
-  const bar = document.createElement("div");
-  bar.className = "pack-bar";
-  const picker = document.createElement("select");
-  picker.className = "pack-picker";
-  PACKS.forEach((p, i) => {
-    const opt = document.createElement("option");
-    opt.value = String(i);
-    opt.textContent = p.label;
-    picker.appendChild(opt);
-  });
-  const codexBtn = document.createElement("button");
-  codexBtn.className = "reset-btn";
-  codexBtn.textContent = "🧹 Reset Codex";
-  codexBtn.title = "Forget all discovered commands (fresh playthrough)";
-  codexBtn.onclick = () => {
-    resetCodex();
-    load(Number(picker.value));
-  };
-  bar.append(picker, codexBtn);
-  app.appendChild(bar);
+const gameRoot = document.createElement("div");
+gameRoot.className = "game-root";
+gameRoot.hidden = true;
+document.body.appendChild(gameRoot);
 
-  const stage = document.createElement("div");
-  stage.className = "stage";
-  app.appendChild(stage);
-
-  const progress = document.createElement("div");
-  progress.className = "progress";
-  app.appendChild(progress);
-
-  async function load(index: number) {
-    stage.innerHTML = `<p class="progress">Loading…</p>`;
-    let pack: Pack;
-    try {
-      pack = await loadPack(PACKS[index].url);
-    } catch (e) {
-      stage.innerHTML = `<p class="feedback no">Could not load pack: ${(e as Error).message}</p>`;
-      progress.textContent = "";
-      return;
-    }
-
-    // Order easy -> hard to fake a tiny progression curve (Phase 7).
-    const puzzles = [...pack.puzzles].sort((a, b) => a.difficulty - b.difficulty);
-    let i = 0;
-
-    function show(puzzle: Puzzle) {
-      progress.textContent = `Puzzle ${i + 1} of ${puzzles.length} — ${pack.language} pack`;
-      runPuzzle(stage, puzzle, {
-        onSolved: () => {
-          const next = document.createElement("button");
-          next.className = "submit next";
-          next.textContent = i + 1 < puzzles.length ? "Next puzzle →" : "🎉 Pack complete — restart";
-          next.onclick = () => {
-            i = i + 1 < puzzles.length ? i + 1 : 0;
-            show(puzzles[i]);
-          };
-          stage.appendChild(next);
-        },
-      });
-    }
-
-    if (puzzles.length) show(puzzles[i]);
-    else stage.innerHTML = `<p class="feedback no">No playable puzzles in this pack.</p>`;
-  }
-
-  picker.onchange = () => load(Number(picker.value));
-  load(0);
+/** Show the card host, hide the fullscreen one (and vice-versa). */
+function useCard() {
+  gameRoot.hidden = true;
+  app.hidden = false;
+  document.body.classList.remove("fullscreen-game");
+}
+function useFullscreen() {
+  app.hidden = true;
+  gameRoot.hidden = false;
+  document.body.classList.add("fullscreen-game");
 }
 
-main();
+/**
+ * Mount ONE puzzle. The branch is by world layer, not by language/level:
+ *   a puzzle with a `room` is a fullscreen world (the code game today);
+ *   everything else renders in the #app card via the shared runPuzzle path.
+ */
+function showPuzzle(puzzle: Puzzle, puzzles: Puzzle[], i: number) {
+  if (puzzle.room) {
+    useFullscreen();
+    renderRoom(gameRoot, puzzle); // the room reads the puzzle's answer/beats/terminal flavor
+    return;
+  }
+  useCard();
+  runPuzzle(stage, puzzle, {
+    onSolved: () => {
+      const next = document.createElement("button");
+      next.className = "submit next";
+      next.textContent = i + 1 < puzzles.length ? "Next puzzle →" : "🎉 Pack complete — restart";
+      next.onclick = () => {
+        const ni = i + 1 < puzzles.length ? i + 1 : 0;
+        showPuzzle(puzzles[ni], puzzles, ni);
+      };
+      stage.appendChild(next);
+    },
+  });
+}
+
+async function loadAndShow(url: string) {
+  let pack: Pack;
+  try {
+    pack = await loadPack(url);
+  } catch (e) {
+    useCard();
+    stage.innerHTML = `<p class="feedback no">Could not load pack: ${(e as Error).message}</p>`;
+    return;
+  }
+  // Order easy -> hard to fake a tiny progression curve.
+  const puzzles = [...pack.puzzles].sort((a, b) => a.difficulty - b.difficulty);
+  if (puzzles.length) showPuzzle(puzzles[0], puzzles, 0);
+  else {
+    useCard();
+    stage.innerHTML = `<p class="feedback no">No playable puzzles in this pack.</p>`;
+  }
+}
+
+// TEMP dev switcher (see DEV_PACKS). Remove when the entrance screen lands.
+window.addEventListener("keydown", (e) => {
+  const n = Number(e.key);
+  if (Number.isInteger(n) && n >= 1 && n <= DEV_PACKS.length) loadAndShow(DEV_PACKS[n - 1]);
+});
+
+loadAndShow(CODE_PACK);

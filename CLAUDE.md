@@ -72,10 +72,12 @@ When you extend code puzzles, keep validation as an order/equality check against
 
 ## Rule 4 — Input is KEYBOARD-ONLY for gameplay
 
-- **Gameplay is keyboard-only.** Walking, picking up, placing, building, running,
-  checking — all keyboard.
-- **Mouse is allowed ONLY for:** (a) settings, and (b) switching focus between the
-  **room view** and the **terminal view**. Nothing else in gameplay uses the mouse.
+- **In-room GAMEPLAY is keyboard-only.** Walking (arrows / WASD / hjkl), pick up
+  (`i`), place (`p`), build / run / check, confirm (Enter) — all keyboard.
+- **Mouse is allowed ONLY for window management:** (a) the **settings panel** (the
+  gear icon, top corner — movement scheme + Reset Codex), and (b) **dragging /
+  focusing the terminal panel** (the room⇄terminal focus switch). Nothing in
+  gameplay uses the mouse.
 - **Movement schemes** (settings-selectable):
   - **arrows** — default
   - **WASD**

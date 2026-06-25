@@ -1,8 +1,11 @@
 import type { PuzzleType, Difficulty } from "../schema/types";
 
-// The schema text is injected verbatim so the model fills a fixed contract.
-// In a build you can import the JSON directly; inlined here as a string for clarity.
-import schema from "../schema/puzzle.schema.json";
+// The schema is injected verbatim into the prompt so the model fills a fixed
+// contract. We import the raw text (Vite `?raw`) and parse it so the prompt gets
+// the exact source. (Strict JSON today; if the schema ever grows comments, parse
+// it comment-tolerantly here.)
+import schemaRaw from "../schema/puzzle.schema.json?raw";
+const schema = JSON.parse(schemaRaw);
 
 export interface GenerationRequest {
   language: string;       // OPEN content axis, e.g. "hawaiian"

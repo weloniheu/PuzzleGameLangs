@@ -22,9 +22,37 @@
           { "text": ")", "kind": "punctuation" },
           { "text": "\"hello\"", "kind": "string" },
           { "text": "\"goodbye\"", "kind": "string" }
-        ]
+        ],
+        "beats": {
+          "build-first": "🐍 The snake isn't ready — you haven't BUILT the line yet. Stand on Build and press Enter first.",
+          "wrong-order": "The words tumble out jumbled. The aliens tilt their heads. Try them in a different order.",
+          "wrong-indent": "The line drifts off its margin. Slide it left until it sits against the wall (indent 0).",
+          "wrong-word": "The panel doesn't recognize one of those words. Pick different words and try again.",
+          "success": "The aliens light up and wave back! ✅"
+        },
+        "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
+        "dialogue": {
+          "speakers": {
+            "snake": { "name": "Sss", "side": "left", "portrait": "🐍", "portrait2": "🐍" },
+            "hint":  { "name": "Helper", "side": "right", "portrait": "🛰️", "portrait2": "🛰️" }
+          },
+          "on_enter": [
+            { "id": "enter-1", "speaker": "snake", "text": "Sssss! Welcome to the play house.", "trigger": "on_enter", "autoAdvance": true },
+            { "id": "enter-2", "speaker": "snake", "text": "Maybe you could write a message for the friends watching from that little blue planet? They've waited so long to hear from someone.", "trigger": "on_enter" },
+            { "id": "enter-3", "speaker": "snake", "text": "I can't hold a pen — no hands! — but a printer can speak for me.", "trigger": "on_enter" },
+            { "id": "enter-friend", "speaker": "snake", "text": "Stuck? The friend over there with the ❓ can help.", "trigger": "on_enter", "highlight": "hint" }
+          ],
+          "hints": [
+            { "text": "Greet them — make the program say hello.", "tag": "intro" },
+            { "text": "The snake can't write, but it can use a printer. Reach for print.", "tag": "after:wrong-word" },
+            { "text": "Lay print then the word against the left wall (indent 0): print(\"hello\").", "tag": "after:wrong-order" }
+          ]
+        }
       },
-      "solution": { "output": "hello" },
+      "solution": {
+        "output": "hello",
+        "lines": [{ "content": ["print", "hello"], "indent": 0 }]
+      },
       "hints": [
         "Greet them.",
         "The snake doesn't have hands to write, but it can use a printer.",
@@ -35,6 +63,35 @@
         "tags": ["beginner", "python", "output"],
         "generator": "human",
         "reviewed": true
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": { "x": 6, "y": 6 },
+        "tiles": [
+          "######D######",
+          "#...........#",
+          "#...........#",
+          "#....###....#",
+          "#...........D",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "piles": [
+          { "token": "write", "pos": { "x": 9, "y": 2 } },
+          { "token": "me",    "pos": { "x": 10, "y": 2 } },
+          { "token": "print", "pos": { "x": 9, "y": 6 } },
+          { "token": "hello", "pos": { "x": 10, "y": 6 } }
+        ],
+        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "inventory_slots": 5,
+        "controls": [
+          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
+          { "action": "run",   "label": "Run",   "pos": { "x": 5, "y": 7 } }
+        ],
+        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" }
       }
     },
     {

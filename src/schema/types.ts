@@ -123,10 +123,108 @@ export interface CodeBuildPayload {
   goal: string;
   /** Blocks offered in the palette; player arranges a subset into one line. */
   tokens: CodeToken[];
+  /** Feedback beats keyed by reason ("build-first" | "wrong-order" | "wrong-indent" |
+   *  "wrong-word") plus "success". The engine reads these and hardcodes none. */
+  beats?: Record<string, string>;
+  /** Pretend shell commands echoed to the terminal as FLAVOR — nothing executes. */
+  terminal?: { build: string; run: string };
+  /** Portrait-only dialogue (snake + hint giver share one presentation; see below). */
+  dialogue?: DialogueConfig;
+}
+
+// --- dialogue (two portrait-only speakers sharing one presentation) ---
+export type DialogueTrigger =
+  | "on_enter" | "build-first" | "wrong-order" | "wrong-indent" | "wrong-word" | "success" | "hint";
+/** One spoken beat. `speaker` selects the avatar; `trigger` selects when it fires. */
+export interface DialogueBeat {
+  id: string;
+  speaker: string;          // e.g. "snake" | "hint"
+  text: string;
+  trigger: DialogueTrigger | string;
+  /** true → auto-advance after a pause; omitted → engine auto-advances only short text. */
+  autoAdvance?: boolean;
+  /** marker id to briefly highlight while this beat shows (e.g. "hint"). */
+  highlight?: string;
+}
+/** A speaker's portrait config (placeholder art is fine; portrait2 = optional talk frame). */
+export interface DialogueSpeaker {
+  name: string;
+  side: "left" | "right";   // which edge the portrait slides in from
+  portrait: string;
+  portrait2?: string;
+}
+/** A hint giver line. `tag` is a DATA SEAM for later context-aware selection — ignored now. */
+export interface HintBeat {
+  text: string;
+  tag?: string;
+}
+export interface DialogueConfig {
+  speakers: Record<string, DialogueSpeaker>;
+  /** Snake greeting beats played on room enter. */
+  on_enter?: DialogueBeat[];
+  /** Hint giver's ordered hints (shown one-per-interaction, capped at the last). */
+  hints?: HintBeat[];
+}
+/** One expected code line for the order-checker: content tokens (in order) + indent. */
+export interface CodeAnswerLine {
+  content: string[];
+  indent: number;
 }
 export interface CodeBuildSolution {
   /** The output the assembled program must produce. Checked by `code_match`. */
   output: string;
+  /** Order-check answer: a LIST of lines so multi-line difficulties slot in later;
+   *  difficulty 1 checks only line 0's content order (ignoring punctuation/quotes). */
+  lines?: CodeAnswerLine[];
+}
+
+// --- Room (world layer) ---
+// OPTIONAL top-down room a puzzle can live in. Pure CONTENT: the engine reads the
+// tile grid from here and never hardcodes a layout. The default char legend is
+// '#' wall · '.' floor · 'D' door · 'S' spawn (override per-room with `legend`).
+export type RoomTile = "floor" | "wall" | "door";
+/** A word pile the player faces and presses pickup on. CONTENT: the engine never
+ *  hardcodes which words exist. Piles are infinite for now (consumed on placement
+ *  later, not on pickup). They occupy a cell and block movement (you stand and face). */
+export interface RoomPile {
+  token: string;            // the word added to inventory on pickup
+  pos: { x: number; y: number };
+}
+/** Rectangular region (in cells) where the player may place tokens. The line's
+ *  indent = a placed token's column minus this region's left edge (`x`). CONTENT. */
+export interface CodingArea {
+  x: number;       // left edge column (indent 0 is here, against the wall)
+  y: number;       // top row
+  width: number;   // columns
+  height: number;  // rows
+}
+export interface RoomLayout {
+  width: number;  // columns
+  height: number; // rows
+  /** One string per row; each char is a tile (see default legend above). */
+  tiles: string[];
+  /** Optional char→meaning overrides; "spawn" marks the start cell. */
+  legend?: Record<string, RoomTile | "spawn">;
+  /** Explicit spawn cell; if omitted, derived from an 'S' tile, else first floor. */
+  spawn?: { x: number; y: number };
+  /** Word piles placed on floor cells; the player faces one and presses pickup. */
+  piles?: RoomPile[];
+  /** Region where tokens can be placed (and indent is measured from). */
+  coding_area?: CodingArea;
+  /** How many inventory slots the player has in this room. Engine defaults if absent. */
+  inventory_slots?: number;
+  /** Keyboard-activatable objects in the room (Build / Run). */
+  controls?: RoomControl[];
+  /** The hint giver's in-room marker (the snake has NO marker — it's portrait-only). */
+  hint_giver?: { pos: { x: number; y: number }; marker?: string };
+}
+
+export type RoomActionKind = "build" | "run";
+/** A labeled object the player stands on and activates with Enter (Build / Run). */
+export interface RoomControl {
+  action: RoomActionKind;
+  label: string;
+  pos: { x: number; y: number };
 }
 
 // (predict_output / fix_the_bug payloads live in the contract but are deferred —
@@ -180,6 +278,8 @@ export interface Puzzle {
   solution: Solution;
   hints: string[];
   metadata: PuzzleMetadata;
+  /** OPTIONAL world layer. When present, the puzzle opens in a walkable room. */
+  room?: RoomLayout;
 }
 
 export interface Pack {

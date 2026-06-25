@@ -11,7 +11,7 @@
     "language",
     "puzzle_type",
     "validator_type",
-    // "difficulty",
+    "difficulty",
     "prompt",
     "payload",
     "solution",
@@ -53,6 +53,22 @@
     "payload": { "type": "object" },
     "solution": { "type": "object" },
     "hints": { "type": "array", "items": { "type": "string" } },
+    "room": {
+      "type": "object",
+      "description": "OPTIONAL world layer; when present the puzzle opens in a walkable room.",
+      "required": ["width", "height", "tiles"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "tiles": { "type": "array", "items": { "type": "string" } },
+        "legend": { "type": "object", "additionalProperties": { "type": "string" } },
+        "spawn": {
+          "type": "object",
+          "required": ["x", "y"],
+          "properties": { "x": { "type": "integer" }, "y": { "type": "integer" } }
+        }
+      }
+    },
     "metadata": {
       "type": "object",
       "additionalProperties": true,
