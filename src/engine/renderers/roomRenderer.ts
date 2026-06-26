@@ -1124,7 +1124,7 @@ export function renderRoom(
     world.append(portal);
     playFlash(room.spawn, color, () => {
       // slime hops off the portal cell into the first open neighbor, then the pad vanishes
-      for (const dir of [MOVE.down, MOVE.right, MOVE.left, MOVE.up]) {
+      for (const dir of [MOVE.right, MOVE.left, MOVE.up, MOVE.down,]) {
         const next = step(room, pos, dir);
         if (next.x !== pos.x || next.y !== pos.y) { pos = next; draw(); break; }
       }
