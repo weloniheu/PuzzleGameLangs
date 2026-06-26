@@ -10,7 +10,7 @@
 // The renderer turns a "transition" into a teardown+mount and a "blocked" into a beat.
 // ---------------------------------------------------------------------------
 
-import type { DoorState } from "../schema/types";
+import type { DoorState } from "../../schema/types";
 
 /** The door fields this resolver needs (a structural subset of RoomDoor). */
 export interface DoorData {

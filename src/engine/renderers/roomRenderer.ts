@@ -20,13 +20,13 @@
 import type {
   Puzzle, CodeBuildPayload, CodeBuildSolution, RoomControl, RoomDoor, DialogueBeat, DialogueSpeaker,
 } from "../../schema/types";
-import { parseRoom, step, pileAt, type Cell } from "../room";
-import { resetCodex, getUnlocks } from "../codex";
-import { doorReaction, effectiveDoorState } from "../doors";
-import { createTeardown } from "../teardown";
-import { resolveFeatures, resolveInventorySlots } from "../roomFeatures";
-import type { DestinationOption } from "../progression";
-import { portalFlashColor } from "../portalColors";
+import { parseRoom, step, pileAt, type Cell } from "../core/room";
+import { resetCodex, getUnlocks } from "../core/codex";
+import { doorReaction, effectiveDoorState } from "../core/doors";
+import { createTeardown } from "../core/teardown";
+import { resolveFeatures, resolveInventorySlots } from "../core/roomFeatures";
+import type { DestinationOption } from "../core/progression";
+import { portalFlashColor } from "../core/portalColors";
 import {
   run as runProgram,
   createBuildState,
@@ -40,7 +40,7 @@ import {
 import {
   defaultBindings, actionsFor, normalizeKey, resolve, rebind, bindingGlyph,
   type SchemeId, type Bindings, type Key,
-} from "../keybindings";
+} from "../core/keybindings";
 
 const SCHEME_LABELS: Record<SchemeId, string> = { standard: "Standard", vim: "Vim" };
 const SCHEME_TABS: SchemeId[] = ["standard", "vim"];

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { RoomLayout } from "../schema/types";
+import type { RoomLayout } from "../../schema/types";
 import {
   parseRoom,
   step,

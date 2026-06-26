@@ -10,9 +10,9 @@
 
 import type { Puzzle, LevelEntry, PuzzleType } from "../schema/types";
 import { renderRoom, type RoomHandle } from "./renderers/roomRenderer";
-import { addUnlock, getUnlocks } from "./codex";
-import { destinationMenu, HUB_ID } from "./progression";
-import { portalFlashColor } from "./portalColors";
+import { addUnlock, getUnlocks } from "./core/codex";
+import { destinationMenu, HUB_ID } from "./core/progression";
+import { portalFlashColor } from "./core/portalColors";
 
 export interface RoomManager {
   /** Tear down the current room (if any) and mount the room with this id. */

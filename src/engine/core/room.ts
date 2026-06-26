@@ -6,8 +6,8 @@
 // Keeping this pure makes the rules testable and the renderer dumb.
 // ---------------------------------------------------------------------------
 
-import type { RoomLayout, RoomTile, RoomPile, CodingArea } from "../schema/types";
-import type { Direction } from "./input";
+import type { RoomLayout, RoomTile, RoomPile, CodingArea } from "../../schema/types";
+import type { Direction } from "../input";
 
 export interface Cell {
   x: number;

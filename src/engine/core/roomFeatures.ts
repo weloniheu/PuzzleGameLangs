@@ -10,7 +10,7 @@
 // is deliberately NOT part of this yet.
 // ---------------------------------------------------------------------------
 
-import type { RoomFeature, RoomLayout, PuzzleType } from "../schema/types";
+import type { RoomFeature, RoomLayout, PuzzleType } from "../../schema/types";
 
 /** Inventory slot defaults per puzzle type. A room's own `inventory_slots` ALWAYS wins
  *  over this; this is only the fallback when the room doesn't declare a count. */

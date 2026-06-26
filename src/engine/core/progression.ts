@@ -7,7 +7,7 @@
 // once earned — no skip-ahead. Unlock state lives in the Codex (same save), passed in here.
 // ---------------------------------------------------------------------------
 
-import type { LevelEntry } from "../schema/types";
+import type { LevelEntry } from "../../schema/types";
 
 /** The hub's room id — the root the menu portal always offers a way back to. */
 export const HUB_ID = "hub";

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { destinationMenu, HUB_ID, type DestinationOption } from "./progression";
-import type { LevelEntry } from "../schema/types";
+import type { LevelEntry } from "../../schema/types";
 
 const LEVELS: LevelEntry[] = [
   { id: "lvl1", label: "Greeting" },                       // first level — always available

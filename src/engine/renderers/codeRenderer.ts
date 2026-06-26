@@ -1,5 +1,5 @@
 import type { PuzzleRenderer, Puzzle, CodeBuildPayload, CodeToken } from "../../schema/types";
-import { discover, renderCodexPanel } from "../codex";
+import { discover, renderCodexPanel } from "../core/codex";
 import { createGridArena } from "./gridArena";
 
 /**

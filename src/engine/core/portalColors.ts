@@ -7,7 +7,7 @@
 // Keyed by the existing puzzle_type field — never hardcoded per portal.
 // ---------------------------------------------------------------------------
 
-import type { PuzzleType } from "../schema/types";
+import type { PuzzleType } from "../../schema/types";
 
 /** Red is reserved for the hub exit. */
 export const HUB_FLASH = "#e23b3b";
