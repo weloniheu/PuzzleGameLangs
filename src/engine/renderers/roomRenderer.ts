@@ -20,7 +20,7 @@
 import type {
   Puzzle, CodeBuildPayload, CodeBuildSolution, RoomControl, RoomDoor, DialogueBeat, DialogueSpeaker,
 } from "../../schema/types";
-import { parseRoom, step, pileAt, type Cell } from "../core/room";
+import { parseRoom, step, pileAt, MOVE, type Cell } from "../core/room";
 import { resetCodex, getUnlocks } from "../core/codex";
 import { doorReaction, effectiveDoorState } from "../core/doors";
 import { createTeardown } from "../core/teardown";
@@ -29,6 +29,7 @@ import type { DestinationOption } from "../core/progression";
 import { portalFlashColor } from "../core/portalColors";
 import { renderTileLayer } from "../systems/tileLayer";
 import { computeTile, computeViewport, type RoomSize } from "../systems/camera";
+import { createSlime, drawPlayer } from "../systems/player";
 import {
   run as runProgram,
   createBuildState,
@@ -49,10 +50,6 @@ const SCHEME_TABS: SchemeId[] = ["standard", "vim"];
 const SEQ_WINDOW = 600;       // ms a pending gameplay sequence (e.g. d…) waits for its next key
 const CAPTURE_WINDOW = 320;   // ms an in-progress capture waits before committing
 const CAPTURE_MAX = 2;        // longest sequence the rebinder captures (covers dd/dw)
-/** Movement actions → step vectors. */
-const MOVE: Record<string, { dx: number; dy: number }> = {
-  up: { dx: 0, dy: -1 }, down: { dx: 0, dy: 1 }, left: { dx: -1, dy: 0 }, right: { dx: 1, dy: 0 },
-};
 
 const FIXED_TILE = 40;       // comfortable tile px used when the room is larger than the window
 const HUD_H = 48;            // inventory HUD height (px)
@@ -266,8 +263,7 @@ export function renderRoom(
   pileLayer.className = "room-pile-layer";
   const placedLayer = document.createElement("div");
   placedLayer.className = "room-placed-layer";
-  const slime = document.createElement("div");
-  slime.className = "slime";
+  const slime = createSlime();
   // Order matters for stacking; coding-area layers slot in only when present.
   world.append(tileLayer);
   if (zoneEl) world.append(zoneEl);
@@ -1065,17 +1061,10 @@ export function renderRoom(
   }
 
   function draw() {
-    // Slime scales with the tile, inset a touch so the cell border shows.
-    const inset = Math.max(4, Math.round(tile * 0.1));
-    slime.style.width = `${tile - inset * 2}px`;
-    slime.style.height = `${tile - inset * 2}px`;
-    slime.style.transform = `translate(${pos.x * tile + inset}px, ${pos.y * tile + inset}px)`;
-
-    // Camera follows the slime, clamped so it never shows past the room edges. When
-    // the whole room is visible (viewCols === room.width) this is always 0.
-    const camX = clamp(pos.x - Math.floor(viewCols / 2), 0, Math.max(0, room.width - viewCols));
-    const camY = clamp(pos.y - Math.floor(viewRows / 2), 0, Math.max(0, room.height - viewRows));
-    world.style.transform = `translate(${-camX * tile}px, ${-camY * tile}px)`;
+    // Slime box + camera-follow translate (see systems/player); same inset/transform/clamp.
+    drawPlayer(slime, world, {
+      pos, tile, viewCols, viewRows, roomWidth: room.width, roomHeight: room.height,
+    });
     drawDebug(); // current-row readout depends on where the player is standing
   }
 

@@ -7,12 +7,25 @@
 // ---------------------------------------------------------------------------
 
 import type { RoomLayout, RoomTile, RoomPile, CodingArea } from "../../schema/types";
-import type { Direction } from "../input";
 
 export interface Cell {
   x: number;
   y: number;
 }
+
+/** A movement step vector (the engine's only notion of direction). */
+export interface Direction {
+  dx: number;
+  dy: number;
+}
+
+/** The four movement directions as named step vectors — the ONE source for these. */
+export const MOVE: Record<string, Direction> = {
+  up: { dx: 0, dy: -1 },
+  down: { dx: 0, dy: 1 },
+  left: { dx: -1, dy: 0 },
+  right: { dx: 1, dy: 0 },
+};
 
 export interface Room {
   width: number;
