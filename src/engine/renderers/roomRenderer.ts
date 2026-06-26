@@ -30,6 +30,7 @@ import { portalFlashColor } from "../core/portalColors";
 import { renderTileLayer } from "../systems/tileLayer";
 import { computeTile, computeViewport, type RoomSize } from "../systems/camera";
 import { createSlime, drawPlayer } from "../systems/player";
+import { createDialogue } from "../systems/dialogue";
 import {
   run as runProgram,
   createBuildState,
@@ -139,12 +140,11 @@ export function renderRoom(
   const beats: Record<string, string> = payload.beats ?? {};
   const termCmds = payload.terminal ?? { build: "$ build", run: "$ run" };
   // Dialogue CONTENT (engine hardcodes none): speakers, snake greeting, hint giver lines.
-  const dialogue = payload.dialogue;
-  const speakers: Record<string, DialogueSpeaker> = dialogue?.speakers ?? {};
-  const onEnterBeats: DialogueBeat[] = dialogue?.on_enter ?? [];
-  const hintLines = dialogue?.hints ?? [];
-  const AUTO_LEN = 48;       // text shorter than this auto-advances when autoAdvance is unset
-  const AUTO_PAUSE = 1700;   // ms an auto-advancing beat lingers
+  // Dialogue CONTENT (speakers/greeting/hints) — fed into the dialogue presenter (system).
+  const dialogueCfg = payload.dialogue;
+  const speakers: Record<string, DialogueSpeaker> = dialogueCfg?.speakers ?? {};
+  const onEnterBeats: DialogueBeat[] = dialogueCfg?.on_enter ?? [];
+  const hintLines = dialogueCfg?.hints ?? [];
 
   const room = parseRoom(layout);
   let pos: Cell = { ...room.spawn };
@@ -153,19 +153,8 @@ export function renderRoom(
   let debugOn = false;
   let buildState = createBuildState(); // line is "dirty" until Built (see codeGameLogic)
 
-  // Dialogue state. `dialogueQueue`/`dialogueIdx` drive the shared portrait presenter;
-  // dialogueActive (idx >= 0) is a FOCUS STATE that suppresses gameplay until advanced.
-  let dialogueQueue: DialogueBeat[] = [];
-  let dialogueIdx = -1;
-  let autoTimer = 0;
-  let talkTimer = 0;
-  let hintIdx = -1; // hint giver progresses one line per interaction, capped at the last
-
-  // First-time event beats: tutorial rooms define `first_*` beats that fire ONCE the
-  // first time each mechanic happens. Tracked per room-LOAD (this set lives in the
-  // renderer closure), so re-entering / replaying the room teaches again. Non-tutorial
-  // rooms simply don't define `first_*` beats, so nothing fires (see fireFirstTime).
-  const firedFirstTimes = new Set<string>();
+  // (Dialogue queue/timers/first-time-once state + the presenter itself now live in
+  //  systems/dialogue — see the `dialogue` instance created below.)
 
   // View sizing — recomputed by relayout(); everything pixel-based reads these.
   let tile = FIXED_TILE;
@@ -189,7 +178,6 @@ export function renderRoom(
   const controls: RoomControl[] = hasCodingArea ? (layout.controls ?? []) : [];
   const controlAt = (x: number, y: number) => controls.find((c) => c.pos.x === x && c.pos.y === y) ?? null;
   const hintGiver = layout.hint_giver ?? null; // the ONLY in-room dialogue marker (snake has none)
-  const onHintGiver = (x: number, y: number) => !!hintGiver && hintGiver.pos.x === x && hintGiver.pos.y === y;
 
   // Doors: stand-on-and-interact objects (like controls). Their reaction is resolved
   // against the player's earned unlocks, read ONCE at mount (fresh each time the room loads).
@@ -812,41 +800,26 @@ export function renderRoom(
   let terminalApi: TerminalApi | null = null;
   if (hasTerminal) terminalApi = buildTerminal();
 
-  // --- dialogue surfaces -----------------------------------------------------
-  // PORTRAIT path (a defined character — snake/hint — in a terminal room): avatar + name
-  // + text, anchored to the terminal. NARRATOR path (default voice, any room): bare
-  // transient text, no avatar/name. A beat routes by speaker (see showBeat).
-  let dialogueEl: HTMLDivElement | null = null;
-  let dlgPortrait: HTMLDivElement | null = null;
-  let dlgName: HTMLDivElement | null = null;
-  let dlgText: HTMLParagraphElement | null = null;
-  let dlgCue: HTMLDivElement | null = null;
-  if (hasTerminal) {
-    dialogueEl = document.createElement("div");
-    dialogueEl.className = "room-dialogue";
-    dialogueEl.hidden = true;
-    dlgPortrait = document.createElement("div");
-    dlgPortrait.className = "room-dialogue-portrait";
-    const dlgBox = document.createElement("div");
-    dlgBox.className = "room-dialogue-box";
-    dlgName = document.createElement("div");
-    dlgName.className = "room-dialogue-name";
-    dlgText = document.createElement("p");
-    dlgText.className = "room-dialogue-text";
-    dlgCue = document.createElement("div");
-    dlgCue.className = "room-dialogue-cue";
-    dlgBox.append(dlgName, dlgText, dlgCue);
-    dialogueEl.append(dlgPortrait, dlgBox);
-    container.appendChild(dialogueEl);
-  }
-
-  // Narrator: the DEFAULT voice surface (text only, no avatar/name). Always available —
-  // it's the minimal text surface for rooms without a character (e.g. the hub). Placeholder;
-  // real per-puzzle-type voices come later.
-  const narratorEl = document.createElement("div");
-  narratorEl.className = "room-narrator";
-  narratorEl.hidden = true;
-  container.appendChild(narratorEl);
+  // --- dialogue presenter (system) -------------------------------------------
+  // Owns the portrait + narrator surfaces, the beat queue, the hint-giver marker, and the
+  // first-time-once MECHANISM. Terminal-dock + stage-top are INJECTED getters (we never
+  // reach into the terminal from the presenter); it only signals isActive() — the engine's
+  // keydown handler does the gameplay suppression. firstTimeBeat = snakeBeat (coding content).
+  const dialogue = createDialogue({
+    container,
+    markerLayer,
+    speakers,
+    hintGiver,
+    hintLines,
+    hasPortrait: hasTerminal,
+    isTerminalDocked: () => terminal.mode === "docked",
+    dockedH: () => terminal.dockedH,
+    stageTop: () => stage.getBoundingClientRect().top,
+    hudH: HUD_H,
+    hudGap: HUD_GAP,
+    onEnd: () => viewport.focus({ preventScroll: true }),
+    firstTimeBeat: snakeBeat,
+  });
 
   // -------------------------------------------------------------------------
   // Sizing
@@ -884,7 +857,7 @@ export function renderRoom(
     buildControlsLayer();
     buildDoors();
     buildMenuPortal();
-    buildMarkers();
+    dialogue.buildMarker(tile);
     buildPiles();
     drawPlaced();
     terminalApi?.clampAndPlace();                 // keep a popped window on-screen after resize
@@ -922,29 +895,8 @@ export function renderRoom(
 
     // Band anchored to the WINDOW bottom, full width; the HUD sits a GAP above it.
     if (docked) terminalApi!.layoutDocked();
-    positionDialogue(); // keep the portrait anchored to the terminal across dock/resize
+    dialogue.positionPortrait(); // keep the portrait anchored to the terminal across dock/resize
     draw();
-  }
-
-  /**
-   * Anchor the dialogue portrait ABOVE the terminal by default; if the docked band is
-   * flush near the TOP (no room above it), render INSIDE the band so it's never clipped.
-   */
-  function positionDialogue() {
-    const el = dialogueEl;                     // portrait surface — terminal rooms only
-    if (!el || el.hidden) return;
-    const areaTop = stage.getBoundingClientRect().top; // room area top (below the top bar)
-    const portH = el.offsetHeight || 140;
-    if (terminal.mode === "docked") {
-      const bandTop = window.innerHeight - terminal.dockedH;
-      const inside = bandTop - areaTop < portH + 16; // not enough room above → go inside the band
-      el.classList.toggle("inside-terminal", inside);
-      el.style.top = `${inside ? bandTop + 8 : bandTop - portH - 8}px`;
-    } else {
-      // Popped: the band isn't reserving the bottom, so float just above the HUD.
-      el.classList.remove("inside-terminal");
-      el.style.top = `${window.innerHeight - HUD_H - HUD_GAP - portH - 8}px`;
-    }
   }
 
   /** (Re)build the static tile grid at the current tile size (see systems/tileLayer). */
@@ -1017,29 +969,6 @@ export function renderRoom(
     menuPortalEl.style.transform = `translate(${menuPortalCell.x * tile}px, ${menuPortalCell.y * tile}px)`;
     menuPortalEl.style.fontSize = `${Math.round(tile * 0.5)}px`;
     menuPortalEl.textContent = "🌀";
-  }
-
-  /** (Re)build the hint giver's "?" marker (the snake has none — it's portrait-only). */
-  function buildMarkers() {
-    markerLayer.innerHTML = "";
-    if (!hintGiver) return;
-    const el = document.createElement("div");
-    el.className = "tile-room tile-hint-marker";
-    el.style.width = `${tile}px`;
-    el.style.height = `${tile}px`;
-    el.style.transform = `translate(${hintGiver.pos.x * tile}px, ${hintGiver.pos.y * tile}px)`;
-    const label = document.createElement("span");
-    label.className = "tile-hint-label";
-    label.textContent = hintGiver.marker ?? "?";
-    label.style.fontSize = `${Math.round(tile * 0.5)}px`;
-    el.appendChild(label);
-    markerLayer.appendChild(el);
-  }
-
-  /** Briefly outline the hint marker (used by the "friend over there" enter beat). */
-  function highlightMarker(on: boolean) {
-    const el = markerLayer.firstElementChild as HTMLElement | null;
-    if (el) el.classList.toggle("highlight", on);
   }
 
   /** (Re)build the word piles at the current tile size. */
@@ -1176,7 +1105,7 @@ export function renderRoom(
     buildState = markBuilt(buildState);
     termSet([termCmds.build, "compiled main.py ✓ — ready to Run"], "neutral");
     drawDebug();
-    fireFirstTime("first_build"); // Build always succeeds → first Build is the first successful one
+    dialogue.fireFirstTime("first_build"); // Build always succeeds → first Build is the first successful one
   }
 
   function doRun() {
@@ -1193,7 +1122,7 @@ export function renderRoom(
     if (res.ok) {
       callbacks.onSolved?.(puzzle); // may earn an unlock (e.g. open the next door in the hub)
       const b = snakeBeat("success");
-      if (b) playSequence([b]);
+      if (b) dialogue.play([b]);
       return;
     }
     // A first-time teaching beat (run-before-build, or the first wrong order) takes
@@ -1201,9 +1130,9 @@ export function renderRoom(
     const firstTrigger =
       res.reason === "build-first" ? "first_run_no_build" :
       res.reason === "wrong-order" ? "first_wrong_order" : null;
-    if (firstTrigger && fireFirstTime(firstTrigger)) return;
+    if (firstTrigger && dialogue.fireFirstTime(firstTrigger)) return;
     const b = snakeBeat(res.reason as CheckReason);
-    if (b) playSequence([b]);
+    if (b) dialogue.play([b]);
   }
 
   function activateControl(c: RoomControl) {
@@ -1211,130 +1140,14 @@ export function renderRoom(
     else doRun();
   }
 
-  // -------------------------------------------------------------------------
-  // Dialogue — shared portrait presenter for BOTH speakers (snake + hint giver).
-  // dialogueIdx >= 0 is a focus state; the one keydown handler suppresses gameplay.
-  // -------------------------------------------------------------------------
-  const isDialogueActive = () => dialogueIdx >= 0;
-
-  function clearDialogueTimers() {
-    if (autoTimer) { clearTimeout(autoTimer); autoTimer = 0; }
-    if (talkTimer) { clearInterval(talkTimer); talkTimer = 0; }
-  }
-
-  function playSequence(seq: DialogueBeat[]) {
-    if (!seq.length) return;
-    dialogueQueue = seq;
-    dialogueIdx = 0;
-    showBeat();
-  }
-
-  /** Route a beat to a surface: a defined character (snake/hint) in a terminal room uses
-   *  the PORTRAIT path; everything else (speaker "narrator", or no defined character) uses
-   *  the bare NARRATOR text surface. */
-  function showBeat() {
-    clearDialogueTimers();
-    const beat = dialogueQueue[dialogueIdx];
-    const sp = speakers[beat.speaker];
-    if (sp && dialogueEl && dlgPortrait && dlgName && dlgText && dlgCue) showPortraitBeat(beat, sp);
-    else showNarratorBeat(beat);
-  }
-
-  function showPortraitBeat(beat: DialogueBeat, sp: DialogueSpeaker) {
-    const el = dialogueEl!, portrait = dlgPortrait!, name = dlgName!, text = dlgText!, cue = dlgCue!;
-    el.hidden = false;
-    const side = sp.side === "right" ? "right" : "left";
-    const frame1 = sp.portrait ?? "💬";
-    const frame2 = sp.portrait2;
-    el.classList.toggle("from-right", side === "right");
-    el.classList.toggle("from-left", side !== "right");
-    portrait.textContent = frame1;
-    portrait.classList.add("talking");
-    name.textContent = sp.name ?? beat.speaker;
-    text.textContent = beat.text;
-    highlightMarker(beat.highlight === "hint"); // outline the "?" on the relevant enter beat
-
-    positionDialogue();
-    requestAnimationFrame(() => el.classList.add("shown")); // slide in
-
-    // Optional talking-mouth flicker between two frames (one frame is fine).
-    if (frame2 && frame2 !== frame1) {
-      let alt = false;
-      talkTimer = window.setInterval(() => {
-        alt = !alt;
-        portrait.textContent = alt ? frame2 : frame1;
-      }, 220);
-    }
-
-    // Advance mode: explicit autoAdvance wins; else short text auto-advances (length fallback).
-    const auto = beat.autoAdvance === true || (beat.autoAdvance === undefined && beat.text.length < AUTO_LEN);
-    cue.textContent = auto ? "" : "Enter ▸";
-    if (auto) autoTimer = window.setTimeout(advanceDialogue, AUTO_PAUSE);
-  }
-
-  /** The narrator surface: transient text over the room, no avatar/name. Always
-   *  auto-advances (with Enter able to skip via the dialogue keydown branch). */
-  function showNarratorBeat(beat: DialogueBeat) {
-    narratorEl.textContent = beat.text;
-    narratorEl.hidden = false;
-    requestAnimationFrame(() => narratorEl.classList.add("shown"));
-    // Readable dwell that scales a little with length, then it clears itself.
-    const dwell = Math.min(4000, Math.max(AUTO_PAUSE, beat.text.length * 45));
-    autoTimer = window.setTimeout(advanceDialogue, dwell);
-  }
-
-  function advanceDialogue() {
-    clearDialogueTimers();
-    dialogueIdx++;
-    if (dialogueIdx < dialogueQueue.length) showBeat();
-    else endDialogue();
-  }
-
-  function endDialogue() {
-    clearDialogueTimers();
-    dialogueIdx = -1;
-    dialogueQueue = [];
-    highlightMarker(false);
-    if (dialogueEl && dlgPortrait) {
-      dlgPortrait.classList.remove("talking");
-      dialogueEl.classList.remove("shown"); // slide out
-      const el = dialogueEl;
-      window.setTimeout(() => { if (dialogueIdx === -1) el.hidden = true; }, 260);
-    }
-    narratorEl.classList.remove("shown");
-    window.setTimeout(() => { if (dialogueIdx === -1) narratorEl.hidden = true; }, 260);
-    viewport.focus({ preventScroll: true });
-  }
-
-  /** Wrap a beats-map entry (a run reason like "build-first"/"success", or a "first_*"
-   *  first-time trigger) as a SNAKE portrait beat. Returns null if the pack didn't
-   *  define text for it. */
+  // Coding-puzzle beat factory (CONTENT): wrap a `beats`-map entry (a run reason like
+  // "build-first"/"success", or a "first_*" trigger) as a SNAKE portrait beat, or null
+  // when the pack defines no text. Injected into the dialogue presenter as `firstTimeBeat`
+  // and also used directly for run-reason beats. (Presenter machinery → systems/dialogue.)
   function snakeBeat(reason: string): DialogueBeat | null {
     const text = beats[reason];
     if (!text) return null;
     return { id: `beat-${reason}`, speaker: "snake", text, trigger: reason };
-  }
-
-  /** Fire a one-shot first-time tutorial beat the FIRST time `trigger` happens this
-   *  room-load, then never again. Reuses the existing dialogue presenter — a `first_*`
-   *  beat is just a beat with a first-time trigger. No-op (and harmless) when the pack
-   *  defines no such beat, so non-tutorial rooms are unaffected. Returns true iff a beat
-   *  actually played, so callers can suppress a competing normal beat (run/build-first). */
-  function fireFirstTime(trigger: string): boolean {
-    if (firedFirstTimes.has(trigger)) return false;
-    firedFirstTimes.add(trigger); // mark on first occurrence, whether or not a beat exists
-    const b = snakeBeat(trigger);
-    if (!b) return false;
-    playSequence([b]);
-    return true;
-  }
-
-  /** Hint giver: shows the NEXT hint per interaction, capped at the last. Tags ignored. */
-  function talkToHint() {
-    if (!hintLines.length) return;
-    hintIdx = Math.min(hintIdx + 1, hintLines.length - 1);
-    const line = hintLines[hintIdx];
-    playSequence([{ id: `hint-${hintIdx}`, speaker: "hint", text: line.text, trigger: "hint" }]);
   }
 
   /** Always-visible HUD (Minecraft hotbar feel): N slots, FIFO order, a highlighted
@@ -1373,8 +1186,8 @@ export function renderRoom(
     if (inventory.length >= invSlots) { enterDrop(token, null); return; }
     inventory.push(token);
     drawInventory();
-    fireFirstTime("first_pickup");
-    if (inventory.length >= invSlots) fireFirstTime("first_inventory_full");
+    dialogue.fireFirstTime("first_pickup");
+    if (inventory.length >= invSlots) dialogue.fireFirstTime("first_inventory_full");
   }
 
   /** Pick a placed token back into inventory; if full, the same drop/cancel flow (the
@@ -1405,7 +1218,7 @@ export function renderRoom(
     drawInventory();
     drawPlaced();
     dirtyLine(); // a freshly placed token → line is dirty until Built
-    fireFirstTime("first_place");
+    dialogue.fireFirstTime("first_place");
   }
 
   /** 'i': pile/placed here → pick up; otherwise toggle room ↔ inventory focus. */
@@ -1464,7 +1277,7 @@ export function renderRoom(
     if (onMenuPortal(pos.x, pos.y)) { openDestinationMenu(); return; } // stand on the menu portal → chooser
     const d = doorAt(pos.x, pos.y);                // stand on a door → transition or blocked beat
     if (d) { activateDoor(d); return; }
-    if (onHintGiver(pos.x, pos.y)) talkToHint();   // stand on "?" → next hint beat
+    if (dialogue.onHintGiver(pos.x, pos.y)) dialogue.talkToHint();   // stand on "?" → next hint beat
   }
 
   /** Hub PORTALS — one mechanic, data-driven reaction (see engine/doors.ts): open → the
@@ -1482,7 +1295,7 @@ export function renderRoom(
       return;
     }
     // Blocked-portal reactions speak as the NARRATOR (no character) — works in terminal-less rooms like the hub.
-    if (d.beat) playSequence([{ id: `door-${reaction.reason}`, speaker: "narrator", text: d.beat, trigger: "door" }]);
+    if (d.beat) dialogue.play([{ id: `door-${reaction.reason}`, speaker: "narrator", text: d.beat, trigger: "door" }]);
   }
 
   // --- destination menu (the menu portal's chooser) -------------------------
@@ -1566,10 +1379,10 @@ export function renderRoom(
   const onKeydown = (e: KeyboardEvent) => {
     // Dialogue showing is a FOCUS STATE: advance on Enter/Space, skip on Esc, and
     // suppress all gameplay until it ends. Same handler — just another branch on state.
-    if (isDialogueActive()) {
+    if (dialogue.isActive()) {
       e.preventDefault();
-      if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") advanceDialogue();
-      else if (e.key === "Escape") endDialogue();
+      if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") dialogue.advance();
+      else if (e.key === "Escape") dialogue.end();
       return;
     }
 
@@ -1632,7 +1445,7 @@ export function renderRoom(
   } else if (callbacks.transientArrivalColor) {
     playHubArrival(callbacks.transientArrivalColor);
   }
-  if (onEnterBeats.length) playSequence(onEnterBeats); // snake greeting slides in on enter
+  if (onEnterBeats.length) dialogue.play(onEnterBeats); // snake greeting slides in on enter
 
   // --- TEARDOWN: undo EVERYTHING this room created, so nothing bleeds into the next. ---
   teardown.add(() => window.removeEventListener("resize", onResize));
@@ -1640,7 +1453,7 @@ export function renderRoom(
   teardown.add(() => viewport.removeEventListener("pointerdown", onPointerDown));
   teardown.add(() => {
     // every timer/interval the room can have running
-    clearDialogueTimers();                               // autoTimer + talkTimer (interval)
+    dialogue.clearTimers();                              // autoTimer + talkTimer (interval)
     if (seqTimer) { clearTimeout(seqTimer); seqTimer = 0; }
     if (resizeTimer) { clearTimeout(resizeTimer); resizeTimer = 0; }
     if (capture?.timer) { clearTimeout(capture.timer); }
