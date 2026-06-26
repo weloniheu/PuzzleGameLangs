@@ -27,6 +27,8 @@ import { createTeardown } from "../core/teardown";
 import { resolveFeatures, resolveInventorySlots } from "../core/roomFeatures";
 import type { DestinationOption } from "../core/progression";
 import { portalFlashColor } from "../core/portalColors";
+import { renderTileLayer } from "../systems/tileLayer";
+import { computeTile, computeViewport, type RoomSize } from "../systems/camera";
 import {
   run as runProgram,
   createBuildState,
@@ -68,10 +70,8 @@ const TERM_FONT_MIN = 10;    // terminal font-size bounds (settings)
 const TERM_FONT_MAX = 28;
 const TERM_FONT_STEP = 2;
 
-// Room size: "fill" scales tiles to fill the window (responsive); the others are
-// FIXED tile sizes (camera scrolls if the room is larger than the window).
-type RoomSize = "fill" | "small" | "medium" | "large";
-const ROOM_TILE: Record<Exclude<RoomSize, "fill">, number> = { small: 30, medium: 40, large: 56 };
+// Room sizing (mode type + math) lives in systems/camera. "fill" scales to the window;
+// the others are fixed tile sizes (camera scrolls if the room is larger than the window).
 // Session-persistent room preferences (survive puzzle switches within a session) — now
 // including the active scheme and the editable bindings for BOTH schemes.
 const roomSettings = {
@@ -875,16 +875,13 @@ export function renderRoom(
     // changes the tile. fullH is the POPPED-state room height; docking crops further.
     fullH = Math.max(FIXED_TILE, window.innerHeight - top);
 
-    // Fixed sizes (small/medium/large) hold a constant tile and let the camera scroll,
-    // regardless of window size. "fill" scales UP to the largest integer tile that
-    // fits the WHOLE room — floor() => the tile only steps at true integer thresholds
-    // (no continuous drift), and never below the comfortable floor.
-    if (roomSettings.roomSize === "fill") {
-      const fitTile = Math.floor(Math.min(fullW / room.width, fullH / room.height));
-      tile = Math.max(FIXED_TILE, fitTile);
-    } else {
-      tile = ROOM_TILE[roomSettings.roomSize];
-    }
+    // Tile px from window+room+roomSize (see systems/camera): "fill" → largest integer
+    // tile that fits (steps only at true thresholds), never below the floor; the fixed
+    // sizes ignore the window and let the camera scroll.
+    tile = computeTile({
+      fullW, fullH, roomWidth: room.width, roomHeight: room.height,
+      roomSize: roomSettings.roomSize, minTile: FIXED_TILE,
+    });
 
     buildTiles();
     drawCodingZone();
@@ -907,11 +904,14 @@ export function renderRoom(
     const top = stage.getBoundingClientRect().top;
     // No terminal → nothing crops the camera, so the room uses the full height.
     const docked = !!terminalApi && terminal.mode === "docked";
-    // Docked steals dockedH from the visible height (camera crop); popped steals none.
-    const effH = docked ? Math.max(tile, fullH - terminal.dockedH) : fullH;
-
-    viewCols = Math.min(room.width, Math.max(1, Math.floor(fullW / tile)));
-    viewRows = Math.min(room.height, Math.max(1, Math.floor(effH / tile)));
+    // Viewport cols/rows + the docked-crop effective height (see systems/camera). The
+    // tile is an INPUT here and is never changed — docking only crops the camera.
+    const { effH, viewCols: cols, viewRows: rows } = computeViewport({
+      fullW, fullH, tile, roomWidth: room.width, roomHeight: room.height,
+      docked, dockedH: terminal.dockedH,
+    });
+    viewCols = cols;
+    viewRows = rows;
 
     stage.style.height = `${effH}px`;             // visible room area (camera height)
     viewport.style.width = `${viewCols * tile}px`;
@@ -951,19 +951,9 @@ export function renderRoom(
     }
   }
 
-  /** (Re)build the static tile grid at the current tile size. */
+  /** (Re)build the static tile grid at the current tile size (see systems/tileLayer). */
   function buildTiles() {
-    tileLayer.innerHTML = "";
-    for (let y = 0; y < room.height; y++) {
-      for (let x = 0; x < room.width; x++) {
-        const t = document.createElement("div");
-        t.className = `tile-room tile-${room.grid[y][x]}`;
-        t.style.width = `${tile}px`;
-        t.style.height = `${tile}px`;
-        t.style.transform = `translate(${x * tile}px, ${y * tile}px)`;
-        tileLayer.appendChild(t);
-      }
-    }
+    renderTileLayer(tileLayer, room, tile);
   }
 
   /** Position the tinted coding-area zone (a single rectangle over those cells). No-op
