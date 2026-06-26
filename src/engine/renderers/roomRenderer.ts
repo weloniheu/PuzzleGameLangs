@@ -18,19 +18,39 @@
 // ---------------------------------------------------------------------------
 
 import type {
-  Puzzle, CodeBuildPayload, CodeBuildSolution, RoomControl, DialogueBeat, DialogueSpeaker,
+  Puzzle, CodeBuildPayload, CodeBuildSolution, RoomControl, RoomDoor, DialogueBeat, DialogueSpeaker,
 } from "../../schema/types";
-import { parseRoom, step, pileAt, inCodingArea, type Cell } from "../room";
-import { keyToDirection, inputSettings, SCHEME_LABEL, SCHEME_ORDER } from "../input";
-import { resetCodex } from "../codex";
+import { parseRoom, step, pileAt, type Cell } from "../room";
+import { resetCodex, getUnlocks } from "../codex";
+import { doorReaction, effectiveDoorState } from "../doors";
+import { createTeardown } from "../teardown";
+import { resolveFeatures, resolveInventorySlots } from "../roomFeatures";
+import type { DestinationOption } from "../progression";
+import { portalFlashColor } from "../portalColors";
 import {
   run as runProgram,
   createBuildState,
   markBuilt,
   markDirty,
+  tokensOnRow,
+  evaluatedLines,
   type AnswerLine,
   type CheckReason,
 } from "../codeGameLogic";
+import {
+  defaultBindings, actionsFor, normalizeKey, resolve, rebind, bindingGlyph,
+  type SchemeId, type Bindings, type Key,
+} from "../keybindings";
+
+const SCHEME_LABELS: Record<SchemeId, string> = { standard: "Standard", vim: "Vim" };
+const SCHEME_TABS: SchemeId[] = ["standard", "vim"];
+const SEQ_WINDOW = 600;       // ms a pending gameplay sequence (e.g. d…) waits for its next key
+const CAPTURE_WINDOW = 320;   // ms an in-progress capture waits before committing
+const CAPTURE_MAX = 2;        // longest sequence the rebinder captures (covers dd/dw)
+/** Movement actions → step vectors. */
+const MOVE: Record<string, { dx: number; dy: number }> = {
+  up: { dx: 0, dy: -1 }, down: { dx: 0, dy: 1 }, left: { dx: -1, dy: 0 }, right: { dx: 1, dy: 0 },
+};
 
 const FIXED_TILE = 40;       // comfortable tile px used when the room is larger than the window
 const HUD_H = 48;            // inventory HUD height (px)
@@ -52,36 +72,69 @@ const TERM_FONT_STEP = 2;
 // FIXED tile sizes (camera scrolls if the room is larger than the window).
 type RoomSize = "fill" | "small" | "medium" | "large";
 const ROOM_TILE: Record<Exclude<RoomSize, "fill">, number> = { small: 30, medium: 40, large: 56 };
-// Session-persistent room preferences (survive puzzle switches within a session).
-const roomSettings = { roomSize: "fill" as RoomSize, termFontPx: 14 };
-
-// Movement-key glyphs shown in the in-settings controls list, per scheme.
-const SCHEME_KEYS: Record<string, string> = {
-  arrows: "↑ ↓ ← →",
-  wasd: "W A S D",
-  vim: "H J K L",
+// Session-persistent room preferences (survive puzzle switches within a session) — now
+// including the active scheme and the editable bindings for BOTH schemes.
+const roomSettings = {
+  roomSize: "fill" as RoomSize,
+  termFontPx: 14,
+  scheme: "standard" as SchemeId,
+  bindings: { standard: defaultBindings("standard"), vim: defaultBindings("vim") } as Record<SchemeId, Bindings>,
 };
-const DEFAULT_INV_SLOTS = 5; // fallback when a room doesn't declare inventory_slots
-const PICKUP_KEY = "i";
-const PLACE_KEY = "p";
-const DEBUG_KEY = "`";       // toggles the placed-line readout (no movement-scheme clash)
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
 /** A token placed into the coding area at a cell. */
 interface Placed { token: string; x: number; y: number; }
 
-// Only one room is mounted at a time. Track its resize handler at module scope so a
-// re-render (switching puzzles) tears the old listener down instead of stacking them.
-let activeResizeHandler: (() => void) | null = null;
+/** A door transition target, or a solved-puzzle notification, bubbled up to the manager. */
+export interface RoomCallbacks {
+  /** An OPEN door / menu-portal selection → mount this target id (manager does teardown + mount). */
+  onDoor?: (target: string) => void;
+  /** The room's puzzle was solved → may earn an unlock (see RoomLayout.grants_unlock). */
+  onSolved?: (puzzle: Puzzle) => void;
+  /** When provided, this room is a LEVEL: a persistent MENU PORTAL sits at spawn, and this
+   *  returns the destination chooser (Hub + unlocked levels), recomputed fresh on each open.
+   *  Omitted for the hub (no menu portal). */
+  menuDestinations?: () => DestinationOption[];
+  /** Resolve the teleport flash color for a target id (the manager has the registry).
+   *  Used by hub PORTALS so their transition flashes in the destination's color. */
+  flashColorFor?: (target: string) => string;
+  /** When set, this room is the HUB: on arrival a TRANSIENT portal in this color flashes
+   *  at the spawn, the slime hops off, then the portal self-consumes. The room's other
+   *  portals (the permanent type portals) are untouched. Omitted for puzzle rooms. */
+  transientArrivalColor?: string;
+}
+/** Handle to a mounted room. `teardown()` destroys EVERYTHING the room created. */
+export interface RoomHandle {
+  teardown: () => void;
+}
 
-export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
-  if (activeResizeHandler) {
-    window.removeEventListener("resize", activeResizeHandler);
-    activeResizeHandler = null;
+// Only one room is mounted at a time. Track the WHOLE teardown at module scope so a
+// direct re-render (or a missed manager teardown) tears the old room down completely
+// instead of leaking its listeners/timers into the next one.
+let activeRoomTeardown: (() => void) | null = null;
+
+export function renderRoom(
+  container: HTMLElement,
+  puzzle: Puzzle,
+  callbacks: RoomCallbacks = {},
+): RoomHandle {
+  if (activeRoomTeardown) {
+    activeRoomTeardown(); // self-guard: never stack two live rooms
+    activeRoomTeardown = null;
   }
+  // Every undo (removeEventListener / clearTimer / clear DOM) registers here; leaving the
+  // room runs them all and nulls the list — no listener, timer, or state survives.
+  const teardown = createTeardown();
 
   const layout = puzzle.room!; // main only routes room puzzles here
+  // Feature gating: a room renders ONLY the features it declares. Undeclared → not built
+  // (no DOM, no listeners, no teardown burden). Always-on basics (movement, settings,
+  // inventory HUD) are not features. Adding a gateable feature later = extend RoomFeature
+  // + a render branch here.
+  const features = resolveFeatures(layout);
+  const hasTerminal = features.has("terminal");
+  const hasCodingArea = features.has("coding_area");
   // Code-game CONTENT (engine hardcodes none): the answer, beats, and terminal flavor.
   const payload = puzzle.payload as CodeBuildPayload;
   const solution = puzzle.solution as CodeBuildSolution;
@@ -111,6 +164,12 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
   let talkTimer = 0;
   let hintIdx = -1; // hint giver progresses one line per interaction, capped at the last
 
+  // First-time event beats: tutorial rooms define `first_*` beats that fire ONCE the
+  // first time each mechanic happens. Tracked per room-LOAD (this set lives in the
+  // renderer closure), so re-entering / replaying the room teaches again. Non-tutorial
+  // rooms simply don't define `first_*` beats, so nothing fires (see fireFirstTime).
+  const firedFirstTimes = new Set<string>();
+
   // View sizing — recomputed by relayout(); everything pixel-based reads these.
   let tile = FIXED_TILE;
   let viewCols = room.width;
@@ -129,17 +188,30 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
   };
 
   const placedAt = (x: number, y: number) => placed.find((p) => p.x === x && p.y === y) ?? null;
-  const controls: RoomControl[] = layout.controls ?? [];
+  // Build / Run objects belong to the coding_area feature — without it, none exist.
+  const controls: RoomControl[] = hasCodingArea ? (layout.controls ?? []) : [];
   const controlAt = (x: number, y: number) => controls.find((c) => c.pos.x === x && c.pos.y === y) ?? null;
   const hintGiver = layout.hint_giver ?? null; // the ONLY in-room dialogue marker (snake has none)
   const onHintGiver = (x: number, y: number) => !!hintGiver && hintGiver.pos.x === x && hintGiver.pos.y === y;
+
+  // Doors: stand-on-and-interact objects (like controls). Their reaction is resolved
+  // against the player's earned unlocks, read ONCE at mount (fresh each time the room loads).
+  const doors: RoomDoor[] = layout.doors ?? [];
+  const unlocks = new Set(getUnlocks());
+  const doorAt = (x: number, y: number) => doors.find((d) => d.pos.x === x && d.pos.y === y) ?? null;
+
+  // Menu portal (arrival = exit): for LEVEL rooms only, a persistent portal sits at spawn.
+  // Interacting opens the destination chooser. The hub has no menu portal (no destinations fn).
+  const menuPortalCell = callbacks.menuDestinations ? { x: room.spawn.x, y: room.spawn.y } : null;
+  const onMenuPortal = (x: number, y: number) => !!menuPortalCell && menuPortalCell.x === x && menuPortalCell.y === y;
 
   // Inventory + HUD state. The HUD is ALWAYS visible. `invFocused` is the focus state:
   // room focus → arrows move the slime (HUD slightly dimmed); inventory focus → arrows
   // move the slot cursor (`invSel`), slime is parked, HUD brightened. `invDrop` holds a
   // full-inventory pickup awaiting a drop/cancel decision (reusing the SAME slot cursor);
   // its `restore` is a placed token lifted off the board, put back if the player cancels.
-  const invSlots = layout.inventory_slots ?? DEFAULT_INV_SLOTS;
+  // Slot count resolves room-first, then by puzzle type, then a fallback (see roomFeatures).
+  const invSlots = resolveInventorySlots(layout.inventory_slots, puzzle.puzzle_type);
   let invFocused = false;
   let invSel = 0;
   let invDrop: { pending: string; restore: Placed | null } | null = null;
@@ -173,11 +245,21 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
   // size without disturbing the persistent slime element (and its focus/transition).
   const tileLayer = document.createElement("div");
   tileLayer.className = "room-tile-layer";
-  const zoneEl = document.createElement("div"); // tinted/outlined coding-area zone
-  zoneEl.className = "room-coding-zone";
-  zoneEl.hidden = !room.codingArea;
-  const controlLayer = document.createElement("div"); // Build / Run objects
-  controlLayer.className = "room-control-layer";
+  // Coding-area visuals (zone tint + Build/Run layer) exist ONLY when the feature is on.
+  let zoneEl: HTMLDivElement | null = null;
+  let controlLayer: HTMLDivElement | null = null;
+  if (hasCodingArea) {
+    zoneEl = document.createElement("div"); // tinted/outlined coding-area zone
+    zoneEl.className = "room-coding-zone";
+    zoneEl.hidden = !room.codingArea;
+    controlLayer = document.createElement("div"); // Build / Run objects
+    controlLayer.className = "room-control-layer";
+  }
+  const doorLayer = document.createElement("div"); // transition doors
+  doorLayer.className = "room-door-layer";
+  // Menu portal tile (level rooms only) — a single persistent element repositioned on relayout.
+  const menuPortalEl = menuPortalCell ? document.createElement("div") : null;
+  if (menuPortalEl) menuPortalEl.className = "tile-room tile-portal";
   const markerLayer = document.createElement("div"); // hint giver's "?" marker
   markerLayer.className = "room-marker-layer";
   const pileLayer = document.createElement("div");
@@ -186,7 +268,13 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
   placedLayer.className = "room-placed-layer";
   const slime = document.createElement("div");
   slime.className = "slime";
-  world.append(tileLayer, zoneEl, controlLayer, markerLayer, pileLayer, placedLayer, slime);
+  // Order matters for stacking; coding-area layers slot in only when present.
+  world.append(tileLayer);
+  if (zoneEl) world.append(zoneEl);
+  if (controlLayer) world.append(controlLayer);
+  world.append(doorLayer);
+  if (menuPortalEl) world.append(menuPortalEl); // below the slime, which spawns on top of it
+  world.append(markerLayer, pileLayer, placedLayer, slime);
 
   viewport.appendChild(world);
   stage.appendChild(viewport);
@@ -216,8 +304,33 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
   settingsEl.appendChild(settingsCard);
   container.appendChild(settingsEl);
 
+  // --- destination menu (the menu portal's chooser: Hub + unlocked levels). A menu
+  //     surface like settings: mouse-clickable AND keyboard-navigable; Esc cancels. ---
+  const destMenuEl = document.createElement("div");
+  destMenuEl.className = "room-destmenu";
+  destMenuEl.hidden = true;
+  const destMenuCard = document.createElement("div");
+  destMenuCard.className = "room-destmenu-card";
+  destMenuEl.appendChild(destMenuCard);
+  container.appendChild(destMenuEl);
+  let destMenuOpen = false;
+  let destSel = 0;
+  let destOptions: DestinationOption[] = [];
+
+  // Teleport flash — a colored circle that blooms IN A CELL. Used by BOTH the menu portal
+  // (levels) and the hub PORTALS, so it exists in every room. Lives in `world` so it tracks
+  // the camera and aligns to the grid; appended after the slime → on top.
+  const flashEl = document.createElement("div");
+  flashEl.className = "room-flash";
+  flashEl.hidden = true;
+  world.append(flashEl);
+  let flashTimer = 0;
+
   // Which settings screen is showing (top menu vs a sub-tab). Closed = settingsEl.hidden.
   let settingsView: "menu" | "controls" | "display" = "menu";
+  // Keybinding capture (rebind) state for the Controls tab.
+  let capture: { action: string; slot: number; buffer: Key[]; timer: number } | null = null;
+  let captureMsg = "";
 
   // -- builders (sub-tabs are rebuilt on navigation) -------------------------
   function settingsLabel(text: string) {
@@ -283,54 +396,72 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
   function buildControls() {
     settingsCard.appendChild(settingsHead("Controls", true));
 
-    // Movement scheme (the selector lives here now).
-    const schemeRow = document.createElement("div");
-    schemeRow.className = "room-settings-schemes";
-    for (const s of SCHEME_ORDER) {
+    // Two scheme SUB-TABS. The selected sub-tab is also the ACTIVE (live) scheme.
+    const tabs = document.createElement("div");
+    tabs.className = "room-settings-schemes";
+    for (const s of SCHEME_TABS) {
       const b = document.createElement("button");
       b.type = "button";
-      b.className = `room-scheme-btn${inputSettings.scheme === s ? " active" : ""}`;
-      b.textContent = SCHEME_LABEL[s];
-      b.onclick = () => { inputSettings.scheme = s; renderSettings(); }; // keys list reflects it live
-      schemeRow.appendChild(b);
+      b.className = `room-scheme-btn${roomSettings.scheme === s ? " active" : ""}`;
+      b.textContent = SCHEME_LABELS[s];
+      b.onclick = () => { roomSettings.scheme = s; captureCancel(); renderSettings(); };
+      tabs.appendChild(b);
+    }
+    settingsCard.append(settingsLabel("Scheme (click to make active & edit)"), tabs);
+
+    if (roomSettings.scheme === "standard") {
+      const note = document.createElement("p");
+      note.className = "room-settings-help-text";
+      note.textContent = "Standard: arrows AND WASD both move you. Click a binding to remap it.";
+      settingsCard.appendChild(note);
     }
 
-    // Key bindings (Move reflects the active scheme).
+    // Editable bindings for the viewed scheme.
     const list = document.createElement("div");
     list.className = "room-controls";
-    const rows: [string, string][] = [
-      ["Move", SCHEME_KEYS[inputSettings.scheme] ?? "—"],
-      ["Pick up / inventory", "I"],
-      ["Place token", "P"],
-      ["Build / Run (stand on it)", "Enter"],
-      ["Debug readout", "`"],
-      ["Settings", "Esc"],
-    ];
-    for (const [action, keys] of rows) {
+    const scheme = roomSettings.scheme;
+    const binds = roomSettings.bindings[scheme];
+    for (const def of actionsFor(scheme)) {
       const row = document.createElement("div");
       row.className = "room-control-row";
-      const a = document.createElement("span");
-      a.textContent = action;
-      const k = document.createElement("kbd");
-      k.className = "room-control-keys";
-      k.textContent = keys;
-      row.append(a, k);
+      const name = document.createElement("span");
+      name.textContent = def.label;
+      const chips = document.createElement("div");
+      chips.className = "room-bind-chips";
+      const slots = binds[def.id] ?? [];
+      slots.forEach((b, slot) => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        const capturing = capture && capture.action === def.id && capture.slot === slot;
+        chip.className = `room-bind-chip${capturing ? " capturing" : ""}`;
+        chip.textContent = capturing ? "press a key…" : bindingGlyph(b);
+        chip.onclick = () => captureStart(def.id, slot);
+        chips.appendChild(chip);
+      });
+      row.append(name, chips);
       list.appendChild(row);
     }
+    settingsCard.append(settingsLabel("Keys — click to remap · Esc cancels"), list);
 
-    const help = document.createElement("p");
-    help.className = "room-settings-help-text";
-    help.textContent =
-      "Walk around with the movement keys. Stand on a word pile and press i to take a word into your inventory. Step into the tinted coding area and press p to lay words out in order — distance from the left wall sets the indent. Press i on a placed word to pick it back up. Then stand on Build and press Enter, then stand on Run.";
+    // Reserved + conflict messages.
+    const msg = document.createElement("p");
+    msg.className = `room-settings-help-text${captureMsg ? " warn" : ""}`;
+    msg.textContent = captureMsg || "Esc is reserved for the menu and can't be bound.";
+    settingsCard.appendChild(msg);
 
     const reset = document.createElement("button");
     reset.type = "button";
     reset.className = "room-settings-reset";
-    reset.textContent = "🧹 Reset Codex";
-    reset.title = "Forget all discovered commands (fresh playthrough)";
-    reset.onclick = () => { resetCodex(); };
-
-    settingsCard.append(settingsLabel("Movement scheme"), schemeRow, settingsLabel("Keys"), list, settingsLabel("How to play"), help, reset);
+    reset.textContent = "🧹 Reset all progress";
+    reset.title = "Erase ALL saved progress: discovered commands AND room unlocks";
+    reset.onclick = () => {
+      // Confirm before wiping — this clears the Codex AND every earned hub unlock.
+      const ok = window.confirm(
+        "Reset all progress?\n\nThis erases EVERYTHING saved: every discovered command AND all room unlocks. This cannot be undone.",
+      );
+      if (ok) resetCodex();
+    };
+    settingsCard.appendChild(reset);
   }
 
   function buildDisplay() {
@@ -351,8 +482,10 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
       b.onclick = () => { roomSettings.roomSize = val; renderSettings(); relayout(); };
       sizeRow.appendChild(b);
     }
+    settingsCard.append(settingsLabel("Room size"), sizeRow);
 
-    // Terminal font: presets + stepper + a LIVE sample line.
+    // Terminal text size — only when this room HAS a terminal (else there's nothing to size).
+    if (!hasTerminal) return;
     const presetRow = document.createElement("div");
     presetRow.className = "room-settings-schemes";
     for (const px of [12, 16, 20, 24]) {
@@ -381,10 +514,7 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
     sample.textContent = '>>> print("hello, world")';
     sample.style.fontSize = `${roomSettings.termFontPx}px`;
 
-    settingsCard.append(
-      settingsLabel("Room size"), sizeRow,
-      settingsLabel("Terminal text size"), presetRow, stepRow, sample,
-    );
+    settingsCard.append(settingsLabel("Terminal text size"), presetRow, stepRow, sample);
   }
 
   /** Render the current settings screen; keep focus on the panel so Esc lands here. */
@@ -398,16 +528,61 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
 
   function setTermFont(px: number) {
     roomSettings.termFontPx = clamp(px, TERM_FONT_MIN, TERM_FONT_MAX);
-    applyTermFont();
+    terminalApi?.applyFont(); // no-op without a terminal
     renderSettings(); // refresh active preset highlight + live sample
+  }
+
+  // --- keybinding capture (manual rebind) ---
+  function captureCancel() {
+    if (capture?.timer) clearTimeout(capture.timer);
+    capture = null;
+  }
+  function captureStart(action: string, slot: number) {
+    captureCancel();
+    capture = { action, slot, buffer: [], timer: 0 };
+    captureMsg = "";
+    renderSettings(); // chip shows "press a key…"
+  }
+  function captureCommit() {
+    if (!capture) return;
+    const { action, slot, buffer } = capture;
+    if (capture.timer) clearTimeout(capture.timer);
+    capture = null;
+    if (!buffer.length) { renderSettings(); return; }
+    const res = rebind(roomSettings.bindings[roomSettings.scheme], action, slot, buffer);
+    if (res.ok) {
+      roomSettings.bindings[roomSettings.scheme] = res.bindings;
+      captureMsg = "";
+    } else if (res.reason === "reserved") {
+      captureMsg = "That key is reserved (Esc). Binding unchanged.";
+    } else if (res.reason === "conflict") {
+      const label = actionsFor(roomSettings.scheme).find((a) => a.id === res.conflictAction)?.label ?? res.conflictAction;
+      captureMsg = `Conflicts with “${label}”. Binding unchanged.`;
+    } else {
+      captureMsg = "No key captured. Binding unchanged.";
+    }
+    renderSettings();
+  }
+  /** Capture keystrokes while a chip is in rebind mode (single commits after a short
+   *  window; a sequence commits at max length; Esc cancels). */
+  function captureKey(e: KeyboardEvent) {
+    if (!capture) return;
+    if (e.key === "Escape") { captureCancel(); captureMsg = "Rebind cancelled."; renderSettings(); return; }
+    capture.buffer.push(normalizeKey(e.key));
+    if (capture.timer) clearTimeout(capture.timer);
+    if (capture.buffer.length >= CAPTURE_MAX) { captureCommit(); return; }
+    capture.timer = window.setTimeout(captureCommit, CAPTURE_WINDOW);
   }
 
   function openSettings() {
     settingsView = "menu";        // always enter at the top menu
+    captureCancel();
+    captureMsg = "";
     settingsEl.hidden = false;
     renderSettings();
   }
   function closeSettings() {
+    captureCancel();
     settingsEl.hidden = true;
     viewport.focus({ preventScroll: true });
   }
@@ -438,6 +613,10 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
    *   plain room        → open settings (second esc, from a forced room-focus state)
    */
   function handleEscape() {
+    if (destMenuOpen) {           // menu portal chooser open → close it, stay in the room
+      closeDestinationMenu();
+      return;
+    }
     if (!settingsEl.hidden) {
       if (settingsView !== "menu") { settingsView = "menu"; renderSettings(); }
       else closeSettings();
@@ -448,7 +627,7 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
       viewport.focus({ preventScroll: true });
       return;
     }
-    if (terminalEl.contains(document.activeElement)) {
+    if (terminalApi?.containsActive()) {
       viewport.focus({ preventScroll: true });
       return;
     }
@@ -464,160 +643,214 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
     openSettings();
   };
   settingsEl.addEventListener("pointerdown", (e) => { if (e.target === settingsEl) closeSettings(); });
-  settingsEl.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.preventDefault(); handleEscape(); } });
+  // Click the backdrop (outside the card) to cancel the destination menu.
+  destMenuEl.addEventListener("pointerdown", (e) => { if (e.target === destMenuEl) closeDestinationMenu(); });
+  settingsEl.addEventListener("keydown", (e) => {
+    if (capture) { e.preventDefault(); e.stopPropagation(); captureKey(e); return; } // rebind grabs all keys
+    if (e.key === "Escape") { e.preventDefault(); handleEscape(); }
+  });
 
-  // --- terminal overlay (MOUSE allowed: dock/pop, drag, resize — window management) ---
-  const terminalEl = document.createElement("div");
-  terminalEl.className = "room-terminal";
-  const termHeader = document.createElement("div");
-  termHeader.className = "room-terminal-header";
-  const termTitle = document.createElement("span");
-  termTitle.className = "room-terminal-title";
-  termTitle.textContent = "terminal";
-  const termToggle = document.createElement("button");
-  termToggle.type = "button";
-  termToggle.className = "room-terminal-toggle";
-  termHeader.append(termTitle, termToggle);
-  const termBody = document.createElement("div");
-  termBody.className = "room-terminal-body";
-  termBody.textContent = ">>> ready";
-  const termResize = document.createElement("div");
-  termResize.className = "room-terminal-resize";
-  const termDockGrip = document.createElement("div"); // top-edge drag to set docked height
-  termDockGrip.className = "room-terminal-dockgrip";
-  terminalEl.append(termDockGrip, termHeader, termBody, termResize);
-  container.appendChild(terminalEl);
-
-  // --- dialogue presenter (shared by both speakers — portrait only, slides in/out) ---
-  const dialogueEl = document.createElement("div");
-  dialogueEl.className = "room-dialogue";
-  dialogueEl.hidden = true;
-  const dlgPortrait = document.createElement("div");
-  dlgPortrait.className = "room-dialogue-portrait";
-  const dlgBox = document.createElement("div");
-  dlgBox.className = "room-dialogue-box";
-  const dlgName = document.createElement("div");
-  dlgName.className = "room-dialogue-name";
-  const dlgText = document.createElement("p");
-  dlgText.className = "room-dialogue-text";
-  const dlgCue = document.createElement("div");
-  dlgCue.className = "room-dialogue-cue";
-  dlgBox.append(dlgName, dlgText, dlgCue);
-  dialogueEl.append(dlgPortrait, dlgBox);
-  container.appendChild(dialogueEl);
-
-  function applyTermFont() {
-    termBody.style.fontSize = `${roomSettings.termFontPx}px`;
+  // --- terminal FEATURE (gated): docked/popped overlay + its drag/resize handlers.
+  // Built ONLY when declared; otherwise no DOM and no listeners exist. The rest of the
+  // renderer touches it through this small API (all calls are `terminalApi?.…`). ---
+  interface TerminalApi {
+    containsActive(): boolean;                         // is focus inside the terminal? (esc routing)
+    applyMode(): void;                                 // docked vs popped visuals
+    applyFont(): void;                                 // terminal text size
+    clampAndPlace(): void;                             // keep a popped window on-screen (relayout)
+    layoutDocked(): void;                              // write the docked band geometry (applyViewport)
+    write(lines: string[], state: "neutral" | "success" | "error"): void; // body transcript
   }
 
-  /** Keep the popped window fully inside the game window (clamps size, then position). */
-  function clampTerminal() {
-    const W = container.clientWidth, H = window.innerHeight;
-    terminal.w = clamp(terminal.w, TERM_MIN_W, W);
-    terminal.h = clamp(terminal.h, TERM_MIN_H, H);
-    terminal.x = clamp(terminal.x, 0, Math.max(0, W - terminal.w));
-    terminal.y = clamp(terminal.y, 0, Math.max(0, H - terminal.h));
+  function buildTerminal(): TerminalApi {
+    const terminalEl = document.createElement("div");
+    terminalEl.className = "room-terminal";
+    const termHeader = document.createElement("div");
+    termHeader.className = "room-terminal-header";
+    const termTitle = document.createElement("span");
+    termTitle.className = "room-terminal-title";
+    termTitle.textContent = "terminal";
+    const termToggle = document.createElement("button");
+    termToggle.type = "button";
+    termToggle.className = "room-terminal-toggle";
+    termHeader.append(termTitle, termToggle);
+    const termBody = document.createElement("div");
+    termBody.className = "room-terminal-body";
+    termBody.textContent = ">>> ready";
+    const termResize = document.createElement("div");
+    termResize.className = "room-terminal-resize";
+    const termDockGrip = document.createElement("div"); // top-edge drag to set docked height
+    termDockGrip.className = "room-terminal-dockgrip";
+    terminalEl.append(termDockGrip, termHeader, termBody, termResize);
+    container.appendChild(terminalEl);
+
+    function applyTermFont() {
+      termBody.style.fontSize = `${roomSettings.termFontPx}px`;
+    }
+    /** Keep the popped window fully inside the game window (clamps size, then position). */
+    function clampTerminal() {
+      const W = container.clientWidth, H = window.innerHeight;
+      terminal.w = clamp(terminal.w, TERM_MIN_W, W);
+      terminal.h = clamp(terminal.h, TERM_MIN_H, H);
+      terminal.x = clamp(terminal.x, 0, Math.max(0, W - terminal.w));
+      terminal.y = clamp(terminal.y, 0, Math.max(0, H - terminal.h));
+    }
+    /** Write the popped geometry onto the element. */
+    function placePopped() {
+      terminalEl.style.left = `${terminal.x}px`;
+      terminalEl.style.top = `${terminal.y}px`;
+      terminalEl.style.width = `${terminal.w}px`;
+      terminalEl.style.height = `${terminal.h}px`;
+    }
+    /** Apply the docked-vs-popped visual mode (geometry for docked is set in applyViewport). */
+    function applyTerminalMode() {
+      const popped = terminal.mode === "popped";
+      terminalEl.classList.toggle("popped", popped);
+      terminalEl.classList.toggle("docked", !popped);
+      termToggle.textContent = popped ? "▭ dock" : "◳ pop out";
+      termResize.hidden = !popped;     // corner grip = popped only
+      termDockGrip.hidden = popped;    // top edge grip = docked only
+      if (popped) { clampTerminal(); placePopped(); }
+    }
+
+    // Toggle dock/pop — camera-only reflow; MUST NOT call relayout (no tile change → no breathing).
+    termToggle.onclick = () => {
+      terminal.mode = terminal.mode === "docked" ? "popped" : "docked";
+      applyTerminalMode();
+      applyViewport();
+      viewport.focus({ preventScroll: true });
+    };
+
+    // Drag by the header (popped only).
+    let drag: { px: number; py: number; x: number; y: number } | null = null;
+    termHeader.addEventListener("pointerdown", (e) => {
+      if (terminal.mode !== "popped" || e.target === termToggle) return;
+      drag = { px: e.clientX, py: e.clientY, x: terminal.x, y: terminal.y };
+      termHeader.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    termHeader.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      const W = container.clientWidth, H = window.innerHeight;
+      terminal.x = clamp(drag.x + (e.clientX - drag.px), 0, Math.max(0, W - terminal.w));
+      terminal.y = clamp(drag.y + (e.clientY - drag.py), 0, Math.max(0, H - terminal.h));
+      placePopped();
+    });
+    const endDrag = (e: PointerEvent) => {
+      if (!drag) return;
+      drag = null;
+      termHeader.releasePointerCapture(e.pointerId);
+      viewport.focus({ preventScroll: true });
+    };
+    termHeader.addEventListener("pointerup", endDrag);
+    termHeader.addEventListener("pointercancel", endDrag);
+
+    // Resize by the corner (popped only); grows right/down, clamped to the window edge.
+    let rez: { px: number; py: number; w: number; h: number } | null = null;
+    termResize.addEventListener("pointerdown", (e) => {
+      if (terminal.mode !== "popped") return;
+      rez = { px: e.clientX, py: e.clientY, w: terminal.w, h: terminal.h };
+      termResize.setPointerCapture(e.pointerId);
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    termResize.addEventListener("pointermove", (e) => {
+      if (!rez) return;
+      const W = container.clientWidth, H = window.innerHeight;
+      terminal.w = clamp(rez.w + (e.clientX - rez.px), TERM_MIN_W, W - terminal.x);
+      terminal.h = clamp(rez.h + (e.clientY - rez.py), TERM_MIN_H, H - terminal.y);
+      placePopped();
+    });
+    const endRez = (e: PointerEvent) => {
+      if (!rez) return;
+      rez = null;
+      termResize.releasePointerCapture(e.pointerId);
+      viewport.focus({ preventScroll: true });
+    };
+    termResize.addEventListener("pointerup", endRez);
+    termResize.addEventListener("pointercancel", endRez);
+
+    // Drag the docked band's TOP edge up/down to set its height (docked only). This is
+    // a camera crop — it changes how many room rows are visible, NEVER the tile size.
+    let dockRez: { py: number; h: number } | null = null;
+    termDockGrip.addEventListener("pointerdown", (e) => {
+      if (terminal.mode !== "docked") return;
+      dockRez = { py: e.clientY, h: terminal.dockedH };
+      termDockGrip.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    termDockGrip.addEventListener("pointermove", (e) => {
+      if (!dockRez) return;
+      const maxH = Math.max(TERM_DOCK_MIN_H, fullH - tile); // keep at least one room row visible
+      terminal.dockedH = clamp(dockRez.h + (dockRez.py - e.clientY), TERM_DOCK_MIN_H, maxH); // up = taller
+      applyViewport(); // camera-only; tile unchanged → no breathing
+    });
+    const endDockRez = (e: PointerEvent) => {
+      if (!dockRez) return;
+      dockRez = null;
+      termDockGrip.releasePointerCapture(e.pointerId);
+      viewport.focus({ preventScroll: true });
+    };
+    termDockGrip.addEventListener("pointerup", endDockRez);
+    termDockGrip.addEventListener("pointercancel", endDockRez);
+
+    return {
+      containsActive: () => terminalEl.contains(document.activeElement),
+      applyMode: applyTerminalMode,
+      applyFont: applyTermFont,
+      clampAndPlace: () => { clampTerminal(); if (terminal.mode === "popped") placePopped(); },
+      layoutDocked: () => {
+        terminalEl.style.left = "0px";
+        terminalEl.style.top = `${window.innerHeight - terminal.dockedH}px`;
+        terminalEl.style.width = `${container.clientWidth}px`;
+        terminalEl.style.height = `${terminal.dockedH}px`;
+      },
+      write: (lines, state) => {
+        termBody.textContent = lines.join("\n");
+        termBody.classList.toggle("term-success", state === "success");
+        termBody.classList.toggle("term-error", state === "error");
+      },
+    };
   }
 
-  /** Write the popped geometry onto the element. */
-  function placePopped() {
-    terminalEl.style.left = `${terminal.x}px`;
-    terminalEl.style.top = `${terminal.y}px`;
-    terminalEl.style.width = `${terminal.w}px`;
-    terminalEl.style.height = `${terminal.h}px`;
+  let terminalApi: TerminalApi | null = null;
+  if (hasTerminal) terminalApi = buildTerminal();
+
+  // --- dialogue surfaces -----------------------------------------------------
+  // PORTRAIT path (a defined character — snake/hint — in a terminal room): avatar + name
+  // + text, anchored to the terminal. NARRATOR path (default voice, any room): bare
+  // transient text, no avatar/name. A beat routes by speaker (see showBeat).
+  let dialogueEl: HTMLDivElement | null = null;
+  let dlgPortrait: HTMLDivElement | null = null;
+  let dlgName: HTMLDivElement | null = null;
+  let dlgText: HTMLParagraphElement | null = null;
+  let dlgCue: HTMLDivElement | null = null;
+  if (hasTerminal) {
+    dialogueEl = document.createElement("div");
+    dialogueEl.className = "room-dialogue";
+    dialogueEl.hidden = true;
+    dlgPortrait = document.createElement("div");
+    dlgPortrait.className = "room-dialogue-portrait";
+    const dlgBox = document.createElement("div");
+    dlgBox.className = "room-dialogue-box";
+    dlgName = document.createElement("div");
+    dlgName.className = "room-dialogue-name";
+    dlgText = document.createElement("p");
+    dlgText.className = "room-dialogue-text";
+    dlgCue = document.createElement("div");
+    dlgCue.className = "room-dialogue-cue";
+    dlgBox.append(dlgName, dlgText, dlgCue);
+    dialogueEl.append(dlgPortrait, dlgBox);
+    container.appendChild(dialogueEl);
   }
 
-  /** Apply the docked-vs-popped visual mode (geometry for docked is set in applyViewport). */
-  function applyTerminalMode() {
-    const popped = terminal.mode === "popped";
-    terminalEl.classList.toggle("popped", popped);
-    terminalEl.classList.toggle("docked", !popped);
-    termToggle.textContent = popped ? "▭ dock" : "◳ pop out";
-    termResize.hidden = !popped;     // corner grip = popped only
-    termDockGrip.hidden = popped;    // top edge grip = docked only
-    if (popped) { clampTerminal(); placePopped(); }
-  }
-
-  // Toggle dock/pop — camera-only reflow; MUST NOT call relayout (no tile change → no breathing).
-  termToggle.onclick = () => {
-    terminal.mode = terminal.mode === "docked" ? "popped" : "docked";
-    applyTerminalMode();
-    applyViewport();
-    viewport.focus({ preventScroll: true });
-  };
-
-  // Drag by the header (popped only).
-  let drag: { px: number; py: number; x: number; y: number } | null = null;
-  termHeader.addEventListener("pointerdown", (e) => {
-    if (terminal.mode !== "popped" || e.target === termToggle) return;
-    drag = { px: e.clientX, py: e.clientY, x: terminal.x, y: terminal.y };
-    termHeader.setPointerCapture(e.pointerId);
-    e.preventDefault();
-  });
-  termHeader.addEventListener("pointermove", (e) => {
-    if (!drag) return;
-    const W = container.clientWidth, H = window.innerHeight;
-    terminal.x = clamp(drag.x + (e.clientX - drag.px), 0, Math.max(0, W - terminal.w));
-    terminal.y = clamp(drag.y + (e.clientY - drag.py), 0, Math.max(0, H - terminal.h));
-    placePopped();
-  });
-  const endDrag = (e: PointerEvent) => {
-    if (!drag) return;
-    drag = null;
-    termHeader.releasePointerCapture(e.pointerId);
-    viewport.focus({ preventScroll: true });
-  };
-  termHeader.addEventListener("pointerup", endDrag);
-  termHeader.addEventListener("pointercancel", endDrag);
-
-  // Resize by the corner (popped only); grows right/down, clamped to the window edge.
-  let rez: { px: number; py: number; w: number; h: number } | null = null;
-  termResize.addEventListener("pointerdown", (e) => {
-    if (terminal.mode !== "popped") return;
-    rez = { px: e.clientX, py: e.clientY, w: terminal.w, h: terminal.h };
-    termResize.setPointerCapture(e.pointerId);
-    e.preventDefault();
-    e.stopPropagation();
-  });
-  termResize.addEventListener("pointermove", (e) => {
-    if (!rez) return;
-    const W = container.clientWidth, H = window.innerHeight;
-    terminal.w = clamp(rez.w + (e.clientX - rez.px), TERM_MIN_W, W - terminal.x);
-    terminal.h = clamp(rez.h + (e.clientY - rez.py), TERM_MIN_H, H - terminal.y);
-    placePopped();
-  });
-  const endRez = (e: PointerEvent) => {
-    if (!rez) return;
-    rez = null;
-    termResize.releasePointerCapture(e.pointerId);
-    viewport.focus({ preventScroll: true });
-  };
-  termResize.addEventListener("pointerup", endRez);
-  termResize.addEventListener("pointercancel", endRez);
-
-  // Drag the docked band's TOP edge up/down to set its height (docked only). This is
-  // a camera crop — it changes how many room rows are visible, NEVER the tile size.
-  let dockRez: { py: number; h: number } | null = null;
-  termDockGrip.addEventListener("pointerdown", (e) => {
-    if (terminal.mode !== "docked") return;
-    dockRez = { py: e.clientY, h: terminal.dockedH };
-    termDockGrip.setPointerCapture(e.pointerId);
-    e.preventDefault();
-  });
-  termDockGrip.addEventListener("pointermove", (e) => {
-    if (!dockRez) return;
-    const maxH = Math.max(TERM_DOCK_MIN_H, fullH - tile); // keep at least one room row visible
-    terminal.dockedH = clamp(dockRez.h + (dockRez.py - e.clientY), TERM_DOCK_MIN_H, maxH); // up = taller
-    applyViewport(); // camera-only; tile unchanged → no breathing
-  });
-  const endDockRez = (e: PointerEvent) => {
-    if (!dockRez) return;
-    dockRez = null;
-    termDockGrip.releasePointerCapture(e.pointerId);
-    viewport.focus({ preventScroll: true });
-  };
-  termDockGrip.addEventListener("pointerup", endDockRez);
-  termDockGrip.addEventListener("pointercancel", endDockRez);
+  // Narrator: the DEFAULT voice surface (text only, no avatar/name). Always available —
+  // it's the minimal text surface for rooms without a character (e.g. the hub). Placeholder;
+  // real per-puzzle-type voices come later.
+  const narratorEl = document.createElement("div");
+  narratorEl.className = "room-narrator";
+  narratorEl.hidden = true;
+  container.appendChild(narratorEl);
 
   // -------------------------------------------------------------------------
   // Sizing
@@ -656,11 +889,12 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
     buildTiles();
     drawCodingZone();
     buildControlsLayer();
+    buildDoors();
+    buildMenuPortal();
     buildMarkers();
     buildPiles();
     drawPlaced();
-    clampTerminal();                              // keep a popped window on-screen after resize
-    if (terminal.mode === "popped") placePopped();
+    terminalApi?.clampAndPlace();                 // keep a popped window on-screen after resize
     applyViewport();
   }
 
@@ -671,7 +905,8 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
    */
   function applyViewport() {
     const top = stage.getBoundingClientRect().top;
-    const docked = terminal.mode === "docked";
+    // No terminal → nothing crops the camera, so the room uses the full height.
+    const docked = !!terminalApi && terminal.mode === "docked";
     // Docked steals dockedH from the visible height (camera crop); popped steals none.
     const effH = docked ? Math.max(tile, fullH - terminal.dockedH) : fullH;
 
@@ -689,13 +924,8 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
     // stack is: room → GAP → HUD → GAP → (dock | window edge), so the gap is consistent.
     invStrip.style.top = `${top + effH - HUD_H - HUD_GAP}px`;
 
-    if (docked) {
-      // Band anchored to the WINDOW bottom, full width; the HUD sits a GAP above it.
-      terminalEl.style.left = "0px";
-      terminalEl.style.top = `${window.innerHeight - terminal.dockedH}px`;
-      terminalEl.style.width = `${container.clientWidth}px`;
-      terminalEl.style.height = `${terminal.dockedH}px`;
-    }
+    // Band anchored to the WINDOW bottom, full width; the HUD sits a GAP above it.
+    if (docked) terminalApi!.layoutDocked();
     positionDialogue(); // keep the portrait anchored to the terminal across dock/resize
     draw();
   }
@@ -705,18 +935,19 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
    * flush near the TOP (no room above it), render INSIDE the band so it's never clipped.
    */
   function positionDialogue() {
-    if (dialogueEl.hidden) return;
+    const el = dialogueEl;                     // portrait surface — terminal rooms only
+    if (!el || el.hidden) return;
     const areaTop = stage.getBoundingClientRect().top; // room area top (below the top bar)
-    const portH = dialogueEl.offsetHeight || 140;
+    const portH = el.offsetHeight || 140;
     if (terminal.mode === "docked") {
       const bandTop = window.innerHeight - terminal.dockedH;
       const inside = bandTop - areaTop < portH + 16; // not enough room above → go inside the band
-      dialogueEl.classList.toggle("inside-terminal", inside);
-      dialogueEl.style.top = `${inside ? bandTop + 8 : bandTop - portH - 8}px`;
+      el.classList.toggle("inside-terminal", inside);
+      el.style.top = `${inside ? bandTop + 8 : bandTop - portH - 8}px`;
     } else {
       // Popped: the band isn't reserving the bottom, so float just above the HUD.
-      dialogueEl.classList.remove("inside-terminal");
-      dialogueEl.style.top = `${window.innerHeight - HUD_H - HUD_GAP - portH - 8}px`;
+      el.classList.remove("inside-terminal");
+      el.style.top = `${window.innerHeight - HUD_H - HUD_GAP - portH - 8}px`;
     }
   }
 
@@ -735,8 +966,10 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
     }
   }
 
-  /** Position the tinted coding-area zone (a single rectangle over those cells). */
+  /** Position the tinted coding-area zone (a single rectangle over those cells). No-op
+   *  when the coding_area feature is off (the element was never created). */
   function drawCodingZone() {
+    if (!zoneEl) return;
     const a = room.codingArea;
     if (!a) { zoneEl.hidden = true; return; }
     zoneEl.hidden = false;
@@ -745,8 +978,10 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
     zoneEl.style.transform = `translate(${a.x * tile}px, ${a.y * tile}px)`;
   }
 
-  /** (Re)build the Build / Run objects: labeled tiles, distinct from piles/tokens. */
+  /** (Re)build the Build / Run objects: labeled tiles, distinct from piles/tokens. No-op
+   *  when the coding_area feature is off (no layer, no controls). */
   function buildControlsLayer() {
+    if (!controlLayer) return;
     controlLayer.innerHTML = "";
     for (const c of controls) {
       const el = document.createElement("div");
@@ -761,6 +996,41 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
       el.appendChild(label);
       controlLayer.appendChild(el);
     }
+  }
+
+  /** (Re)build the hub PORTALS (same swirly look as the menu portal, plus a label). The
+   *  EFFECTIVE state (resolved against earned unlocks) drives the look: open = active
+   *  swirl, locked/coming_soon = a dimmed pad with a lock / construction glyph. */
+  function buildDoors() {
+    doorLayer.innerHTML = "";
+    for (const d of doors) {
+      const state = effectiveDoorState(d, unlocks);
+      const el = document.createElement("div");
+      el.className = `tile-room tile-portal tile-portal-${state}`;
+      el.style.width = `${tile}px`;
+      el.style.height = `${tile}px`;
+      el.style.transform = `translate(${d.pos.x * tile}px, ${d.pos.y * tile}px)`;
+      const glyph = document.createElement("span");
+      glyph.className = "tile-portal-glyph";
+      glyph.textContent = state === "open" ? "🌀" : state === "locked" ? "🔒" : "🚧";
+      glyph.style.fontSize = `${Math.round(tile * 0.42)}px`;
+      const label = document.createElement("span");
+      label.className = "tile-portal-label";
+      label.textContent = d.label;
+      label.style.fontSize = `${Math.round(tile * 0.2)}px`;
+      el.append(glyph, label);
+      doorLayer.appendChild(el);
+    }
+  }
+
+  /** Size + position the persistent menu portal at spawn (level rooms only). */
+  function buildMenuPortal() {
+    if (!menuPortalEl || !menuPortalCell) return;
+    menuPortalEl.style.width = `${tile}px`;
+    menuPortalEl.style.height = `${tile}px`;
+    menuPortalEl.style.transform = `translate(${menuPortalCell.x * tile}px, ${menuPortalCell.y * tile}px)`;
+    menuPortalEl.style.fontSize = `${Math.round(tile * 0.5)}px`;
+    menuPortalEl.textContent = "🌀";
   }
 
   /** (Re)build the hint giver's "?" marker (the snake has none — it's portrait-only). */
@@ -798,7 +1068,7 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
       const label = document.createElement("span");
       label.className = "tile-pile-label";
       label.textContent = pile.token;
-      label.style.fontSize = `${Math.round(tile * 0.32)}px`;
+      label.style.fontSize = `${Math.round(tile * 0.25)}px`;
       p.appendChild(label);
       pileLayer.appendChild(p);
     }
@@ -819,9 +1089,52 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
     drawDebug(); // current-row readout depends on where the player is standing
   }
 
+  /** Bloom the teleport flash in a CELL, in `color`, then run `onDone` (~flash duration).
+   *  No-op-but-still-calls-onDone when there's no flash element (keeps callers' order intact). */
+  function playFlash(cell: Cell, color: string, onDone?: () => void) {
+    if (flashTimer) { clearTimeout(flashTimer); flashTimer = 0; }
+    if (!flashEl) { onDone?.(); return; }
+    flashEl.style.setProperty("--flash", color);
+    flashEl.style.width = `${tile}px`;
+    flashEl.style.height = `${tile}px`;
+    flashEl.style.left = `${cell.x * tile}px`;
+    flashEl.style.top = `${cell.y * tile}px`;
+    flashEl.hidden = false;
+    flashEl.classList.remove("shown");
+    requestAnimationFrame(() => flashEl.classList.add("shown")); // restart the bloom animation
+    flashTimer = window.setTimeout(() => {
+      flashEl.classList.remove("shown");
+      flashEl.hidden = true;
+      flashTimer = 0;
+      onDone?.();
+    }, 380);
+  }
+
+  /** HUB ARRIVAL — the one TRANSIENT portal. A red pad appears at the spawn, flashes; then
+   *  the slime hops off into open space and the pad self-consumes. The permanent hub
+   *  portals are untouched. */
+  function playHubArrival(color: string) {
+    const portal = document.createElement("div");
+    portal.className = "tile-room tile-portal tile-portal-transient"; // under the slime (z-index)
+    portal.style.width = `${tile}px`;
+    portal.style.height = `${tile}px`;
+    portal.style.transform = `translate(${room.spawn.x * tile}px, ${room.spawn.y * tile}px)`;
+    portal.style.fontSize = `${Math.round(tile * 0.5)}px`;
+    portal.textContent = "🌀";
+    world.append(portal);
+    playFlash(room.spawn, color, () => {
+      // slime hops off the portal cell into the first open neighbor, then the pad vanishes
+      for (const dir of [MOVE.down, MOVE.right, MOVE.left, MOVE.up]) {
+        const next = step(room, pos, dir);
+        if (next.x !== pos.x || next.y !== pos.y) { pos = next; draw(); break; }
+      }
+      portal.remove(); // self-consume — the transient portal is gone
+    });
+  }
+
   /** Placed tokens on a given row, left-to-right (the "line" for that row). */
   function lineOnRow(y: number): Placed[] {
-    return placed.filter((p) => p.y === y).sort((a, b) => a.x - b.x);
+    return tokensOnRow(placed, y);
   }
 
   /** Indent = leftmost placed column on the row minus the coding area's left edge. */
@@ -841,6 +1154,7 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
       t.style.transform = `translate(${p.x * tile}px, ${p.y * tile}px)`;
       const label = document.createElement("span");
       label.className = "tile-pile-label";
+      label.style.fontSize = `${Math.round(tile * 0.25)}px`;
       label.textContent = p.token;
       t.appendChild(label);
       placedLayer.appendChild(t);
@@ -861,12 +1175,11 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
   // Build / Run — order-check against the pack answer (NO execution; see codeGameLogic)
   // -------------------------------------------------------------------------
 
-  /** The single line under construction: the first occupied row's tokens + its indent. */
-  function currentLine(): { content: string[]; indent: number } {
-    const rows = [...new Set(placed.map((p) => p.y))].sort((a, b) => a - b);
-    if (!rows.length) return { content: [], indent: 0 };
-    const row = lineOnRow(rows[0]);
-    return { content: row.map((p) => p.token), indent: indentOnRow(rows[0]) ?? 0 };
+  /** The program Build/Run evaluates: EVERY occupied row inside the coding area (placement
+   *  is free, but tokens outside the zone are silently ignored). More than the answer's
+   *  lines → extra code, which fails (see checkProgram). */
+  function currentProgram() {
+    return evaluatedLines(placed, room.codingArea);
   }
 
   /** Placing/removing a token re-dirties the line (must Build again before Run). */
@@ -877,27 +1190,40 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
 
   /** Echo flavor text into the EXISTING terminal (nothing executes). */
   function termSet(lines: string[], state: "neutral" | "success" | "error") {
-    termBody.textContent = lines.join("\n");
-    termBody.classList.toggle("term-success", state === "success");
-    termBody.classList.toggle("term-error", state === "error");
+    terminalApi?.write(lines, state); // no terminal → nowhere to echo (no-op)
   }
 
   function doBuild() {
     buildState = markBuilt(buildState);
     termSet([termCmds.build, "compiled main.py ✓ — ready to Run"], "neutral");
     drawDebug();
+    fireFirstTime("first_build"); // Build always succeeds → first Build is the first successful one
   }
 
   function doRun() {
-    const line = currentLine();
-    const res = runProgram(buildState, line.content, line.indent, answer);
+    const res = runProgram(buildState, currentProgram(), answer);
     // Terminal = pretend shell transcript (flavor); the SNAKE portrait delivers the beat.
     if (res.ok) {
       termSet([termCmds.run, solution.output], "success");
     } else {
-      termSet([termCmds.run, res.reason === "build-first" ? "error: nothing built" : "(no output)"], "error");
+      const err =
+        res.reason === "build-first" ? "error: nothing built" :
+        res.reason === "extra-code" ? "error: unexpected extra code" : "(no output)";
+      termSet([termCmds.run, err], "error");
     }
-    const b = snakeBeat(res.ok ? "success" : (res.reason as CheckReason));
+    if (res.ok) {
+      callbacks.onSolved?.(puzzle); // may earn an unlock (e.g. open the next door in the hub)
+      const b = snakeBeat("success");
+      if (b) playSequence([b]);
+      return;
+    }
+    // A first-time teaching beat (run-before-build, or the first wrong order) takes
+    // precedence the FIRST time it happens; afterwards the normal reason beat plays.
+    const firstTrigger =
+      res.reason === "build-first" ? "first_run_no_build" :
+      res.reason === "wrong-order" ? "first_wrong_order" : null;
+    if (firstTrigger && fireFirstTime(firstTrigger)) return;
+    const b = snakeBeat(res.reason as CheckReason);
     if (b) playSequence([b]);
   }
 
@@ -921,41 +1247,61 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
     if (!seq.length) return;
     dialogueQueue = seq;
     dialogueIdx = 0;
-    dialogueEl.hidden = false;
     showBeat();
   }
 
+  /** Route a beat to a surface: a defined character (snake/hint) in a terminal room uses
+   *  the PORTRAIT path; everything else (speaker "narrator", or no defined character) uses
+   *  the bare NARRATOR text surface. */
   function showBeat() {
     clearDialogueTimers();
     const beat = dialogueQueue[dialogueIdx];
     const sp = speakers[beat.speaker];
-    const side = sp?.side === "right" ? "right" : "left";
-    const frame1 = sp?.portrait ?? "💬";
-    const frame2 = sp?.portrait2;
-    dialogueEl.classList.toggle("from-right", side === "right");
-    dialogueEl.classList.toggle("from-left", side !== "right");
-    dlgPortrait.textContent = frame1;
-    dlgPortrait.classList.add("talking");
-    dlgName.textContent = sp?.name ?? beat.speaker;
-    dlgText.textContent = beat.text;
+    if (sp && dialogueEl && dlgPortrait && dlgName && dlgText && dlgCue) showPortraitBeat(beat, sp);
+    else showNarratorBeat(beat);
+  }
+
+  function showPortraitBeat(beat: DialogueBeat, sp: DialogueSpeaker) {
+    const el = dialogueEl!, portrait = dlgPortrait!, name = dlgName!, text = dlgText!, cue = dlgCue!;
+    el.hidden = false;
+    const side = sp.side === "right" ? "right" : "left";
+    const frame1 = sp.portrait ?? "💬";
+    const frame2 = sp.portrait2;
+    el.classList.toggle("from-right", side === "right");
+    el.classList.toggle("from-left", side !== "right");
+    portrait.textContent = frame1;
+    portrait.classList.add("talking");
+    name.textContent = sp.name ?? beat.speaker;
+    text.textContent = beat.text;
     highlightMarker(beat.highlight === "hint"); // outline the "?" on the relevant enter beat
 
     positionDialogue();
-    requestAnimationFrame(() => dialogueEl.classList.add("shown")); // slide in
+    requestAnimationFrame(() => el.classList.add("shown")); // slide in
 
     // Optional talking-mouth flicker between two frames (one frame is fine).
     if (frame2 && frame2 !== frame1) {
       let alt = false;
       talkTimer = window.setInterval(() => {
         alt = !alt;
-        dlgPortrait.textContent = alt ? frame2 : frame1;
+        portrait.textContent = alt ? frame2 : frame1;
       }, 220);
     }
 
     // Advance mode: explicit autoAdvance wins; else short text auto-advances (length fallback).
     const auto = beat.autoAdvance === true || (beat.autoAdvance === undefined && beat.text.length < AUTO_LEN);
-    dlgCue.textContent = auto ? "" : "Enter ▸";
+    cue.textContent = auto ? "" : "Enter ▸";
     if (auto) autoTimer = window.setTimeout(advanceDialogue, AUTO_PAUSE);
+  }
+
+  /** The narrator surface: transient text over the room, no avatar/name. Always
+   *  auto-advances (with Enter able to skip via the dialogue keydown branch). */
+  function showNarratorBeat(beat: DialogueBeat) {
+    narratorEl.textContent = beat.text;
+    narratorEl.hidden = false;
+    requestAnimationFrame(() => narratorEl.classList.add("shown"));
+    // Readable dwell that scales a little with length, then it clears itself.
+    const dwell = Math.min(4000, Math.max(AUTO_PAUSE, beat.text.length * 45));
+    autoTimer = window.setTimeout(advanceDialogue, dwell);
   }
 
   function advanceDialogue() {
@@ -970,17 +1316,38 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
     dialogueIdx = -1;
     dialogueQueue = [];
     highlightMarker(false);
-    dlgPortrait.classList.remove("talking");
-    dialogueEl.classList.remove("shown"); // slide out
-    window.setTimeout(() => { if (dialogueIdx === -1) dialogueEl.hidden = true; }, 260);
+    if (dialogueEl && dlgPortrait) {
+      dlgPortrait.classList.remove("talking");
+      dialogueEl.classList.remove("shown"); // slide out
+      const el = dialogueEl;
+      window.setTimeout(() => { if (dialogueIdx === -1) el.hidden = true; }, 260);
+    }
+    narratorEl.classList.remove("shown");
+    window.setTimeout(() => { if (dialogueIdx === -1) narratorEl.hidden = true; }, 260);
     viewport.focus({ preventScroll: true });
   }
 
-  /** Wrap a phase-4 run reason ("build-first"/…/"success") as a SNAKE portrait beat. */
+  /** Wrap a beats-map entry (a run reason like "build-first"/"success", or a "first_*"
+   *  first-time trigger) as a SNAKE portrait beat. Returns null if the pack didn't
+   *  define text for it. */
   function snakeBeat(reason: string): DialogueBeat | null {
     const text = beats[reason];
     if (!text) return null;
-    return { id: `run-${reason}`, speaker: "snake", text, trigger: reason };
+    return { id: `beat-${reason}`, speaker: "snake", text, trigger: reason };
+  }
+
+  /** Fire a one-shot first-time tutorial beat the FIRST time `trigger` happens this
+   *  room-load, then never again. Reuses the existing dialogue presenter — a `first_*`
+   *  beat is just a beat with a first-time trigger. No-op (and harmless) when the pack
+   *  defines no such beat, so non-tutorial rooms are unaffected. Returns true iff a beat
+   *  actually played, so callers can suppress a competing normal beat (run/build-first). */
+  function fireFirstTime(trigger: string): boolean {
+    if (firedFirstTimes.has(trigger)) return false;
+    firedFirstTimes.add(trigger); // mark on first occurrence, whether or not a beat exists
+    const b = snakeBeat(trigger);
+    if (!b) return false;
+    playSequence([b]);
+    return true;
   }
 
   /** Hint giver: shows the NEXT hint per interaction, capped at the last. Tags ignored. */
@@ -996,18 +1363,12 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
   function drawInventory() {
     invStrip.classList.toggle("focused", invFocused); // brightening = the real focus signal
     invStrip.innerHTML = "";
-    const label = document.createElement("span");
-    label.className = "room-inventory-label";
-    label.textContent = invDrop
-      ? "Full! ← → pick a slot · Enter drop · Esc cancel"
-      : `Inventory ${inventory.length}/${invSlots}`;
-    invStrip.appendChild(label);
     for (let s = 0; s < invSlots; s++) {
       const slot = document.createElement("span");
       const filled = s < inventory.length;
       const selected = invFocused && s === invSel;
       slot.className = `room-inventory-slot${filled ? "" : " empty"}${selected ? " selected" : ""}`;
-      slot.textContent = filled ? inventory[s] : "·";
+      slot.textContent = filled ? inventory[s] : "";
       invStrip.appendChild(slot);
     }
   }
@@ -1033,6 +1394,8 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
     if (inventory.length >= invSlots) { enterDrop(token, null); return; }
     inventory.push(token);
     drawInventory();
+    fireFirstTime("first_pickup");
+    if (inventory.length >= invSlots) fireFirstTime("first_inventory_full");
   }
 
   /** Pick a placed token back into inventory; if full, the same drop/cancel flow (the
@@ -1052,17 +1415,18 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
     dirtyLine();
   }
 
-  /** Place inventory[index] into an empty coding-area cell here (CONSUMED, one-use). */
+  /** Place inventory[index] onto ANY empty cell here (CONSUMED, one-use). Placement is
+   *  free anywhere in the room; only the coding-area region is read by Build/Run. */
   function placeToken(index: number) {
     if (index < 0 || index >= inventory.length) return; // empty slot → nothing to place
-    if (!inCodingArea(room, pos.x, pos.y)) return;        // only inside the coding area
-    if (placedAt(pos.x, pos.y) || pileAt(room, pos.x, pos.y) || controlAt(pos.x, pos.y)) return; // cell must be empty
+    if (placedAt(pos.x, pos.y) || pileAt(room, pos.x, pos.y) || controlAt(pos.x, pos.y)) return; // empty, non-pile cell (the player only ever stands on floor)
     const [token] = inventory.splice(index, 1);
     placed.push({ token, x: pos.x, y: pos.y });
     invSel = clamp(invSel, 0, Math.max(0, inventory.length - 1));
     drawInventory();
     drawPlaced();
     dirtyLine(); // a freshly placed token → line is dirty until Built
+    fireFirstTime("first_place");
   }
 
   /** 'i': pile/placed here → pick up; otherwise toggle room ↔ inventory focus. */
@@ -1091,9 +1455,136 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
     drawInventory();
   }
 
-  // ONE focus-aware input handler. Arrows mean slime-move OR slot-cursor depending on
-  // `invFocused`; 'i'/'p' are context-decided; esc routes to the single esc ladder.
-  viewport.addEventListener("keydown", (e) => {
+  // --- action dispatch (bindings-driven; one mechanism for keys AND sequences) ---
+  const activeBindings = (): Bindings => roomSettings.bindings[roomSettings.scheme];
+  let pendingKeys: Key[] = []; // buffered keys of an in-progress sequence (e.g. d…)
+  let seqTimer = 0;
+  function clearPending() {
+    pendingKeys = [];
+    if (seqTimer) { clearTimeout(seqTimer); seqTimer = 0; }
+  }
+  function armPendingTimer() {
+    if (seqTimer) clearTimeout(seqTimer);
+    seqTimer = window.setTimeout(() => { pendingKeys = []; seqTimer = 0; }, SEQ_WINDOW);
+  }
+
+  function moveOrCursor(dir: { dx: number; dy: number }) {
+    if (invFocused) {
+      if (dir.dx < 0 || dir.dy < 0) invSel = Math.max(0, invSel - 1);
+      else invSel = Math.min(invSlots - 1, invSel + 1);
+      drawInventory();
+    } else {
+      pos = step(room, pos, dir);
+      draw();
+    }
+  }
+  function doInteract() {
+    if (invFocused) { if (invDrop) confirmDrop(); return; }
+    const c = controlAt(pos.x, pos.y);             // stand on Build / Run → activate
+    if (c) { activateControl(c); return; }
+    if (onMenuPortal(pos.x, pos.y)) { openDestinationMenu(); return; } // stand on the menu portal → chooser
+    const d = doorAt(pos.x, pos.y);                // stand on a door → transition or blocked beat
+    if (d) { activateDoor(d); return; }
+    if (onHintGiver(pos.x, pos.y)) talkToHint();   // stand on "?" → next hint beat
+  }
+
+  /** Hub PORTALS — one mechanic, data-driven reaction (see engine/doors.ts): open → the
+   *  teleport-away sequence (flash in the destination's color → remove slime → change map),
+   *  same as the menu portal; locked / coming_soon → fire the beat and stay put. */
+  function activateDoor(d: RoomDoor) {
+    const reaction = doorReaction(d, unlocks);
+    if (reaction.kind === "transition") {
+      const color = callbacks.flashColorFor?.(reaction.target)
+        ?? portalFlashColor({ puzzleType: puzzle.puzzle_type });
+      playFlash(pos, color, () => {
+        slime.remove();                      // remove the slime before the map changes
+        callbacks.onDoor?.(reaction.target); // manager tears THIS room down + mounts target
+      });
+      return;
+    }
+    // Blocked-portal reactions speak as the NARRATOR (no character) — works in terminal-less rooms like the hub.
+    if (d.beat) playSequence([{ id: `door-${reaction.reason}`, speaker: "narrator", text: d.beat, trigger: "door" }]);
+  }
+
+  // --- destination menu (the menu portal's chooser) -------------------------
+  function openDestinationMenu() {
+    if (!callbacks.menuDestinations) return;
+    destOptions = callbacks.menuDestinations(); // fresh: a just-earned unlock shows up now
+    if (!destOptions.length) return;
+    destSel = 0;
+    destMenuOpen = true;
+    renderDestMenu();
+    destMenuEl.hidden = false;
+  }
+  function closeDestinationMenu() {
+    destMenuOpen = false;
+    destMenuEl.hidden = true;
+    viewport.focus({ preventScroll: true });
+  }
+  function renderDestMenu() {
+    destMenuCard.innerHTML = "";
+    const title = document.createElement("p");
+    title.className = "room-destmenu-title";
+    title.textContent = "Where to?";
+    destMenuCard.appendChild(title);
+    destOptions.forEach((opt, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = `room-destmenu-option${i === destSel ? " selected" : ""}`;
+      b.textContent = opt.kind === "hub" ? `⌂ ${opt.label}` : opt.label;
+      b.onclick = () => { destSel = i; selectDestination(); };       // mouse: pick directly
+      b.onmouseenter = () => { destSel = i; renderDestMenu(); };     // mouse hover tracks the cursor
+      destMenuCard.appendChild(b);
+    });
+    const hint = document.createElement("p");
+    hint.className = "room-destmenu-hint";
+    hint.textContent = "↑↓ choose · Enter go · Esc cancel";
+    destMenuCard.appendChild(hint);
+  }
+  function moveDestSel(delta: number) {
+    destSel = clamp(destSel + delta, 0, destOptions.length - 1);
+    renderDestMenu();
+  }
+  /** Commit the highlighted choice — the TELEPORT-AWAY sequence, in strict order:
+   *  1) flash the slime's CURRENT cell in the destination's color (red for the hub),
+   *  2) remove the slime element (clean, no leak), 3) change map (teardown + mount). */
+  function selectDestination() {
+    const opt = destOptions[destSel];
+    if (!opt) return;
+    closeDestinationMenu();
+    const color = opt.flashColor ?? portalFlashColor({ hub: opt.kind === "hub", puzzleType: puzzle.puzzle_type });
+    playFlash(pos, color, () => {
+      slime.remove();              // 2. remove the slime before the map changes
+      callbacks.onDoor?.(opt.id);  // 3. change map (manager does teardown + mount)
+    });
+  }
+  function vimClearLine() {            // dd — clear the player's CURRENT row only (any column,
+    const row = tokensOnRow(placed, pos.y); //  in or out of the coding area); other rows stay.
+    if (!row.length) return;
+    for (const p of row) placed.splice(placed.indexOf(p), 1);
+    drawPlaced();
+    dirtyLine();
+  }
+  function vimDeleteToken() {          // dw — delete the placed token under the player (current line)
+    const p = placedAt(pos.x, pos.y);
+    if (!p) return;
+    placed.splice(placed.indexOf(p), 1);
+    drawPlaced();
+    dirtyLine();
+  }
+  function dispatchAction(action: string) {
+    if (MOVE[action]) { moveOrCursor(MOVE[action]); return; }
+    if (action === "pickup") pressI();
+    else if (action === "place") pressPlace();
+    else if (action === "interact") doInteract();
+    else if (action === "debug") { debugOn = !debugOn; drawDebug(); }
+    else if (action === "clearLine") vimClearLine();
+    else if (action === "deleteToken") vimDeleteToken();
+  }
+
+  // ONE focus-aware input handler. Esc + dialogue are fixed; everything else resolves
+  // the pressed key/sequence against the ACTIVE scheme's bindings (no hardcoded keys).
+  const onKeydown = (e: KeyboardEvent) => {
     // Dialogue showing is a FOCUS STATE: advance on Enter/Space, skip on Esc, and
     // suppress all gameplay until it ends. Same handler — just another branch on state.
     if (isDialogueActive()) {
@@ -1103,40 +1594,42 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
       return;
     }
 
-    if (e.key === "Escape") { e.preventDefault(); handleEscape(); return; }
-
-    if (e.key === DEBUG_KEY) { e.preventDefault(); debugOn = !debugOn; drawDebug(); return; }
-
-    if (e.key === PICKUP_KEY || e.key === PICKUP_KEY.toUpperCase()) { e.preventDefault(); pressI(); return; }
-
-    if (e.key === PLACE_KEY || e.key === PLACE_KEY.toUpperCase()) { e.preventDefault(); pressPlace(); return; }
-
-    if (e.key === "Enter") {
+    // Destination menu open is a FOCUS STATE: arrows move the cursor, Enter selects, Esc
+    // routes through the esc ladder (→ close, stay in room). All gameplay is suppressed.
+    if (destMenuOpen) {
       e.preventDefault();
-      if (invFocused && invDrop) { confirmDrop(); return; }   // drop-mode: confirm the drop
-      if (!invFocused) {
-        const c = controlAt(pos.x, pos.y);                     // stand on Build / Run → activate
-        if (c) { activateControl(c); return; }
-        if (onHintGiver(pos.x, pos.y)) talkToHint();           // stand on "?" → next hint beat
-      }
+      if (e.key === "Escape") { handleEscape(); return; }
+      if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") { selectDestination(); return; }
+      if (e.key === "ArrowUp" || e.key === "ArrowLeft" || e.key === "w" || e.key === "k") { moveDestSel(-1); return; }
+      if (e.key === "ArrowDown" || e.key === "ArrowRight" || e.key === "s" || e.key === "j") { moveDestSel(1); return; }
       return;
     }
 
-    const dir = keyToDirection(e.key);
-    if (!dir) return;
-    e.preventDefault(); // stop arrow-key page scroll
-    if (invFocused) {
-      // Arrows move the slot cursor (single row: any horizontal/vertical = ±1).
-      if (dir.dx < 0 || dir.dy < 0) invSel = Math.max(0, invSel - 1);
-      else invSel = Math.min(invSlots - 1, invSel + 1);
-      drawInventory();
-    } else {
-      pos = step(room, pos, dir); // room focus: arrows move the slime
-      draw();
+    if (e.key === "Escape") { e.preventDefault(); handleEscape(); return; } // reserved: esc ladder
+
+    const key = normalizeKey(e.key);
+    pendingKeys.push(key);
+    let r = resolve(activeBindings(), pendingKeys);
+    if (r.kind === "none" && pendingKeys.length > 1) {
+      pendingKeys = [key];                 // a sequence broke — restart from this key
+      r = resolve(activeBindings(), pendingKeys);
     }
-  });
+    if (r.kind === "fire") {
+      e.preventDefault();
+      const action = r.action;
+      clearPending();
+      dispatchAction(action);
+    } else if (r.kind === "pending") {
+      e.preventDefault();
+      armPendingTimer();                   // wait for the next key in the sequence
+    } else {
+      clearPending();                      // unbound key — let it pass through
+    }
+  };
+  viewport.addEventListener("keydown", onKeydown);
   // Mouse may focus the room (room⇄terminal focus switch); it does nothing else in-room.
-  viewport.addEventListener("pointerdown", () => viewport.focus({ preventScroll: true }));
+  const onPointerDown = () => viewport.focus({ preventScroll: true });
+  viewport.addEventListener("pointerdown", onPointerDown);
 
   // Debounced resize: recompute the layout but coalesce bursts of resize events.
   let resizeTimer = 0;
@@ -1144,13 +1637,46 @@ export function renderRoom(container: HTMLElement, puzzle: Puzzle): void {
     clearTimeout(resizeTimer);
     resizeTimer = window.setTimeout(relayout, RESIZE_DEBOUNCE);
   };
-  activeResizeHandler = onResize;
   window.addEventListener("resize", onResize);
 
-  applyTerminalMode(); // terminal starts docked (bottom band)
-  applyTermFont();     // apply the persisted terminal font size
+  terminalApi?.applyMode(); // terminal starts docked (bottom band) — no-op without a terminal
+  terminalApi?.applyFont(); // apply the persisted terminal font size
   relayout();
   drawInventory();
   viewport.focus({ preventScroll: true });
+  // ARRIVAL emergence:
+  //  • PUZZLE → bloom the spawn cell on the PERMANENT menu portal (which STAYS) in the
+  //    arriving room's color (its type, or this room's override).
+  //  • HUB → a TRANSIENT red portal flashes, the slime hops off, then it self-consumes.
+  if (menuPortalCell) {
+    playFlash(room.spawn, portalFlashColor({ puzzleType: puzzle.puzzle_type, override: layout.flash_color }));
+  } else if (callbacks.transientArrivalColor) {
+    playHubArrival(callbacks.transientArrivalColor);
+  }
   if (onEnterBeats.length) playSequence(onEnterBeats); // snake greeting slides in on enter
+
+  // --- TEARDOWN: undo EVERYTHING this room created, so nothing bleeds into the next. ---
+  teardown.add(() => window.removeEventListener("resize", onResize));
+  teardown.add(() => viewport.removeEventListener("keydown", onKeydown));
+  teardown.add(() => viewport.removeEventListener("pointerdown", onPointerDown));
+  teardown.add(() => {
+    // every timer/interval the room can have running
+    clearDialogueTimers();                               // autoTimer + talkTimer (interval)
+    if (seqTimer) { clearTimeout(seqTimer); seqTimer = 0; }
+    if (resizeTimer) { clearTimeout(resizeTimer); resizeTimer = 0; }
+    if (capture?.timer) { clearTimeout(capture.timer); }
+    if (flashTimer) { clearTimeout(flashTimer); flashTimer = 0; } // pending hub-warp flash
+  });
+  // Dropping all room DOM also detaches every element-scoped listener (settings + terminal
+  // pointer handlers, buttons) — they GC with their nodes.
+  teardown.add(() => { container.innerHTML = ""; });
+
+  const handle: RoomHandle = {
+    teardown: () => {
+      teardown.run();
+      if (activeRoomTeardown === handle.teardown) activeRoomTeardown = null;
+    },
+  };
+  activeRoomTeardown = handle.teardown;
+  return handle;
 }

@@ -49,6 +49,7 @@
       ]
     },
     "difficulty": { "type": "integer", "minimum": 1, "maximum": 5 },
+    "tutorial": { "type": "boolean", "description": "Content label only; the engine never branches on it. A tutorial room's sole behavioral difference is defining first_* beats." },
     "prompt": { "type": "string", "minLength": 1 },
     "payload": { "type": "object" },
     "solution": { "type": "object" },

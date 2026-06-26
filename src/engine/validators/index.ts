@@ -1,5 +1,5 @@
 import type { Validator, ValidatorType } from "../../schema/types";
-import { setMatch } from "./setMatch";
+// import { setMatch } from "./setMatch";
 import { sequenceMatch } from "./sequenceMatch";
 import { exactMatch, normalizedMatch } from "./textMatch";
 import { combineMatch } from "./combineMatch";
@@ -15,7 +15,7 @@ import { codeMatch } from "./codeMatch";
  * puzzle requesting it will be rejected at load, which is the desired behavior.
  */
 const registry: Partial<Record<ValidatorType, Validator>> = {
-  set_match: setMatch,
+  // set_match: setMatch,
   sequence_match: sequenceMatch, // also used by sentence_build (grammar)
   exact_match: exactMatch,
   normalized_match: normalizedMatch,

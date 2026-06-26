@@ -52,14 +52,17 @@ export function parseRoom(layout: RoomLayout): Room {
     grid.push(row);
   }
 
-  // Fall back to the first floor tile if no spawn was given or found.
+  // No explicit spawn/'S' → DEFAULT to the BOTTOM of the room (matches "enter from the
+  // bottom"): the lowest floor row, the floor cell nearest the horizontal center.
   if (!spawn) {
-    outer: for (let y = 0; y < layout.height; y++) {
-      for (let x = 0; x < layout.width; x++) {
-        if (grid[y][x] === "floor") {
-          spawn = { x, y };
-          break outer;
-        }
+    const cx = (layout.width - 1) / 2;
+    outer: for (let y = layout.height - 1; y >= 0; y--) {
+      const floorXs: number[] = [];
+      for (let x = 0; x < layout.width; x++) if (grid[y][x] === "floor") floorXs.push(x);
+      if (floorXs.length) {
+        floorXs.sort((a, b) => Math.abs(a - cx) - Math.abs(b - cx));
+        spawn = { x: floorXs[0], y };
+        break outer;
       }
     }
   }

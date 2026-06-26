@@ -2,6 +2,15 @@
   "pack_id": "python.code.v1",
   "schema_version": "1.0.0",
   "language": "python",
+  "progression": [
+    {
+      "puzzle_type": "code_build",
+      "levels": [
+        { "id": "py-code-hello-001", "label": "1 · Greeting" },
+        { "id": "py-code-name-002", "label": "2 · Your name", "unlock": "puzzle1.cleared" }
+      ]
+    }
+  ],
   "puzzles": [
     {
       "id": "py-code-hello-001",
@@ -10,10 +19,11 @@
       "puzzle_type": "code_build",
       "validator_type": "code_match",
       "difficulty": 1,
+      "tutorial": true,
       "prompt": "Assemble one line of code to respond. Walk onto blocks and press Enter to build your line, then stand on ▶ Run.",
       "payload": {
         "scenario": "You look around and find yourself looking at a blue planet. You can barely see them — they wave at you and wait for you to respond.",
-        "goal": "Greet them. Make your program say: hello",
+        "goal": "Greet them. Make your program say: hello world",
         "tokens": [
           { "text": "print", "kind": "function", "discovers": "print" },
           { "text": "write", "kind": "decoy" },
@@ -21,6 +31,7 @@
           { "text": "(", "kind": "punctuation" },
           { "text": ")", "kind": "punctuation" },
           { "text": "\"hello\"", "kind": "string" },
+          { "text": "\"world\"", "kind": "string" },
           { "text": "\"goodbye\"", "kind": "string" }
         ],
         "beats": {
@@ -28,7 +39,10 @@
           "wrong-order": "The words tumble out jumbled. The aliens tilt their heads. Try them in a different order.",
           "wrong-indent": "The line drifts off its margin. Slide it left until it sits against the wall (indent 0).",
           "wrong-word": "The panel doesn't recognize one of those words. Pick different words and try again.",
-          "success": "The aliens light up and wave back! ✅"
+          "extra-code": "There's more than one line of code in the panel. Clear everything except a single print hello world against the left wall.",
+          "success": "The aliens light up and wave back! ✅",
+          "first_pickup": "🐍 Nice — you picked up a word! It rides in your hotbar at the bottom. Walk to an empty floor tile and press P to set it down.",
+          "first_run_no_build": "🐍 Whoa — you ran before BUILDING. Stand on Build and press Enter to compile your line first, then come back to Run."
         },
         "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
         "dialogue": {
@@ -50,8 +64,8 @@
         }
       },
       "solution": {
-        "output": "hello",
-        "lines": [{ "content": ["print", "hello"], "indent": 0 }]
+        "output": "hello world",
+        "lines": [{ "content": ["print", "hello", "world"], "indent": 0 }]
       },
       "hints": [
         "Greet them.",
@@ -67,31 +81,33 @@
       "room": {
         "width": 13,
         "height": 9,
-        "spawn": { "x": 6, "y": 6 },
         "tiles": [
           "######D######",
           "#...........#",
           "#...........#",
           "#....###....#",
-          "#...........D",
+          "#...........#",
           "#...........#",
           "#...........#",
           "#...........#",
           "#############"
         ],
         "piles": [
-          { "token": "write", "pos": { "x": 9, "y": 2 } },
-          { "token": "me",    "pos": { "x": 10, "y": 2 } },
-          { "token": "print", "pos": { "x": 9, "y": 6 } },
-          { "token": "hello", "pos": { "x": 10, "y": 6 } }
+          { "token": "write",   "pos": { "x": 9,  "y": 2 } },
+          { "token": "goodbye", "pos": { "x": 10, "y": 2 } },
+          { "token": "print",   "pos": { "x": 9,  "y": 6 } },
+          { "token": "hello",   "pos": { "x": 10, "y": 6 } },
+          { "token": "world",   "pos": { "x": 11, "y": 6 } }
         ],
+        "features": ["terminal", "coding_area"],
         "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
         "inventory_slots": 5,
         "controls": [
           { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
           { "action": "run",   "label": "Run",   "pos": { "x": 5, "y": 7 } }
         ],
-        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" }
+        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
+        "grants_unlock": "puzzle1.cleared"
       }
     },
     {
@@ -114,7 +130,10 @@
           { "text": "\"name\"", "kind": "string" }
         ]
       },
-      "solution": { "output": "Sam" },
+      "solution": {
+        "output": "Sam",
+        "lines": [{ "content": ["print", "Sam"], "indent": 0 }]
+      },
       "hints": [
         "You already know the command that shows text — check your Codex.",
         "Put the right name inside the quotes.",
@@ -125,6 +144,36 @@
         "tags": ["beginner", "python", "output"],
         "generator": "human",
         "reviewed": true
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": { "x": 9, "y": 4 },
+        "flash_color": "#c850ff",
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#....###....#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "piles": [
+          { "token": "name", "pos": { "x": 9,  "y": 2 } },
+          { "token": "print", "pos": { "x": 9,  "y": 6 } },
+          { "token": "Sam",   "pos": { "x": 10, "y": 6 } }
+        ],
+        "features": ["terminal", "coding_area"],
+        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "inventory_slots": 5,
+        "controls": [
+          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
+          { "action": "run",   "label": "Run",   "pos": { "x": 5, "y": 7 } }
+        ],
+        "grants_unlock": "puzzle2.cleared"
       }
     },
     {

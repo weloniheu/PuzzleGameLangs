@@ -124,7 +124,9 @@ export interface CodeBuildPayload {
   /** Blocks offered in the palette; player arranges a subset into one line. */
   tokens: CodeToken[];
   /** Feedback beats keyed by reason ("build-first" | "wrong-order" | "wrong-indent" |
-   *  "wrong-word") plus "success". The engine reads these and hardcodes none. */
+   *  "wrong-word") plus "success". The engine reads these and hardcodes none.
+   *  Tutorial rooms may also define FIRST-TIME beats keyed by a `first_*` trigger
+   *  (see DialogueTrigger) — fired once the first time that mechanic happens. */
   beats?: Record<string, string>;
   /** Pretend shell commands echoed to the terminal as FLAVOR — nothing executes. */
   terminal?: { build: string; run: string };
@@ -134,7 +136,11 @@ export interface CodeBuildPayload {
 
 // --- dialogue (two portrait-only speakers sharing one presentation) ---
 export type DialogueTrigger =
-  | "on_enter" | "build-first" | "wrong-order" | "wrong-indent" | "wrong-word" | "success" | "hint";
+  | "on_enter" | "build-first" | "wrong-order" | "wrong-indent" | "wrong-word" | "success" | "hint"
+  // FIRST-TIME triggers (tutorial rooms): fire ONCE the first time that mechanic happens
+  // per room-load, through the same beat system. Optional — a room without them is unaffected.
+  | "first_pickup" | "first_inventory_full" | "first_place"
+  | "first_run_no_build" | "first_wrong_order" | "first_build";
 /** One spoken beat. `speaker` selects the avatar; `trigger` selects when it fires. */
 export interface DialogueBeat {
   id: string;
@@ -198,6 +204,12 @@ export interface CodingArea {
   width: number;   // columns
   height: number;  // rows
 }
+/** Optional, gateable room features. A room renders ONLY the features it declares; an
+ *  undeclared feature is not built at all. CLOSED set (engine has a render branch per
+ *  feature); content picks from these. Always-on basics (movement, settings, inventory
+ *  HUD) are NOT features — they need no declaration. */
+export type RoomFeature = "terminal" | "coding_area";
+
 export interface RoomLayout {
   width: number;  // columns
   height: number; // rows
@@ -211,12 +223,23 @@ export interface RoomLayout {
   piles?: RoomPile[];
   /** Region where tokens can be placed (and indent is measured from). */
   coding_area?: CodingArea;
-  /** How many inventory slots the player has in this room. Engine defaults if absent. */
+  /** Features this room renders. Undeclared features are not built (see RoomFeature).
+   *  Coding-style puzzles declare ["terminal", "coding_area"]; the hub declares none. */
+  features?: RoomFeature[];
+  /** How many inventory slots the player has in this room. Resolved room-first, then by
+   *  puzzle-type default, then a fallback (see engine/roomFeatures.ts). */
   inventory_slots?: number;
   /** Keyboard-activatable objects in the room (Build / Run). */
   controls?: RoomControl[];
   /** The hint giver's in-room marker (the snake has NO marker — it's portrait-only). */
   hint_giver?: { pos: { x: number; y: number }; marker?: string };
+  /** Doors that transition to other rooms/puzzles (data-driven reaction; see engine/doors.ts). */
+  doors?: RoomDoor[];
+  /** Unlock key granted when this room's puzzle is SOLVED (opens a flagged door elsewhere). */
+  grants_unlock?: string;
+  /** OVERRIDE for the teleport flash color of flashes that ENTER/TARGET this room. If set,
+   *  it wins over the puzzle-type-derived default (see engine/portalColors.ts). CSS color. */
+  flash_color?: string;
 }
 
 export type RoomActionKind = "build" | "run";
@@ -225,6 +248,26 @@ export interface RoomControl {
   action: RoomActionKind;
   label: string;
   pos: { x: number; y: number };
+}
+
+/** A door's base state. `open` transitions; `locked`/`coming_soon` are blocked until
+ *  (for locked) an unlock flag is earned. The REACTION is data-driven — see engine/doors.ts. */
+export type DoorState = "open" | "locked" | "coming_soon";
+/** A door the player stands on and activates with Enter. CONTENT: one mechanic (interact),
+ *  but the reaction depends on this data. The EXIT door is just a door whose `target` is the
+ *  hub — there is no special back-system. */
+export interface RoomDoor {
+  pos: { x: number; y: number };
+  /** Room/puzzle id this door opens (e.g. another puzzle, or the hub for an exit door). */
+  target: string;
+  /** Display text on the door tile. */
+  label: string;
+  state: DoorState;
+  /** If set and present in the saved unlocks, a `locked` door is treated as `open`
+   *  (e.g. solving a puzzle earns this key). Ignored for `open`/`coming_soon`. */
+  unlock?: string;
+  /** Optional beat text shown (via the snake portrait) when the door is blocked. */
+  beat?: string;
 }
 
 // (predict_output / fix_the_bug payloads live in the contract but are deferred —
@@ -280,6 +323,24 @@ export interface Puzzle {
   metadata: PuzzleMetadata;
   /** OPTIONAL world layer. When present, the puzzle opens in a walkable room. */
   room?: RoomLayout;
+  /** OPTIONAL label marking this as a tutorial room. Purely a content label — the engine
+   *  NEVER branches on it. A tutorial room's only behavioral difference is that it defines
+   *  `first_*` beats (see DialogueTrigger); there is no separate tutorial engine. */
+  tutorial?: boolean;
+}
+
+/** One entry in a puzzle type's ORDERED level list. A level is available when its
+ *  `unlock` key is earned (the first level has none). Completing a level grants the
+ *  next level's unlock (via the room's `grants_unlock`). CONTENT. */
+export interface LevelEntry {
+  id: string;        // puzzle/room id this level mounts
+  label: string;     // display text in the destination menu
+  unlock?: string;   // unlock key required to be available (omit for the first level)
+}
+/** A puzzle type's ordered levels. The destination menu lists the UNLOCKED ones. */
+export interface ProgressionEntry {
+  puzzle_type: PuzzleType;
+  levels: LevelEntry[];
 }
 
 export interface Pack {
@@ -287,6 +348,8 @@ export interface Pack {
   schema_version: string;
   language: string;
   puzzles: Puzzle[];
+  /** Ordered level lists per puzzle type (drives the menu portal's destination chooser). */
+  progression?: ProgressionEntry[];
 }
 
 // --- Engine-facing interfaces (Phase 2.2) ---

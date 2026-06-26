@@ -9,6 +9,7 @@
   --ok: #4ade80;
   --no: #f87171;
   --accent: #6aa0e8;
+  --slime: #7ad15a; /* recolorable — single source of truth for the slime AND the HUD palette */
 }
 
 * { box-sizing: border-box; }
@@ -354,6 +355,20 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   background: #4a3b2c; padding: 0.15rem 0.45rem; border-radius: 6px;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
 }
+/* Editable binding chips (click → capture/remap). */
+.room-bind-chips { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.room-bind-chip {
+  cursor: pointer; font-family: ui-monospace, monospace; font-size: 0.8rem; font-weight: 700;
+  color: #fff6e6; background: #4a3b2c; border: none; border-radius: 6px;
+  padding: 0.2rem 0.5rem; min-width: 34px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+.room-bind-chip:hover { background: #5a4733; }
+.room-bind-chip.capturing {
+  color: #14110d; background: var(--accent); font-style: italic; font-weight: 600;
+  box-shadow: 0 0 12px rgba(106, 160, 232, 0.6);
+}
+.room-settings-help-text.warn { color: var(--no); }
 
 /* Generic settings toggle button (room-size static/fill). */
 .room-settings-toggle {
@@ -541,6 +556,81 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   text-transform: uppercase;
 }
 
+/* Hub portals live in this layer (the menu portal lives in `world`). */
+.room-door-layer { position: absolute; top: 0; left: 0; }
+
+/* Portal pad — the menu portal (spawn) AND the hub portals share this look: a glowing
+   swirl. Hub portals add a label and locked/coming_soon dim variants. The slime sits on
+   top of the spawn portal. */
+.tile-portal {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  line-height: 1; z-index: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(150, 120, 230, 0.55), rgba(90, 60, 160, 0.25) 70%, transparent);
+  box-shadow: inset 0 0 0 2px rgba(190, 170, 255, 0.6), 0 0 14px rgba(150, 120, 230, 0.5);
+  animation: portal-pulse 1.8s ease-in-out infinite;
+}
+@keyframes portal-pulse { 0%, 100% { opacity: 0.78; } 50% { opacity: 1; } }
+/* Blocked portals: a dimmed grey pad, no pulse. */
+.tile-portal-locked, .tile-portal-coming_soon {
+  animation: none;
+  background: radial-gradient(circle at 50% 50%, rgba(120, 120, 130, 0.42), rgba(70, 70, 80, 0.2) 70%, transparent);
+  box-shadow: inset 0 0 0 2px rgba(170, 170, 180, 0.4), 0 0 8px rgba(80, 80, 90, 0.4);
+  opacity: 0.85;
+}
+/* The ONE transient portal: the red "arrived home" pad at the hub. Created on arrival,
+   flashed, then removed by JS (self-consumes). Red = the exit/home color. */
+.tile-portal-transient {
+  background: radial-gradient(circle at 50% 50%, rgba(230, 80, 80, 0.6), rgba(160, 40, 40, 0.28) 70%, transparent);
+  box-shadow: inset 0 0 0 2px rgba(255, 150, 150, 0.7), 0 0 16px rgba(230, 80, 80, 0.6);
+}
+.tile-portal-glyph { line-height: 1; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
+.tile-portal-label {
+  font-weight: 800; line-height: 1; letter-spacing: 0.02em;
+  color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  max-width: 96%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Destination chooser — a menu surface like settings: mouse + keyboard, Esc cancels. */
+.room-destmenu {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+.room-destmenu[hidden] { display: none; }
+.room-destmenu-card {
+  min-width: 260px; max-width: 90vw;
+  background: #2f2418; color: #fff6e6;
+  padding: 1.25rem 1.5rem; border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(0, 0, 0, 0.4);
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+.room-destmenu-title { margin: 0 0 0.5rem; font-weight: 700; font-size: 1.1rem; }
+.room-destmenu-option {
+  cursor: pointer; text-align: left; padding: 0.5rem 0.75rem; border: none; border-radius: 8px;
+  font-size: 0.95rem; font-weight: 600; color: #fff6e6; background: #4a3b2c;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+.room-destmenu-option.selected { background: var(--accent); color: #14110d; box-shadow: 0 0 12px rgba(106, 160, 232, 0.6); }
+.room-destmenu-hint { margin: 0.4rem 0 0; color: var(--muted); font-size: 0.75rem; text-align: center; }
+
+/* Teleport flash — a colored circle that blooms IN A CELL (positioned by JS within the
+   world, so it tracks the camera). Color comes from --flash (destination-derived; red for
+   the hub). One-shot bloom on `.shown`. */
+.room-flash {
+  position: absolute; left: 0; top: 0; z-index: 3;
+  border-radius: 50%; pointer-events: none;
+  transform-origin: center; transform: scale(0.3); opacity: 0;
+  background: radial-gradient(circle, var(--flash, #e23b3b) 0%, var(--flash, #e23b3b) 45%, transparent 72%);
+}
+.room-flash[hidden] { display: none; }
+.room-flash.shown { animation: flash-bloom 0.38s ease-out forwards; }
+@keyframes flash-bloom {
+  0%   { transform: scale(0.3); opacity: 0; }
+  35%  { opacity: 0.95; }
+  100% { transform: scale(12); opacity: 0; }
+}
+
 /* Hint giver's "?" marker (the only in-room dialogue marker; snake is portrait-only). */
 .room-marker-layer { position: absolute; top: 0; left: 0; }
 .tile-hint-marker { display: flex; align-items: center; justify-content: center; z-index: 1; border-radius: 8px; }
@@ -581,6 +671,20 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
 .room-dialogue-text { margin: 0; line-height: 1.45; }
 .room-dialogue-cue { margin-top: 0.4rem; text-align: right; color: var(--muted); font-size: 0.75rem; min-height: 1em; }
 
+/* Narrator — the default voice surface: bare transient text over the room, centered near
+   the bottom. No avatar, no name (placeholder until per-puzzle-type voices land). */
+.room-narrator {
+  position: fixed; left: 50%; bottom: 96px; z-index: 50;
+  transform: translateX(-50%) translateY(12px);
+  max-width: min(620px, 90vw); pointer-events: none; text-align: center;
+  background: rgba(20, 17, 13, 0.82); color: #fff6e6;
+  padding: 0.7rem 1.1rem; border-radius: 12px; line-height: 1.45;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 246, 230, 0.12);
+  opacity: 0; transition: transform 0.22s ease, opacity 0.22s ease;
+}
+.room-narrator[hidden] { display: none; }
+.room-narrator.shown { opacity: 1; transform: translateX(-50%) translateY(0); }
+
 /* Debug readout (toggle with `). */
 .room-debug {
   max-width: 640px; margin: 0.5rem auto 0;
@@ -590,26 +694,49 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
 }
 
-/* Inventory HUD — Minecraft-hotbar feel: always visible, overlaid (position set by JS),
-   slightly dimmed in room focus (still readable), brightened in inventory focus. */
+/* Inventory HUD — Minecraft-hotbar feel: always visible, overlaid (position set by JS).
+   The whole palette derives from --slime (one source of truth) via color-mix(): recolor
+   the slime and the hotbar recolors with it. A subtle brightness shift (not a fade)
+   marks the room⇄inventory focus change. */
 .room-inventory {
-  position: absolute; left: 0; right: 0; z-index: 30;
-  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
-  height: 48px; box-sizing: border-box; padding: 0 0.5rem;
-  opacity: 0.78; transition: opacity 0.1s ease; /* room-focus dim — an indicator, not a hide */
+  /* JS sets `top`; we center horizontally and shrink-wrap so the HUD hugs ONLY the
+     slots (not a full-width bar). Vertical position logic is left untouched. */
+  position: absolute; left: 50%; transform: translateX(-50%); z-index: 30;
+  display: flex; align-items: center; justify-content: center; /* no gap — slots are flush */
+  box-sizing: border-box; padding: 0; /* backing = exact slot footprint, no surrounding halo */
+  /* translucent, slime-tinted backing sits directly behind the flush row */
+  background: color-mix(in srgb, var(--slime) 16%, transparent);
+  /* thin fixed LIGHT border traces the whole row so the HUD pops on any background
+     (dark tiles, light tiles, terminal) — intentionally NOT slime-derived */
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 6px;
+  filter: brightness(0.85); transition: filter 0.1s ease; /* room-focus dim — an indicator, not a hide */
 }
-.room-inventory.focused { opacity: 1; }
-.room-inventory-label { color: var(--muted); font-size: 0.78rem; margin-right: 0.35rem; }
-.room-inventory.focused .room-inventory-label { color: #fff6e6; }
+.room-inventory.focused { filter: brightness(1); }
 .room-inventory-slot {
-  min-width: 52px; padding: 0.35rem 0.55rem; text-align: center;
-  border-radius: 6px; font-size: 0.8rem; font-weight: 700;
-  background: #4a3b2c; color: #fff6e6;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+  width: 40px; height: 40px; /* SQUARE — equal width/height */
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 700; color: #fff6e6;
+  border-radius: 0; /* flush: cells butt together into one segmented bar */
+  background: color-mix(in srgb, var(--slime) 38%, #1c140c); /* tinted but darkened for legible text */
 }
-.room-inventory-slot.empty { color: var(--muted); font-weight: 400; background: #2c241c; }
-/* Selected slot — the focus signal while navigating the hotbar. */
-.room-inventory-slot.selected { box-shadow: inset 0 0 0 2px var(--accent), 0 0 10px rgba(106, 160, 232, 0.5); }
+/* thin divider line between adjacent cells — the only seam in the segmented bar */
+.room-inventory-slot + .room-inventory-slot {
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+/* end cells follow the frame corners so nothing bleeds past the light border (6px frame − 1px border) */
+.room-inventory-slot:first-child { border-radius: 5px 0 0 5px; }
+.room-inventory-slot:last-child { border-radius: 0 5px 5px 0; }
+.room-inventory-slot.empty {
+  color: var(--muted); font-weight: 400;
+  background: color-mix(in srgb, var(--slime) 16%, #14100a);
+}
+/* Selected slot — brighter slime + glow is the focus signal while navigating the hotbar. */
+.room-inventory-slot.selected {
+  box-shadow:
+    inset 0 0 0 2px color-mix(in srgb, var(--slime) 70%, #ffffff),
+    0 0 10px color-mix(in srgb, var(--slime) 60%, transparent);
+}
 
 /* Keyboard-only inventory overlay. */
 .room-overlay {
@@ -640,7 +767,7 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   z-index: 2;
   pointer-events: none;
   transition: transform 0.1s ease;
-  --slime: #7ad15a; /* recolorable */
+  /* --slime now inherits from :root so recoloring it also recolors the HUD */
   background:
     radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.7) 0 12%, transparent 22%),
     var(--slime);

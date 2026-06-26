@@ -11,6 +11,9 @@
 // ---------------------------------------------------------------------------
 
 const KEY = "codex.discovered.v1";
+// Hub/room unlocks live alongside the Codex under the SAME save system (one place to
+// persist, one place to reset). Stored as a flat list of earned unlock keys.
+const UNLOCK_KEY = "codex.unlocks.v1";
 
 export interface CodexEntry {
   /** the command name, e.g. "print" */
@@ -61,9 +64,50 @@ export function discover(entries: CodexEntry[]): string[] {
   return fresh;
 }
 
-/** Wipe the Codex — handy for testing a fresh playthrough. */
+// --- room/hub unlocks (persisted alongside the Codex) ----------------------
+
+function readUnlocks(): string[] {
+  try {
+    const raw = localStorage.getItem(UNLOCK_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as string[]).filter((k) => typeof k === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeUnlocks(keys: string[]): void {
+  try {
+    localStorage.setItem(UNLOCK_KEY, JSON.stringify(keys));
+  } catch {
+    /* storage unavailable (private mode / tests) — degrade silently */
+  }
+}
+
+/** All earned unlock keys (the hub reads these on load to know which doors are open). */
+export function getUnlocks(): string[] {
+  return readUnlocks();
+}
+
+export function hasUnlock(key: string): boolean {
+  return readUnlocks().includes(key);
+}
+
+/** Earn an unlock if new; returns true iff it was freshly added. */
+export function addUnlock(key: string): boolean {
+  if (!key) return false;
+  const current = readUnlocks();
+  if (current.includes(key)) return false;
+  current.push(key);
+  writeUnlocks(current);
+  return true;
+}
+
+/** Wipe ALL saved progress — discovered commands AND room unlocks (one reset). */
 export function resetCodex(): void {
   write([]);
+  writeUnlocks([]);
 }
 
 /** Renders (or re-renders) the Codex panel into `el`. */

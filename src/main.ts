@@ -1,11 +1,13 @@
 import "./style.css";
-import type { Pack, Puzzle } from "./schema/types";
+import type { Pack, Puzzle, PuzzleType, LevelEntry } from "./schema/types";
 import { loadPack } from "./engine/packLoader";
 import { runPuzzle } from "./engine/puzzleRunner";
 import { renderRoom } from "./engine/renderers/roomRenderer";
+import { createRoomManager, type RoomManager } from "./engine/roomManager";
 
-// The game boots STRAIGHT into the Python code pack — no selector. Pack/level
-// selection will move into an in-game entrance screen in a later phase.
+// The code game boots into a minimal TEST HUB (throwaway — real hub design comes later);
+// the hub's doors transition to the Python code pack's puzzles via the room manager.
+const HUB_PACK = "/content/packs/hub.test.v1.json";
 const CODE_PACK = "/content/packs/python.code.v1.json";
 
 // TEMPORARY dev-only switcher: with the dropdown gone, press 1–4 to load a pack's
@@ -87,10 +89,44 @@ async function loadAndShow(url: string) {
   }
 }
 
-// TEMP dev switcher (see DEV_PACKS). Remove when the entrance screen lands.
+// --- the code game: a room WORLD managed by the room manager (hub + puzzles) ---
+// The manager owns "which room is active" and does teardown+mount on every transition.
+// Rooms resolve by id from a registry merged across the hub pack and the code pack, so a
+// door's `target` (another puzzle, or "hub" for an exit) just names a room.
+let roomManager: RoomManager | null = null;
+const roomRegistry = new Map<string, Puzzle>();
+const levelsByType = new Map<PuzzleType, LevelEntry[]>(); // ordered level lists per puzzle type
+
+async function bootHub() {
+  if (!roomRegistry.size) {
+    const [hub, code] = await Promise.all([loadPack(HUB_PACK), loadPack(CODE_PACK)]);
+    for (const p of [...hub.puzzles, ...code.puzzles]) roomRegistry.set(p.id, p);
+    // Merge each pack's progression into one type → ordered-levels map (drives the menu portal).
+    for (const pack of [hub, code]) {
+      for (const prog of pack.progression ?? []) {
+        levelsByType.set(prog.puzzle_type, [...(levelsByType.get(prog.puzzle_type) ?? []), ...prog.levels]);
+      }
+    }
+  }
+  if (!roomManager) {
+    roomManager = createRoomManager(
+      gameRoot,
+      (id) => roomRegistry.get(id) ?? null,
+      (puzzleType) => levelsByType.get(puzzleType) ?? [],
+      { onBeforeMount: useFullscreen },
+    );
+  }
+  roomManager.enter("hub");
+}
+
+// TEMP dev switcher: 1 = the code game (hub world); 2–4 = the card games. Switching to a
+// card tears the room world down first so no room listeners/timers survive the swap.
 window.addEventListener("keydown", (e) => {
   const n = Number(e.key);
-  if (Number.isInteger(n) && n >= 1 && n <= DEV_PACKS.length) loadAndShow(DEV_PACKS[n - 1]);
+  if (!Number.isInteger(n) || n < 1 || n > DEV_PACKS.length) return;
+  if (n === 1) { bootHub(); return; }
+  roomManager?.teardown();
+  loadAndShow(DEV_PACKS[n - 1]);
 });
 
-loadAndShow(CODE_PACK);
+bootHub();

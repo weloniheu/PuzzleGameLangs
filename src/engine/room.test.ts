@@ -60,9 +60,15 @@ describe("parseRoom", () => {
     expect(room.spawn).toEqual({ x: 2, y: 1 });
   });
 
-  it("falls back to the first floor cell when there is no spawn or 'S'", () => {
-    // OPEN is all floor, no S, no explicit spawn → first floor scanned is (0,0).
-    expect(parseRoom(OPEN).spawn).toEqual({ x: 0, y: 0 });
+  it("defaults to the BOTTOM (lowest floor row, center-most) when there is no spawn or 'S'", () => {
+    // OPEN is 3×3 all floor → bottom row y=2, center column x=1.
+    expect(parseRoom(OPEN).spawn).toEqual({ x: 1, y: 2 });
+  });
+
+  it("the bottom default picks the floor cell nearest the horizontal center", () => {
+    // Lowest row "#...#" has floor at x∈{1,2,3}; center (x=2) is nearest.
+    const room = parseRoom({ width: 5, height: 2, tiles: [".....", "#...#"] });
+    expect(room.spawn).toEqual({ x: 2, y: 1 });
   });
 
   it("treats unknown characters as floor", () => {

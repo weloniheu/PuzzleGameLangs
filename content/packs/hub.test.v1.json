@@ -1,0 +1,81 @@
+{
+  "pack_id": "hub.test.v1",
+  "schema_version": "1.0.0",
+  "language": "none",
+  "puzzles": [
+    {
+      "id": "hub",
+      "schema_version": "1.0.0",
+      "language": "none",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 1,
+      "prompt": "Walk onto a door (🚪) and press Enter to go through it.",
+      "payload": {
+        "scenario": "A quiet hub with three doors. (Throwaway TEST hub — real design comes later.)",
+        "goal": "Pick a door.",
+        "tokens": [{ "text": "noop", "kind": "decoy" }],
+        "beats": {},
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "hub-enter",
+              "speaker": "narrator",
+              "text": "Welcome to the hub. An open door (🚪) leads somewhere; 🔒 and 🚧 don't — yet.",
+              "trigger": "on_enter"
+            }
+          ]
+        }
+      },
+      "solution": { "output": "" },
+      "hints": [],
+      "metadata": { "reviewed": true, "concept": "test hub", "tags": ["hub", "test"] },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": { "x": 6, "y": 4 },
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "doors": [
+          {
+            "pos": { "x": 2, "y": 2 },
+            "target": "py-code-hello-001",
+            "label": "Coding",
+            "state": "open"
+          },
+          {
+            "pos": { "x": 5, "y": 2 },
+            "target": "",
+            "label": "Logic",
+            "state": "coming_soon",
+            "beat": "🚧 Logic portal — coming soon."
+          },
+          {
+            "pos": { "x": 8, "y": 2 },
+            "target": "",
+            "label": "Grammar",
+            "state": "coming_soon",
+            "beat": "🚧 Grammar portal — coming soon."
+          },
+          {
+            "pos": { "x": 11, "y": 2 },
+            "target": "",
+            "label": "Language",
+            "state": "coming_soon",
+            "beat": "🚧 Language portal — coming soon."
+          }
+        ]
+      }
+    }
+  ]
+}
