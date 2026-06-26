@@ -36,7 +36,7 @@ import {
   evaluatedLines,
   type AnswerLine,
   type CheckReason,
-} from "../codeGameLogic";
+} from "../../puzzles/coding/codeGameLogic";
 import {
   defaultBindings, actionsFor, normalizeKey, resolve, rebind, bindingGlyph,
   type SchemeId, type Bindings, type Key,
