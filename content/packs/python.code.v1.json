@@ -41,7 +41,6 @@
           "wrong-word": "The panel doesn't recognize one of those words. Pick different words and try again.",
           "extra-code": "There's more than one line of code in the panel. Clear everything except a single print hello world against the left wall.",
           "success": "The aliens light up and wave back! ✅",
-          "first_pickup": "🐍 Nice — you picked up a word! It rides in your hotbar at the bottom. Walk to an empty floor tile and press P to set it down.",
           "first_run_no_build": "🐍 Whoa — you ran before BUILDING. Stand on Build and press Enter to compile your line first, then come back to Run."
         },
         "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
@@ -60,6 +59,13 @@
             { "text": "Greet them — make the program say hello.", "tag": "intro" },
             { "text": "The snake can't write, but it can use a printer. Reach for print.", "tag": "after:wrong-word" },
             { "text": "Lay print then the word against the left wall (indent 0): print(\"hello\").", "tag": "after:wrong-order" }
+          ],
+          "guided_tutorial": [
+            { "id": "ctut-1", "speaker": "narrator", "text": "This is a code puzzle. Let's learn how it works.", "trigger": "guided_tutorial", "autoAdvance": false },
+            { "id": "ctut-2", "speaker": "narrator", "text": "Walk up to a word on the floor and press I to pick it up.", "trigger": "guided_tutorial", "waitFor": "pickup" },
+            { "id": "ctut-3", "speaker": "narrator", "text": "Walk to an empty tile and press P to place it down.", "trigger": "guided_tutorial", "waitFor": "place" },
+            { "id": "ctut-4", "speaker": "narrator", "text": "Stand on Build and press Enter to compile your line.", "trigger": "guided_tutorial", "waitFor": "build" },
+            { "id": "ctut-5", "speaker": "narrator", "text": "Stand on Run and press Enter to see what your line does.", "trigger": "guided_tutorial", "waitFor": "run" }
           ]
         }
       },

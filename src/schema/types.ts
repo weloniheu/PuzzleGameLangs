@@ -141,6 +141,20 @@ export type DialogueTrigger =
   // per room-load, through the same beat system. Optional — a room without them is unaffected.
   | "first_pickup" | "first_inventory_full" | "first_place"
   | "first_run_no_build" | "first_wrong_order" | "first_build";
+/** Closed set of mechanics a GUIDED TUTORIAL step can block on. The engine reports when
+ *  one actually happens (see Dialogue.notify in systems/dialogue.ts); content only picks
+ *  from these — it never invents a new one. */
+export type TutorialWaitFor =
+  | "move" | "interact" | "pickup" | "place" | "build" | "run"
+  /** an OPEN door transition — stricter than "interact" (blocked doors / hint giver don't count) */
+  | "enter_door"
+  // STUBS for puzzle types not yet mounted in the room world (see content/TUTORIAL_SCRIPTS.md).
+  // Reserved so their pack content can be authored now; the engine fires them once those
+  // renderers join the room/dialogue system.
+  /** walked into a block and shoved it one tile (match / combine sokoban mechanic) */
+  | "push"
+  /** merged two objects on the combinator tile (combine mechanic) */
+  | "combine";
 /** One spoken beat. `speaker` selects the avatar; `trigger` selects when it fires. */
 export interface DialogueBeat {
   id: string;
@@ -151,6 +165,9 @@ export interface DialogueBeat {
   autoAdvance?: boolean;
   /** marker id to briefly highlight while this beat shows (e.g. "hint"). */
   highlight?: string;
+  /** GUIDED TUTORIAL ONLY: if set, this beat does NOT auto-advance on a timer — it stays
+   *  until the player actually performs this action, then advances. Omit for normal beats. */
+  waitFor?: TutorialWaitFor;
 }
 /** A speaker's portrait config (placeholder art is fine; portrait2 = optional talk frame). */
 export interface DialogueSpeaker {
@@ -170,6 +187,11 @@ export interface DialogueConfig {
   on_enter?: DialogueBeat[];
   /** Hint giver's ordered hints (shown one-per-interaction, capped at the last). */
   hints?: HintBeat[];
+  /** GUIDED TUTORIAL (content, cut-and-dry, no character): plays ONCE ever, the first time
+   *  this room is visited (persisted — see codex.ts tutorial tracking), appended after
+   *  `on_enter`. A room without this is unaffected. Settings offers a "replay" that clears
+   *  the persisted flag so it plays again next visit. */
+  guided_tutorial?: DialogueBeat[];
 }
 /** One expected code line for the order-checker: content tokens (in order) + indent. */
 export interface CodeAnswerLine {

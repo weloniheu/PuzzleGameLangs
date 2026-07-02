@@ -684,6 +684,9 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
 }
 .room-narrator[hidden] { display: none; }
 .room-narrator.shown { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* Enter-gated narrator beats (tutorial informational steps) show a small advance cue. */
+.room-narrator-cue { margin-top: 0.3rem; font-size: 0.75rem; color: rgba(255, 246, 230, 0.55); min-height: 1em; }
+.room-narrator-cue:empty { display: none; }
 
 /* Debug readout (toggle with `). */
 .room-debug {
