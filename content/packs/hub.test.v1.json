@@ -18,13 +18,11 @@
         "beats": {},
         "dialogue": {
           "speakers": {},
-          "on_enter": [
-            {
-              "id": "hub-enter",
-              "speaker": "narrator",
-              "text": "Welcome to the hub. An open door (🚪) leads somewhere; 🔒 and 🚧 don't — yet.",
-              "trigger": "on_enter"
-            }
+          "guided_tutorial": [
+            { "id": "tut-1", "speaker": "narrator", "text": "Hi! Welcome to Puzzle Patch. Let's get you started.", "trigger": "guided_tutorial", "autoAdvance": false },
+            { "id": "tut-2", "speaker": "narrator", "text": "Move around using the arrow keys or WASD.", "trigger": "guided_tutorial", "waitFor": "move" },
+            { "id": "tut-3", "speaker": "narrator", "text": "You can open Settings anytime — click the ⚙ icon in the corner — to change your controls or replay this tutorial.", "trigger": "guided_tutorial", "autoAdvance": false },
+            { "id": "tut-4", "speaker": "narrator", "text": "Now try interacting. Walk up to the Coding door and press Enter.", "trigger": "guided_tutorial", "waitFor": "enter_door" }
           ]
         }
       },

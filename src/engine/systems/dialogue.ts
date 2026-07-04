@@ -15,7 +15,7 @@
 //     (content, e.g. the coding `beats` map) is injected as `firstTimeBeat`.
 // ---------------------------------------------------------------------------
 
-import type { DialogueBeat, DialogueSpeaker, HintBeat } from "../../schema/types";
+import type { DialogueBeat, DialogueSpeaker, HintBeat, TutorialWaitFor } from "../../schema/types";
 
 // --- timing/threshold constants (moved from roomRenderer, unchanged) ---
 export const AUTO_LEN = 48;     // text shorter than this auto-advances when autoAdvance is unset
@@ -70,11 +70,27 @@ export interface DialogueDeps {
   firstTimeBeat: (trigger: string) => DialogueBeat | null; // content lookup (e.g. snakeBeat)
 }
 
+export interface PlayOptions {
+  /** Called once, when this sequence reaches its natural end (not on a mid-queue Escape). */
+  onComplete?: () => void;
+  /** false → Escape cannot cut this sequence short (GUIDED TUTORIALS). Default true. */
+  skippable?: boolean;
+}
+
 export interface Dialogue {
-  play(seq: DialogueBeat[]): void;
+  play(seq: DialogueBeat[], opts?: PlayOptions): void;
   advance(): void;
   end(): void;
   isActive(): boolean;
+  /** Whether the engine should suppress gameplay input right now. True for ordinary beats;
+   *  false while a GUIDED TUTORIAL beat (one with `waitFor`) is showing, so the player's
+   *  real action can reach the room (see `notify`). */
+  blocksInput(): boolean;
+  /** Whether Escape is allowed to end the CURRENT sequence early (see PlayOptions.skippable). */
+  canSkip(): boolean;
+  /** Report that `kind` actually happened in the room. If the beat on screen is waiting for
+   *  exactly this (`waitFor === kind`), advance past it. No-op otherwise. */
+  notify(kind: TutorialWaitFor): void;
   clearTimers(): void;
   positionPortrait(): void;
   buildMarker(tile: number): void;
@@ -114,6 +130,10 @@ export function createDialogue(deps: DialogueDeps): Dialogue {
   const narratorEl = document.createElement("div");
   narratorEl.className = "room-narrator";
   narratorEl.hidden = true;
+  const narratorText = document.createElement("span");
+  const narratorCue = document.createElement("div");
+  narratorCue.className = "room-narrator-cue";
+  narratorEl.append(narratorText, narratorCue);
   deps.container.appendChild(narratorEl);
 
   // --- state ---
@@ -122,9 +142,31 @@ export function createDialogue(deps: DialogueDeps): Dialogue {
   let talkTimer = 0;
   let hintIdx = -1; // hint giver progresses one line per interaction, capped at the last
   const firedFirstTimes = new Set<string>();
+  let queueOnComplete: (() => void) | null = null;
+  let queueSkippable = true;
+  // A GUIDED TUTORIAL paused mid-queue while an INTERJECTION (error beat, blocked door,
+  // hint) plays — restored, at the same step, when the interjection ends. One level deep:
+  // interjections themselves are ordinary skippable beats and simply replace each other.
+  let stashed: { state: QueueState; onComplete: (() => void) | null } | null = null;
 
   function isActive(): boolean {
     return queueActive(state);
+  }
+
+  /** Gameplay is suppressed for an ordinary beat, but NOT for a GUIDED TUTORIAL beat
+   *  (one with `waitFor`) — that one stays on screen while the real action passes through. */
+  function blocksInput(): boolean {
+    const beat = currentBeat(state);
+    return !!beat && !beat.waitFor;
+  }
+
+  function canSkip(): boolean {
+    return queueSkippable;
+  }
+
+  function notify(kind: TutorialWaitFor): void {
+    const beat = currentBeat(state);
+    if (beat && beat.waitFor === kind) advance();
   }
 
   function clearTimers() {
@@ -132,21 +174,53 @@ export function createDialogue(deps: DialogueDeps): Dialogue {
     if (talkTimer) { clearInterval(talkTimer); talkTimer = 0; }
   }
 
-  function play(seq: DialogueBeat[]) {
+  function play(seq: DialogueBeat[], opts: PlayOptions = {}) {
     if (!seq.length) return;
+    // A play() while an UNSKIPPABLE queue (guided tutorial) is in flight would clobber it —
+    // its remaining steps and onComplete would be lost. Instead, STASH the tutorial, play
+    // the newcomer as an interjection, and resume the tutorial where it left off (see end()).
+    if (queueActive(state) && !queueSkippable && (opts.skippable ?? true)) {
+      stashed = { state, onComplete: queueOnComplete };
+      queueOnComplete = opts.onComplete ?? null;
+      queueSkippable = true;
+      state = startQueue(seq);
+      showBeat();
+      return;
+    }
+    queueOnComplete = opts.onComplete ?? null;
+    queueSkippable = opts.skippable ?? true;
     state = startQueue(seq);
     showBeat();
   }
 
   /** Route a beat to a surface: a defined character in a terminal room → PORTRAIT;
-   *  everything else (speaker "narrator", or no defined character) → NARRATOR text. */
+   *  everything else (speaker "narrator", or no defined character) → NARRATOR text.
+   *  The OTHER surface hides immediately — only one voice is ever on screen. */
   function showBeat() {
     clearTimers();
     const beat = currentBeat(state);
     if (!beat) return;
     const sp = deps.speakers[beat.speaker];
-    if (sp && dialogueEl && dlgPortrait && dlgName && dlgText && dlgCue) showPortraitBeat(beat, sp);
-    else showNarratorBeat(beat);
+    if (sp && dialogueEl && dlgPortrait && dlgName && dlgText && dlgCue) {
+      hideNarratorNow();
+      showPortraitBeat(beat, sp);
+    } else {
+      hidePortraitNow();
+      showNarratorBeat(beat);
+    }
+  }
+
+  /** Instantly drop a surface (no fade) — used when the queue switches surfaces, or a new
+   *  sequence starts before the previous fade-out finished (which would leave stale text). */
+  function hidePortraitNow() {
+    if (!dialogueEl || !dlgPortrait) return;
+    dlgPortrait.classList.remove("talking");
+    dialogueEl.classList.remove("shown");
+    dialogueEl.hidden = true;
+  }
+  function hideNarratorNow() {
+    narratorEl.classList.remove("shown");
+    narratorEl.hidden = true;
   }
 
   function showPortraitBeat(beat: DialogueBeat, sp: DialogueSpeaker) {
@@ -176,17 +250,22 @@ export function createDialogue(deps: DialogueDeps): Dialogue {
     }
 
     const auto = isAutoAdvance(beat, AUTO_LEN);
-    cue.textContent = auto ? "" : "Enter ▸";
-    if (auto) autoTimer = window.setTimeout(advance, AUTO_PAUSE);
+    cue.textContent = beat.waitFor || auto ? "" : "Enter ▸";
+    if (!beat.waitFor && auto) autoTimer = window.setTimeout(advance, AUTO_PAUSE);
   }
 
-  /** The narrator surface: transient text over the room, no avatar/name. Always
-   *  auto-advances (with Enter able to skip via the engine's keydown branch). */
+  /** The narrator surface: transient text over the room, no avatar/name. Normally
+   *  auto-advances (with Enter able to skip via the engine's keydown branch) — UNLESS:
+   *   • `waitFor` set (GUIDED TUTORIAL step) → stays until the action happens (`notify()`);
+   *   • `autoAdvance: false` explicit → stays until Enter, with a visible cue (no
+   *     reading-speed pressure — tutorial informational steps use this). */
   function showNarratorBeat(beat: DialogueBeat) {
-    narratorEl.textContent = beat.text;
+    narratorText.textContent = beat.text;
+    const waitEnter = !beat.waitFor && beat.autoAdvance === false;
+    narratorCue.textContent = waitEnter ? "Enter ▸" : "";
     narratorEl.hidden = false;
     requestAnimationFrame(() => narratorEl.classList.add("shown"));
-    autoTimer = window.setTimeout(advance, narratorDwell(beat.text, AUTO_PAUSE));
+    if (!beat.waitFor && !waitEnter) autoTimer = window.setTimeout(advance, narratorDwell(beat.text, AUTO_PAUSE));
   }
 
   function advance() {
@@ -209,6 +288,20 @@ export function createDialogue(deps: DialogueDeps): Dialogue {
     narratorEl.classList.remove("shown");
     window.setTimeout(() => { if (state.idx === -1) narratorEl.hidden = true; }, 260);
     deps.onEnd();
+    const onComplete = queueOnComplete;
+    queueOnComplete = null;
+    queueSkippable = true;
+    onComplete?.();
+    // An interjection just finished over a stashed GUIDED TUTORIAL → resume it at the
+    // same step (re-show the beat the player was on). See play() for the stash.
+    if (stashed) {
+      const s = stashed;
+      stashed = null;
+      state = s.state;
+      queueOnComplete = s.onComplete;
+      queueSkippable = false;
+      showBeat();
+    }
   }
 
   /**
@@ -280,7 +373,7 @@ export function createDialogue(deps: DialogueDeps): Dialogue {
   }
 
   return {
-    play, advance, end, isActive, clearTimers,
+    play, advance, end, isActive, blocksInput, canSkip, notify, clearTimers,
     positionPortrait, buildMarker, onHintGiver, talkToHint, fireFirstTime,
   };
 }

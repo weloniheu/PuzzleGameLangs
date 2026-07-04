@@ -39,6 +39,9 @@ export type Difficulty = 1 | 2 | 3 | 4 | 5;
 export interface MatchPayload {
   /** Canonical correct pairs. The renderer shuffles the right column for display. */
   pairs: { left: string; right: string }[];
+  /** Optional first-time walkthrough (see systems/tutorialOverlay.ts). Persisted per
+   *  puzzle TYPE, so only the first match puzzle the player ever meets plays it. */
+  guided_tutorial?: DialogueBeat[];
 }
 export interface MatchSolution {
   /** left -> right. Validated unordered by `set_match`. */
@@ -84,6 +87,8 @@ export interface SentencePayload {
   words: SentenceWord[];
   /** Optional worked example shown above the board to model the structure. */
   example?: string;
+  /** Optional first-time walkthrough (see systems/tutorialOverlay.ts). Per-TYPE. */
+  guided_tutorial?: DialogueBeat[];
 }
 // sentence_build is validated by `sequence_match` against ReorderSolution.order.
 
@@ -103,6 +108,8 @@ export interface CombinePayload {
   goal: string;
   items: CombineItem[];
   recipes: CombineRecipe[];
+  /** Optional first-time walkthrough (see systems/tutorialOverlay.ts). Per-TYPE. */
+  guided_tutorial?: DialogueBeat[];
 }
 export interface CombineSolution {
   /** The winning unordered set of item ids. Checked by `combine_match`. */
@@ -141,6 +148,18 @@ export type DialogueTrigger =
   // per room-load, through the same beat system. Optional — a room without them is unaffected.
   | "first_pickup" | "first_inventory_full" | "first_place"
   | "first_run_no_build" | "first_wrong_order" | "first_build";
+/** Closed set of mechanics a GUIDED TUTORIAL step can block on. The engine reports when
+ *  one actually happens (see Dialogue.notify in systems/dialogue.ts); content only picks
+ *  from these — it never invents a new one. */
+export type TutorialWaitFor =
+  | "move" | "interact" | "pickup" | "place" | "build" | "run"
+  /** an OPEN door transition — stricter than "interact" (blocked doors / hint giver don't count) */
+  | "enter_door"
+  // CARD-GAME kinds (fired via systems/tutorialOverlay.ts; see content/TUTORIAL_SCRIPTS.md):
+  /** walked into a word block and shoved it one tile (match sokoban mechanic) */
+  | "push"
+  /** ran a Mix with at least two things in the bowl (combine mechanic) */
+  | "combine";
 /** One spoken beat. `speaker` selects the avatar; `trigger` selects when it fires. */
 export interface DialogueBeat {
   id: string;
@@ -151,6 +170,9 @@ export interface DialogueBeat {
   autoAdvance?: boolean;
   /** marker id to briefly highlight while this beat shows (e.g. "hint"). */
   highlight?: string;
+  /** GUIDED TUTORIAL ONLY: if set, this beat does NOT auto-advance on a timer — it stays
+   *  until the player actually performs this action, then advances. Omit for normal beats. */
+  waitFor?: TutorialWaitFor;
 }
 /** A speaker's portrait config (placeholder art is fine; portrait2 = optional talk frame). */
 export interface DialogueSpeaker {
@@ -170,6 +192,11 @@ export interface DialogueConfig {
   on_enter?: DialogueBeat[];
   /** Hint giver's ordered hints (shown one-per-interaction, capped at the last). */
   hints?: HintBeat[];
+  /** GUIDED TUTORIAL (content, cut-and-dry, no character): plays ONCE ever, the first time
+   *  this room is visited (persisted — see codex.ts tutorial tracking), appended after
+   *  `on_enter`. A room without this is unaffected. Settings offers a "replay" that clears
+   *  the persisted flag so it plays again next visit. */
+  guided_tutorial?: DialogueBeat[];
 }
 /** One expected code line for the order-checker: content tokens (in order) + indent. */
 export interface CodeAnswerLine {

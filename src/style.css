@@ -684,6 +684,24 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
 }
 .room-narrator[hidden] { display: none; }
 .room-narrator.shown { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* Enter-gated narrator beats (tutorial informational steps) show a small advance cue. */
+.room-narrator-cue { margin-top: 0.3rem; font-size: 0.75rem; color: rgba(255, 246, 230, 0.55); min-height: 1em; }
+.room-narrator-cue:empty { display: none; }
+
+/* Guided-tutorial bar for the CARD games (systems/tutorialOverlay.ts) — the narrator's
+   lightweight sibling. Own scoped classes; styles no puzzle board. */
+.tutorial-bar {
+  position: fixed; left: 50%; bottom: 24px; z-index: 60;
+  transform: translateX(-50%) translateY(12px);
+  max-width: min(620px, 90vw); pointer-events: none; text-align: center;
+  background: rgba(20, 17, 13, 0.88); color: #fff6e6;
+  padding: 0.7rem 1.1rem; border-radius: 12px; line-height: 1.45;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 246, 230, 0.12);
+  opacity: 0; transition: transform 0.22s ease, opacity 0.22s ease;
+}
+.tutorial-bar.shown { opacity: 1; transform: translateX(-50%) translateY(0); }
+.tutorial-bar-cue { margin-top: 0.3rem; font-size: 0.75rem; color: rgba(255, 246, 230, 0.55); min-height: 1em; }
+.tutorial-bar-cue:empty { display: none; }
 
 /* Debug readout (toggle with `). */
 .room-debug {

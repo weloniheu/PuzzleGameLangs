@@ -104,10 +104,53 @@ export function addUnlock(key: string): boolean {
   return true;
 }
 
-/** Wipe ALL saved progress — discovered commands AND room unlocks (one reset). */
+/** Wipe ALL saved progress — discovered commands, room unlocks, AND tutorial "seen" flags. */
 export function resetCodex(): void {
   write([]);
   writeUnlocks([]);
+  writeTutorials([]);
+}
+
+// --- guided-tutorial "seen" flags (persisted alongside the Codex) --------------------
+// A guided tutorial (see DialogueConfig.guided_tutorial) plays ONCE ever, keyed by the
+// room/puzzle id. Settings offers a lightweight "replay" that only clears this list —
+// it does NOT touch discovered commands or unlocks.
+
+const TUTORIAL_KEY = "codex.tutorials.v1";
+
+function readTutorials(): string[] {
+  try {
+    const raw = localStorage.getItem(TUTORIAL_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as string[]).filter((k) => typeof k === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeTutorials(ids: string[]): void {
+  try {
+    localStorage.setItem(TUTORIAL_KEY, JSON.stringify(ids));
+  } catch {
+    /* storage unavailable (private mode / tests) — degrade silently */
+  }
+}
+
+/** Has this room/puzzle's guided tutorial already played (ever)? */
+export function hasCompletedTutorial(id: string): boolean {
+  return readTutorials().includes(id);
+}
+
+/** Mark a guided tutorial as seen — it won't auto-play again until replayed. */
+export function completeTutorial(id: string): void {
+  const current = readTutorials();
+  if (!current.includes(id)) writeTutorials([...current, id]);
+}
+
+/** Clear every "seen" flag — the next visit to each room plays its guided tutorial again. */
+export function resetTutorials(): void {
+  writeTutorials([]);
 }
 
 /** Renders (or re-renders) the Codex panel into `el`. */

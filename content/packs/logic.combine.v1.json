@@ -23,6 +23,12 @@
           { "inputs": ["scissors", "rope"], "result": "✂️ snip! the rope is cut and the door swings open" },
           { "inputs": ["rock", "rope"], "result": "the rope frays a little, but holds" },
           { "inputs": ["water", "rope"], "result": "the rope just gets wet" }
+        ],
+        "guided_tutorial": [
+          { "id": "ctut-1", "speaker": "narrator", "text": "This is a combining puzzle. Let's learn how it works.", "trigger": "guided_tutorial" },
+          { "id": "ctut-2", "speaker": "narrator", "text": "Walk onto an object and press Enter to drop it into the bowl. Enter again takes it back out.", "trigger": "guided_tutorial", "waitFor": "pickup" },
+          { "id": "ctut-3", "speaker": "narrator", "text": "When the bowl has what you need, stand on 🧪 Mix and press Enter.", "trigger": "guided_tutorial", "waitFor": "combine" },
+          { "id": "ctut-4", "speaker": "narrator", "text": "Mix the right things together to reach the goal.", "trigger": "guided_tutorial" }
         ]
       },
       "solution": { "inputs": ["scissors", "rope"] },

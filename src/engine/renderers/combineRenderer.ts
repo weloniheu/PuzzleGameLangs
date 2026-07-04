@@ -1,5 +1,6 @@
 import type { PuzzleRenderer, Puzzle, CombinePayload } from "../../schema/types";
 import { createGridArena } from "./gridArena";
+import { mountGuidedTutorial } from "../systems/tutorialOverlay";
 
 function sameSet(a: string[], b: string[]): boolean {
   if (a.length !== b.length) return false;
@@ -44,7 +45,9 @@ export const combineRenderer: PuzzleRenderer = {
     }
 
     function toggleItem(id: string) {
-      bowl = bowl.includes(id) ? bowl.filter((x) => x !== id) : [...bowl, id];
+      const adding = !bowl.includes(id);
+      bowl = adding ? [...bowl, id] : bowl.filter((x) => x !== id);
+      if (adding) tutorial.notify("pickup"); // GUIDED TUTORIAL: dropped an object into the bowl
       result.textContent = "";
       drawBowl();
       arena.refresh();
@@ -56,6 +59,7 @@ export const combineRenderer: PuzzleRenderer = {
         result.classList.add("dud");
         return;
       }
+      tutorial.notify("combine"); // GUIDED TUTORIAL: a real Mix ran (≥2 things), win or dud
       const recipe = payload.recipes.find((r) => sameSet(r.inputs, bowl));
       result.textContent = recipe ? `→ ${recipe.result}` : "→ nothing useful happens.";
       result.classList.toggle("dud", !recipe);
@@ -96,5 +100,7 @@ export const combineRenderer: PuzzleRenderer = {
     });
 
     drawBowl();
+    // First-ever combine puzzle: the guided walkthrough bar (no-op if already taught).
+    const tutorial = mountGuidedTutorial(container, puzzle);
   },
 };
