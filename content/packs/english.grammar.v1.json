@@ -17,6 +17,11 @@
           { "left": "run", "right": "verb (an action)" },
           { "left": "happy", "right": "adjective (describes a thing)" },
           { "left": "quickly", "right": "adverb (describes an action)" }
+        ],
+        "guided_tutorial": [
+          { "id": "mtut-1", "speaker": "narrator", "text": "This is a matching puzzle. Let's learn how it works.", "trigger": "guided_tutorial" },
+          { "id": "mtut-2", "speaker": "narrator", "text": "Walk into a word block to push it one space.", "trigger": "guided_tutorial", "waitFor": "push" },
+          { "id": "mtut-3", "speaker": "narrator", "text": "Push each meaning onto the word it matches. Fill every slot to finish — press R to reset the board if you get stuck.", "trigger": "guided_tutorial" }
         ]
       },
       "solution": {
@@ -57,6 +62,11 @@
           { "text": "the cat", "role": "subject" },
           { "text": "barks", "role": "verb" },
           { "text": "sleeps", "role": "verb" }
+        ],
+        "guided_tutorial": [
+          { "id": "stut-1", "speaker": "narrator", "text": "This is a sentence puzzle. Let's learn how it works.", "trigger": "guided_tutorial" },
+          { "id": "stut-2", "speaker": "narrator", "text": "Walk to a word and press Enter to drop it into the next open slot.", "trigger": "guided_tutorial", "waitFor": "place" },
+          { "id": "stut-3", "speaker": "narrator", "text": "Placed the wrong word? Stand on it and press Enter to take it back. Fill every slot to finish.", "trigger": "guided_tutorial" }
         ]
       },
       "solution": { "order": ["the dog", "barks"] },

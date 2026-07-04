@@ -1,5 +1,6 @@
 import type { PuzzleRenderer, Puzzle, SentencePayload } from "../../schema/types";
 import { createGridArena } from "./gridArena";
+import { mountGuidedTutorial } from "../systems/tutorialOverlay";
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -75,6 +76,7 @@ export const sentenceRenderer: PuzzleRenderer = {
         const open = placed.findIndex((p) => p === null);
         if (open === -1) return; // board full
         placed[open] = text;
+        tutorial.notify("place"); // GUIDED TUTORIAL: a word landed in a slot
       }
       drawSlots();
       arena.refresh();
@@ -96,5 +98,7 @@ export const sentenceRenderer: PuzzleRenderer = {
     });
 
     drawSlots();
+    // First-ever sentence puzzle: the guided walkthrough bar (no-op if already taught).
+    const tutorial = mountGuidedTutorial(container, puzzle);
   },
 };

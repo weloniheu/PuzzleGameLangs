@@ -16,6 +16,11 @@
           { "left": "aloha", "right": "love / hello" },
           { "left": "mahalo", "right": "thank you" },
           { "left": "wai", "right": "water" }
+        ],
+        "guided_tutorial": [
+          { "id": "mtut-1", "speaker": "narrator", "text": "This is a matching puzzle. Let's learn how it works.", "trigger": "guided_tutorial" },
+          { "id": "mtut-2", "speaker": "narrator", "text": "Walk into a word block to push it one space.", "trigger": "guided_tutorial", "waitFor": "push" },
+          { "id": "mtut-3", "speaker": "narrator", "text": "Push each meaning onto the word it matches. Fill every slot to finish — press R to reset the board if you get stuck.", "trigger": "guided_tutorial" }
         ]
       },
       "solution": {

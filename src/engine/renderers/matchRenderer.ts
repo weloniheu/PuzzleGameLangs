@@ -1,4 +1,5 @@
 import type { PuzzleRenderer, Puzzle, MatchPayload } from "../../schema/types";
+import { mountGuidedTutorial } from "../systems/tutorialOverlay";
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -212,6 +213,7 @@ export const matchRenderer: PuzzleRenderer = {
 
         pushed.x = tx;
         pushed.y = ty;
+        tutorial.notify("push"); // GUIDED TUTORIAL: a block actually moved
       }
       lastWallBump = null;
       player.x = nx;
@@ -292,6 +294,8 @@ export const matchRenderer: PuzzleRenderer = {
     container.appendChild(controls);
 
     draw();
+    // First-ever match puzzle: the guided walkthrough bar (no-op if already taught).
+    const tutorial = mountGuidedTutorial(container, puzzle);
     arena.focus({ preventScroll: true });
   },
 };

@@ -39,6 +39,9 @@ export type Difficulty = 1 | 2 | 3 | 4 | 5;
 export interface MatchPayload {
   /** Canonical correct pairs. The renderer shuffles the right column for display. */
   pairs: { left: string; right: string }[];
+  /** Optional first-time walkthrough (see systems/tutorialOverlay.ts). Persisted per
+   *  puzzle TYPE, so only the first match puzzle the player ever meets plays it. */
+  guided_tutorial?: DialogueBeat[];
 }
 export interface MatchSolution {
   /** left -> right. Validated unordered by `set_match`. */
@@ -84,6 +87,8 @@ export interface SentencePayload {
   words: SentenceWord[];
   /** Optional worked example shown above the board to model the structure. */
   example?: string;
+  /** Optional first-time walkthrough (see systems/tutorialOverlay.ts). Per-TYPE. */
+  guided_tutorial?: DialogueBeat[];
 }
 // sentence_build is validated by `sequence_match` against ReorderSolution.order.
 
@@ -103,6 +108,8 @@ export interface CombinePayload {
   goal: string;
   items: CombineItem[];
   recipes: CombineRecipe[];
+  /** Optional first-time walkthrough (see systems/tutorialOverlay.ts). Per-TYPE. */
+  guided_tutorial?: DialogueBeat[];
 }
 export interface CombineSolution {
   /** The winning unordered set of item ids. Checked by `combine_match`. */
@@ -148,12 +155,10 @@ export type TutorialWaitFor =
   | "move" | "interact" | "pickup" | "place" | "build" | "run"
   /** an OPEN door transition — stricter than "interact" (blocked doors / hint giver don't count) */
   | "enter_door"
-  // STUBS for puzzle types not yet mounted in the room world (see content/TUTORIAL_SCRIPTS.md).
-  // Reserved so their pack content can be authored now; the engine fires them once those
-  // renderers join the room/dialogue system.
-  /** walked into a block and shoved it one tile (match / combine sokoban mechanic) */
+  // CARD-GAME kinds (fired via systems/tutorialOverlay.ts; see content/TUTORIAL_SCRIPTS.md):
+  /** walked into a word block and shoved it one tile (match sokoban mechanic) */
   | "push"
-  /** merged two objects on the combinator tile (combine mechanic) */
+  /** ran a Mix with at least two things in the bowl (combine mechanic) */
   | "combine";
 /** One spoken beat. `speaker` selects the avatar; `trigger` selects when it fires. */
 export interface DialogueBeat {
