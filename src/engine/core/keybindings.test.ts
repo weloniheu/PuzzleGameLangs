@@ -4,7 +4,6 @@ import {
   actionsFor,
   normalizeKey,
   bindingGlyph,
-  bindingsGlyph,
   findConflict,
   isReserved,
   rebind,
@@ -29,7 +28,6 @@ describe("glyphs", () => {
     expect(bindingGlyph(["h"])).toBe("H");
     expect(bindingGlyph(["d", "d"])).toBe("dd");
     expect(bindingGlyph(["d", "w"])).toBe("dw");
-    expect(bindingsGlyph([["ArrowUp"], ["w"]])).toBe("↑ / W");
   });
 });
 

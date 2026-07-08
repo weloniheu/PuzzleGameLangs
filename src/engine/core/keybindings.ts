@@ -70,9 +70,6 @@ export function bindingGlyph(b: Binding): string {
   if (b.length === 1) return keyGlyph(b[0]);
   return b.map((k) => (k.length === 1 ? k : keyGlyph(k))).join("");
 }
-export function bindingsGlyph(list: Binding[]): string {
-  return list.map(bindingGlyph).join(" / ");
-}
 
 // --- conflicts ------------------------------------------------------------
 export const RESERVED_KEYS: Key[] = ["Escape"]; // Esc drives the esc ladder — never rebindable

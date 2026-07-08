@@ -21,7 +21,6 @@ import {
 import { createTeardown } from "./core/teardown";
 import { resolveFeatures, resolveInventorySlots } from "./core/roomFeatures";
 import type { DestinationOption } from "./core/progression";
-import { portalFlashColor } from "./core/portalColors";
 import { renderTileLayer } from "./systems/tileLayer";
 import { computeTile, computeViewport } from "./systems/camera";
 import { createSlime, drawPlayer } from "./systems/player";
@@ -54,10 +53,6 @@ export interface RoomCallbacks {
   /** Resolve the teleport flash color for a target id (the manager has the registry).
    *  Used by hub PORTALS so their transition flashes in the destination's color. */
   flashColorFor?: (target: string) => string;
-  /** When set, this room is the HUB: on arrival a TRANSIENT portal in this color flashes
-   *  at the spawn, the slime hops off, then the portal self-consumes. The room's other
-   *  portals (the permanent type portals) are untouched. Omitted for puzzle rooms. */
-  transientArrivalColor?: string;
 }
 /** Handle to a mounted room. `teardown()` destroys EVERYTHING the room created. */
 export interface RoomHandle {
@@ -205,7 +200,6 @@ export function mountRoom(
   // --- portals & transitions (system): doors, menu portal, chooser, flash ----
   const portals = createPortals({
     container,
-    world,
     room,
     doors,
     unlocks,
@@ -216,12 +210,6 @@ export function mountRoom(
     dialogue,
     removePlayer: () => slime.remove(), // remove the slime before the map changes
     focusRoom,
-    hopPlayer: (order: Direction[]) => {
-      for (const dir of order) {
-        const next = step(room, pos, dir);
-        if (next.x !== pos.x || next.y !== pos.y) { pos = next; draw(); break; }
-      }
-    },
     menuDestinations: callbacks.menuDestinations,
     flashColorFor: callbacks.flashColorFor,
     onTransition: (target) => callbacks.onDoor?.(target), // manager tears THIS room down + mounts target
@@ -230,7 +218,7 @@ export function mountRoom(
   // Order matters for stacking; module layers slot in around these (see addLayer).
   world.append(tileLayer, portals.doorLayer);
   if (portals.menuPortalEl) world.append(portals.menuPortalEl); // below the slime, which spawns on top of it
-  world.append(markerLayer, pileLayer, slime, portals.flashEl); // flash after the slime → on top
+  world.append(markerLayer, pileLayer, slime);
 
   // --- the puzzle-type MODULE: looked up by registry, mounted with engine services ---
   let mounted: MountedPuzzle | null = null;
@@ -461,15 +449,6 @@ export function mountRoom(
   relayout();
   inv.draw();
   focusRoom();
-  // ARRIVAL emergence:
-  //  • PUZZLE → bloom the spawn cell on the PERMANENT menu portal (which STAYS) in the
-  //    arriving room's color (its type, or this room's override).
-  //  • HUB → a TRANSIENT red portal flashes, the slime hops off, then it self-consumes.
-  if (portals.menuPortalEl) {
-    portals.playFlash(room.spawn, portalFlashColor({ puzzleType: puzzle.puzzle_type, override: layout.flash_color }));
-  } else if (callbacks.transientArrivalColor) {
-    // portals.playHubArrival(callbacks.transientArrivalColor);
-  }
   // First-ever visit to this room: on_enter (story, if any) + the guided tutorial, played
   // as ONE unskippable sequence, then marked seen (see codex.ts). Every later visit just
   // gets the normal on_enter greeting, exactly as before.
@@ -492,7 +471,6 @@ export function mountRoom(
     input.clearPending();                 // pending key-sequence timer
     if (resizeTimer) { clearTimeout(resizeTimer); resizeTimer = 0; }
     settings.cancelCapture();             // drop any pending rebind-capture timer
-    portals.clearTimers();                // pending warp flash
   });
   teardown.add(() => mounted?.teardown()); // module non-DOM cleanup
   // Dropping all room DOM also detaches every element-scoped listener (settings + panel
