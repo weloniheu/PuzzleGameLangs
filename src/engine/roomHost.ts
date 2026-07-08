@@ -148,18 +148,20 @@ export function mountRoom(
 
   const focusRoom = () => viewport.focus({ preventScroll: true });
 
-  // --- inventory + HUD (system): FIFO slots, drop/cancel flow, always-visible strip ---
-  const inv = createInventoryHud(container, invSlots);
+  // --- inventory + HUD (FEATURE-GATED system): FIFO slots, drop/cancel flow, the
+  //     always-visible strip. Rooms that carry tokens declare "inventory"; a room
+  //     without it builds no HUD and no inventory interactions at all. ---
+  const inv = features.has("inventory") ? createInventoryHud(container, invSlots) : null;
 
   /** Clear inventory/terminal focus back to the plain room (used on settings-open). */
   function dropFocusToRoom() {
-    if (inv.focused()) exitInventory();
+    if (inv?.focused()) exitInventory();
     focusRoom(); // pulls focus off any panel control too
   }
 
   /** Leave inventory focus → room focus. Cancels a pending drop (restoring any lifted token). */
   function exitInventory() {
-    inv.exitFocus();
+    inv?.exitFocus();
   }
 
   // --- settings panel (system): gear + Controls/Display tabs + rebind capture. Focus/esc
@@ -237,6 +239,7 @@ export function mountRoom(
     },
     reflow: () => applyViewport(),
     focusRoom,
+    movePlayer: (cell) => { pos = { ...cell }; draw(); },
     dialogue,
     inventory: inv,
     onSolved: () => callbacks.onSolved?.(puzzle),
@@ -254,7 +257,7 @@ export function mountRoom(
     const resolution = resolveEscape({
       destMenuOpen: portals.isDestMenuOpen(),
       settingsOpen: settings.isOpen(),
-      inventoryFocused: inv.focused(),
+      inventoryFocused: inv?.focused() ?? false,
       overlayFocused: mounted?.panel?.containsActive() ?? false,
     });
     switch (resolution) {
@@ -329,7 +332,7 @@ export function mountRoom(
     // HUD: anchored just below the room area, always with the same gap above its lower
     // neighbour (the dock top when docked, the window bottom when popped). Bottom-up the
     // stack is: room → GAP → HUD → GAP → (dock | window edge), so the gap is consistent.
-    inv.setTop(top + effH - HUD_H - HUD_GAP);
+    inv?.setTop(top + effH - HUD_H - HUD_GAP);
 
     // Band anchored to the WINDOW bottom, full width; the HUD sits a GAP above it.
     if (docked) mounted!.panel!.layoutDocked();
@@ -368,7 +371,7 @@ export function mountRoom(
   // -------------------------------------------------------------------------
 
   function moveOrCursor(dir: Direction) {
-    if (inv.focused()) {
+    if (inv?.focused()) {
       inv.moveCursor(dir.dx < 0 || dir.dy < 0 ? -1 : 1);
     } else {
       const before = pos;
@@ -381,22 +384,23 @@ export function mountRoom(
 
   /** Take one copy of `token` from a pile. Full inventory does NOT silently fail: it
    *  shifts to inventory focus with a drop/cancel prompt (same slot cursor). */
-  function tryPickup(token: string) {
-    if (!inv.pickupToken(token, null)) return; // full → the drop prompt opened instead
+  function tryPickup(inventory: NonNullable<typeof inv>, token: string) {
+    if (!inventory.pickupToken(token, null)) return; // full → the drop prompt opened instead
     dialogue.notify("pickup"); // GUIDED TUTORIAL first (see module build), then first-time beats
     dialogue.fireFirstTime("first_pickup");
-    if (inv.isFull()) dialogue.fireFirstTime("first_inventory_full");
+    if (inventory.isFull()) dialogue.fireFirstTime("first_inventory_full");
   }
 
   /** pickup fallthrough (the module already declined): pile here → toggle focus. */
   function pressPickup() {
+    if (!inv) return; // no inventory feature → nothing to pick up or focus
     const here = pileAt(room, pos.x, pos.y);
-    if (here) { tryPickup(here.token); return; }
+    if (here) { tryPickup(inv, here.token); return; }
     if (inv.focused()) { exitInventory(); } else { inv.enterFocus(); }
   }
 
   function doInteract() {
-    if (inv.focused()) { if (inv.hasPendingDrop()) inv.confirmDrop(); return; }
+    if (inv?.focused()) { if (inv.hasPendingDrop()) inv.confirmDrop(); return; }
     if (mounted?.onInteract(pos)) return;          // stand on a module object (Build / Run) → activate
     const menuHere = portals.onMenuPortal(pos.x, pos.y); // stand on the menu portal → chooser
     const d = portals.doorAt(pos.x, pos.y);              // stand on a door → transition or blocked beat
@@ -449,7 +453,7 @@ export function mountRoom(
   window.addEventListener("resize", onResize);
 
   relayout();
-  inv.draw();
+  inv?.draw();
   focusRoom();
   // First-ever visit to this room: on_enter (story, if any) + the guided tutorial, played
   // as ONE unskippable sequence, then marked seen (see codex.ts). Every later visit just

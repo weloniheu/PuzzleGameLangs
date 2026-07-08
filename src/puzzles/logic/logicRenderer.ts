@@ -46,7 +46,7 @@ const MOVE_KEYS: Record<string, Direction> = {
 // --- object-kind display (per-renderer visual default; unknown → tinted initial).
 //     Shared with the in-room module (index.ts) so both surfaces draw alike. ---
 export const OBJECT_GLYPH: Record<string, string> = {
-  baba: "🐢", rock: "🪨", flag: "🚩", wall: "🧱", water: "💧", key: "🗝️", door: "🚪",
+  slime: "🟢", rock: "🪨", flag: "🚩", wall: "🧱", water: "💧", key: "🗝️", door: "🚪",
 };
 
 const STYLE = `

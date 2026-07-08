@@ -197,36 +197,42 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
 
     // The board IS the room: the ENGINE's tile grid is the board floor (13×9 =
     // an 11×7 board plus the wall ring) — no floating panel, no nested room.
+    // 7 entity boxes = 6 word tiles + the flag; the SLIME entity has NO glyph
+    // because the engine's slime IS it ("SLIME IS YOU" controls the player).
     await vi.waitFor(() =>
-      expect(c.querySelectorAll(".logic-board-layer .logic-cell-box")).toHaveLength(8), // 6 words + 2 objects
+      expect(c.querySelectorAll(".logic-board-layer .logic-cell-box")).toHaveLength(7),
     );
     expect(c.querySelector(".logic-game")).toBeNull(); // the standalone panel never mounts in-room
     expect(c.querySelectorAll(".room-tile-layer .tile-room")).toHaveLength(13 * 9);
     expect(c.querySelectorAll(".room-world")).toHaveLength(1); // ONE room
+    expect(c.querySelectorAll(".slime")).toHaveLength(1);      // ONE player
+    expect(c.querySelector(".room-inventory")).toBeNull();     // no HUD (feature not declared)
+    expect(c.querySelector(".room-terminal")).toBeNull();      // no coding furniture
 
-    // ONE input pipeline: arrows drive the BOARD through the engine's dispatch;
-    // the slime stays parked (no ghost movement from a second listener).
-    const slime = slimeAt(c);
-    const before = c.querySelector(".logic-board-layer")!.innerHTML;
+    // ONE input pipeline, one body: arrows step the BOARD through the engine's
+    // dispatch, and the slime moves because it IS the YOU entity.
+    const slime0 = slimeAt(c);
+    const board0 = c.querySelector(".logic-board-layer")!.innerHTML;
     press(c, "ArrowRight");
-    expect(slimeAt(c)).toBe(slime);
-    expect(c.querySelector(".logic-board-layer")!.innerHTML).not.toBe(before); // the YOU entity moved
-
+    expect(slimeAt(c)).not.toBe(slime0); // the slime IS the controlled entity
     press(c, "u"); // the shared undo binding routes to the module
-    expect(c.querySelector(".logic-board-layer")!.innerHTML).toBe(before);
+    expect(c.querySelector(".logic-board-layer")!.innerHTML).toBe(board0);
+    expect(slimeAt(c)).toBe(slime0); // undo pulls the player back too
 
-    // Enter while NOT won falls through to the engine's menu portal → the exit chooser.
+    // Enter while NOT won falls through to the engine's menu portal (under the
+    // slime's start cell) → the exit chooser.
     press(c, "Enter");
     expect([...c.querySelectorAll(".room-destmenu-option")].map((b) => b.textContent))
       .toEqual(["⌂ Hub", "Logic I"]);
     press(c, "Escape");
     expect((c.querySelector(".room-destmenu") as HTMLElement).hidden).toBe(true);
 
-    // Walk the YOU entity onto the flag → won → this room's unlock is granted, so
-    // the exit chooser now offers Logic II (engine-native progression).
+    // Walk the slime onto the flag → won → the unlock is granted and the frozen
+    // board RELEASES movement, so the engine walks the slime back to the portal.
     press(c, "ArrowRight", 6);
     expect(text(c, ".logic-room-banner")).toContain("Solved");
-    press(c, "Enter"); // slime is on the menu portal → chooser
+    press(c, "ArrowLeft", 6); // engine movement now (board frozen)
+    press(c, "Enter");        // on the menu portal → chooser, with Logic II unlocked
     expect([...c.querySelectorAll(".room-destmenu-option")].map((b) => b.textContent))
       .toEqual(["⌂ Hub", "Logic I", "Logic II"]);
     press(c, "Enter"); // select "⌂ Hub" → back through the portal system

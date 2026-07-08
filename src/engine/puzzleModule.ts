@@ -52,8 +52,12 @@ export interface EngineContext {
   reflow(): void;
   /** Return keyboard focus to the room viewport. */
   focusRoom(): void;
+  /** Move the engine's player (the slime) to a cell and redraw (camera follows).
+   *  Board modules use this to pin the player to their board's controlled entity. */
+  movePlayer(cell: Cell): void;
   dialogue: Dialogue;
-  inventory: InventoryHud;
+  /** null when the room doesn't declare the "inventory" feature. */
+  inventory: InventoryHud | null;
   /** Report the room's puzzle solved (may earn an unlock — the manager decides). */
   onSolved(): void;
   /** Register module undo callbacks (the engine also clears all room DOM). */

@@ -252,9 +252,10 @@ export interface CodingArea {
 }
 /** Optional, gateable room features. A room renders ONLY the features it declares; an
  *  undeclared feature is not built at all. CLOSED set (engine has a render branch per
- *  feature); content picks from these. Always-on basics (movement, settings, inventory
- *  HUD) are NOT features — they need no declaration. */
-export type RoomFeature = "terminal" | "coding_area";
+ *  feature); content picks from these. Always-on basics (movement, settings) are NOT
+ *  features — they need no declaration. The inventory HUD IS a feature: rooms that
+ *  carry tokens (hub, code levels) declare it; board rooms (logic) don't. */
+export type RoomFeature = "terminal" | "coding_area" | "inventory";
 
 export interface RoomLayout {
   width: number;  // columns
@@ -270,7 +271,8 @@ export interface RoomLayout {
   /** Region where tokens can be placed (and indent is measured from). */
   coding_area?: CodingArea;
   /** Features this room renders. Undeclared features are not built (see RoomFeature).
-   *  Coding-style puzzles declare ["terminal", "coding_area"]; the hub declares none. */
+   *  Coding-style puzzles declare ["terminal", "coding_area", "inventory"]; the hub
+   *  declares ["inventory"]; logic board rooms declare none. */
   features?: RoomFeature[];
   /** How many inventory slots the player has in this room. Resolved room-first, then by
    *  puzzle-type default, then a fallback (see engine/roomFeatures.ts). */

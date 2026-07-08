@@ -22,6 +22,8 @@ import {
   createBoard,
   step,
   activeRuleCells,
+  computeRules,
+  hasProperty,
   DIRECTIONS,
   type Board,
   type Entity,
@@ -93,12 +95,23 @@ export const logicModule: RoomPuzzleModule = {
     let won = false;
     let disposed = false;
 
+    /** The board entity the engine SLIME embodies: the first object that the active
+     *  rules make YOU. One player — the slime IS that entity; its glyph is not drawn.
+     *  Derived from the rules each redraw, so a rule change re-picks it (data-driven,
+     *  never a hardcoded noun). */
+    function youEntity(b: Board): Entity | null {
+      const rs = computeRules(b);
+      return b.entities.find((e) => !e.word && hasProperty(rs, e.noun, "you")) ?? null;
+    }
+
     function drawBoard() {
       if (!board) return;
       const tile = ctx.tile();
       const live = activeRuleCells(board);
+      const you = youEntity(board);
       boardLayer.innerHTML = "";
       for (const e of board.entities) {
+        if (e === you) continue; // the SLIME is this entity's body — no second glyph
         const box = document.createElement("div");
         box.className = "logic-cell-box";
         box.style.width = `${tile}px`;
@@ -124,11 +137,14 @@ export const logicModule: RoomPuzzleModule = {
         }
         boardLayer.appendChild(box);
       }
+      // Pin the engine player to the controlled entity (camera follows). If no rule
+      // makes anything YOU right now, the slime just stays where it was.
+      if (you) ctx.movePlayer({ x: you.x + ox, y: you.y + oy });
     }
 
     function finish() {
       won = true;
-      banner.textContent = "✦ Solved! ✦";
+      banner.textContent = "✦ Solved! Walk back to the portal ✦";
       banner.hidden = false;
       ctx.onSolved(); // earns this room's unlock — the next level appears in the exit menu
     }
@@ -180,7 +196,13 @@ export const logicModule: RoomPuzzleModule = {
       onAction(actionId) {
         if (!board) return false; // board not loaded yet
         const dir = DIRECTIONS[actionId]; // up / down / left / right — same ids as the bindings
-        if (dir) { move(dir); return true; }
+        // A WON board is frozen and RELEASES movement: the engine walks the slime
+        // freely (back to the menu portal — the exit) over the finished board.
+        if (dir) {
+          if (won) return false;
+          move(dir);
+          return true;
+        }
         if (actionId === "undo") { undo(); return true; }
         if (actionId === "reset") { reset(); return true; }
         return false;

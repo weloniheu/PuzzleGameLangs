@@ -246,9 +246,11 @@ export function createCodingArea(deps: CodingAreaDeps): CodingArea {
   /** Pick a placed token back into inventory; if full, the drop/cancel flow (the
    *  token is lifted off the board and restored on cancel). */
   function tryPickPlaced(p: Placed) {
-    if (ctx.inventory.isFull()) {
+    const inv = ctx.inventory;
+    if (!inv) return; // a coding room always declares "inventory"; nowhere to put it otherwise
+    if (inv.isFull()) {
       placed.splice(placed.indexOf(p), 1); // lift it off; restored on cancel, kept on drop
-      ctx.inventory.pickupToken(p.token, () => {
+      inv.pickupToken(p.token, () => {
         placed.push(p); // un-lift
         drawPlaced();
         buildState = markDirty(buildState);
@@ -257,7 +259,7 @@ export function createCodingArea(deps: CodingAreaDeps): CodingArea {
       dirtyLine(); // the line changed → must Build again
       return;
     }
-    ctx.inventory.pickupToken(p.token, null);
+    inv.pickupToken(p.token, null);
     placed.splice(placed.indexOf(p), 1);
     drawPlaced();
     dirtyLine();
@@ -266,10 +268,11 @@ export function createCodingArea(deps: CodingAreaDeps): CodingArea {
   /** Place inventory[index] onto ANY empty cell here (CONSUMED, one-use). Placement is
    *  free anywhere in the room; only the coding-area region is read by Build/Run. */
   function placeToken(index: number) {
-    if (ctx.inventory.itemAt(index) === undefined) return; // empty slot → nothing to place
+    const inv = ctx.inventory;
+    if (!inv || inv.itemAt(index) === undefined) return; // empty slot → nothing to place
     const pos = ctx.pos();
     if (placedAt(pos.x, pos.y) || pileAt(room, pos.x, pos.y) || controlAt(pos.x, pos.y)) return; // empty, non-pile cell
-    const token = ctx.inventory.removeAt(index)!;
+    const token = inv.removeAt(index)!;
     placed.push({ token, x: pos.x, y: pos.y });
     drawPlaced();
     dirtyLine(); // a freshly placed token → line is dirty until Built
@@ -279,7 +282,7 @@ export function createCodingArea(deps: CodingAreaDeps): CodingArea {
 
   /** 'p': inventory focus → place SELECTED slot; room focus → place FIFO (front). */
   function pressPlace() {
-    placeToken(ctx.inventory.focused() ? ctx.inventory.selected() : 0);
+    placeToken(ctx.inventory?.focused() ? ctx.inventory.selected() : 0);
   }
 
   function vimClearLine() {            // dd — clear the player's CURRENT row only (any column,
