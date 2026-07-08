@@ -1,15 +1,15 @@
 // ---------------------------------------------------------------------------
-// Room manager — the layer ABOVE renderRoom. It owns "which room is active" and
+// Room manager — the layer ABOVE the room host. It owns "which room is active" and
 // performs transitions: FULLY tear down the current room, then mount the target.
 //
-// Each room mounts FRESH (renderRoom builds all its own state); persistent progress
+// Each room mounts FRESH (mountRoom builds all its own state); persistent progress
 // (discovered commands, hub unlocks) lives in the Codex, never carried in the room.
 // Doors don't know about rooms — they emit a target id; the manager resolves it to a
 // puzzle and swaps. The EXIT door is just a door whose target is the hub.
 // ---------------------------------------------------------------------------
 
 import type { Puzzle, LevelEntry, PuzzleType } from "../schema/types";
-import { renderRoom, type RoomHandle } from "./renderers/roomRenderer";
+import { mountRoom, type RoomHandle } from "./roomHost";
 import { addUnlock, getUnlocks } from "./core/codex";
 import { destinationMenu, HUB_ID } from "./core/progression";
 import { portalFlashColor } from "./core/portalColors";
@@ -59,7 +59,7 @@ export function createRoomManager(
     const isLevel = levels.some((lv) => lv.id === puzzle.id);
     const isHub = puzzle.id === HUB_ID;
 
-    current = renderRoom(container, puzzle, {
+    current = mountRoom(container, puzzle, {
       // Arriving at the HUB plays the one TRANSIENT portal: a red pad flashes at the arrival
       // point, the slime hops off, then it self-consumes (leaving the permanent hub portals).
       transientArrivalColor: isHub ? portalFlashColor({ hub: true }) : undefined,

@@ -2,7 +2,7 @@ import "./style.css";
 import type { Pack, Puzzle, PuzzleType, LevelEntry } from "./schema/types";
 import { loadPack } from "./engine/packLoader";
 import { runPuzzle } from "./engine/puzzleRunner";
-import { renderRoom } from "./engine/renderers/roomRenderer";
+import { mountRoom } from "./engine/roomHost";
 import { createRoomManager, type RoomManager } from "./engine/roomManager";
 
 // The code game boots into a minimal TEST HUB (throwaway — real hub design comes later);
@@ -53,7 +53,7 @@ function useFullscreen() {
 function showPuzzle(puzzle: Puzzle, puzzles: Puzzle[], i: number) {
   if (puzzle.room) {
     useFullscreen();
-    renderRoom(gameRoot, puzzle); // the room reads the puzzle's answer/beats/terminal flavor
+    mountRoom(gameRoot, puzzle); // the room reads the puzzle's answer/beats/terminal flavor
     return;
   }
   useCard();

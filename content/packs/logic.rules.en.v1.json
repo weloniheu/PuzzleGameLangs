@@ -1,0 +1,141 @@
+{
+  "pack_id": "logic.rules.en.v1",
+  "schema_version": "1.0.0",
+  "language": "english",
+  "pattern": {
+    "slots": [
+      { "accepts": ["noun"], "capture": "subject" },
+      { "accepts": ["connector"] },
+      { "accepts": ["property", "noun"], "capture": "predicate" }
+    ],
+    "directions": ["horizontal", "vertical"]
+  },
+  "vocab": [
+    { "text": "BABA", "role": "noun", "noun": "baba" },
+    { "text": "ROCK", "role": "noun", "noun": "rock" },
+    { "text": "FLAG", "role": "noun", "noun": "flag" },
+    { "text": "WALL", "role": "noun", "noun": "wall" },
+    { "text": "IS", "role": "connector" },
+    { "text": "YOU", "role": "property", "property": "you" },
+    { "text": "STOP", "role": "property", "property": "stop" },
+    { "text": "PUSH", "role": "property", "property": "push" },
+    { "text": "WIN", "role": "property", "property": "win" }
+  ],
+  "puzzles": [
+    {
+      "id": "en-01-welcome",
+      "title": "Just Walk",
+      "difficulty": 1,
+      "width": 11,
+      "height": 7,
+      "hint": "Read the rules, then walk onto the flag.",
+      "objects": [
+        { "noun": "baba", "x": 2, "y": 3 },
+        { "noun": "flag", "x": 8, "y": 3 }
+      ],
+      "words": [
+        { "text": "BABA", "x": 1, "y": 1 },
+        { "text": "IS", "x": 2, "y": 1 },
+        { "text": "YOU", "x": 3, "y": 1 },
+        { "text": "FLAG", "x": 7, "y": 1 },
+        { "text": "IS", "x": 8, "y": 1 },
+        { "text": "WIN", "x": 9, "y": 1 }
+      ]
+    },
+    {
+      "id": "en-02-push",
+      "title": "Out of the Way",
+      "difficulty": 2,
+      "width": 11,
+      "height": 7,
+      "hint": "The rock is in the path. What does ROCK IS PUSH let you do?",
+      "objects": [
+        { "noun": "baba", "x": 2, "y": 3 },
+        { "noun": "rock", "x": 5, "y": 3 },
+        { "noun": "flag", "x": 8, "y": 3 }
+      ],
+      "words": [
+        { "text": "BABA", "x": 1, "y": 1 },
+        { "text": "IS", "x": 2, "y": 1 },
+        { "text": "YOU", "x": 3, "y": 1 },
+        { "text": "FLAG", "x": 7, "y": 1 },
+        { "text": "IS", "x": 8, "y": 1 },
+        { "text": "WIN", "x": 9, "y": 1 },
+        { "text": "ROCK", "x": 1, "y": 5 },
+        { "text": "IS", "x": 2, "y": 5 },
+        { "text": "PUSH", "x": 3, "y": 5 }
+      ]
+    },
+    {
+      "id": "en-03-break-wall",
+      "title": "Break the Rule",
+      "difficulty": 3,
+      "width": 11,
+      "height": 9,
+      "hint": "A wall of stone blocks the flag. Rules are made of words — words can be pushed.",
+      "objects": [
+        { "noun": "baba", "x": 2, "y": 4 },
+        { "noun": "wall", "x": 6, "y": 2 },
+        { "noun": "wall", "x": 6, "y": 3 },
+        { "noun": "wall", "x": 6, "y": 4 },
+        { "noun": "wall", "x": 6, "y": 5 },
+        { "noun": "wall", "x": 6, "y": 6 },
+        { "noun": "flag", "x": 9, "y": 4 }
+      ],
+      "words": [
+        { "text": "BABA", "x": 1, "y": 1 },
+        { "text": "IS", "x": 2, "y": 1 },
+        { "text": "YOU", "x": 3, "y": 1 },
+        { "text": "FLAG", "x": 7, "y": 1 },
+        { "text": "IS", "x": 8, "y": 1 },
+        { "text": "WIN", "x": 9, "y": 1 },
+        { "text": "WALL", "x": 1, "y": 7 },
+        { "text": "IS", "x": 2, "y": 7 },
+        { "text": "STOP", "x": 3, "y": 7 }
+      ]
+    },
+    {
+      "id": "en-04-make-win",
+      "title": "Make It Win",
+      "difficulty": 4,
+      "width": 11,
+      "height": 9,
+      "hint": "Nothing is WIN yet. Push the WIN word to finish a rule.",
+      "objects": [
+        { "noun": "baba", "x": 2, "y": 5 },
+        { "noun": "flag", "x": 8, "y": 5 }
+      ],
+      "words": [
+        { "text": "BABA", "x": 1, "y": 1 },
+        { "text": "IS", "x": 2, "y": 1 },
+        { "text": "YOU", "x": 3, "y": 1 },
+        { "text": "FLAG", "x": 6, "y": 1 },
+        { "text": "IS", "x": 7, "y": 1 },
+        { "text": "WIN", "x": 8, "y": 3 }
+      ]
+    },
+    {
+      "id": "en-05-become",
+      "title": "Turn to Gold",
+      "difficulty": 5,
+      "width": 11,
+      "height": 9,
+      "hint": "There is no flag to reach — but a flag would win. What could the rock become?",
+      "objects": [
+        { "noun": "baba", "x": 2, "y": 6 },
+        { "noun": "rock", "x": 5, "y": 3 }
+      ],
+      "words": [
+        { "text": "BABA", "x": 1, "y": 1 },
+        { "text": "IS", "x": 2, "y": 1 },
+        { "text": "YOU", "x": 3, "y": 1 },
+        { "text": "FLAG", "x": 7, "y": 1 },
+        { "text": "IS", "x": 8, "y": 1 },
+        { "text": "WIN", "x": 9, "y": 1 },
+        { "text": "ROCK", "x": 1, "y": 4 },
+        { "text": "IS", "x": 2, "y": 4 },
+        { "text": "FLAG", "x": 4, "y": 4 }
+      ]
+    }
+  ]
+}
