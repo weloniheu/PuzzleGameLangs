@@ -53,10 +53,9 @@
           },
           {
             "pos": { "x": 5, "y": 2 },
-            "target": "",
+            "target": "logic-rules-001",
             "label": "Logic",
-            "state": "coming_soon",
-            "beat": "🚧 Logic portal — coming soon."
+            "state": "open"
           },
           {
             "pos": { "x": 8, "y": 2 },

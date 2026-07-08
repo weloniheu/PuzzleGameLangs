@@ -18,6 +18,7 @@ export type PuzzleType =
   | "sentence_build" // grammar: arrange tagged words into a sentence structure
   | "combine"        // word-logic: combine objects to reach a described outcome
   | "code_build"     // assemble code blocks from a discovered-command palette
+  | "logic_rules"    // Baba-style rule manipulation (room-only; see src/puzzles/logic/)
   | "predict_output"
   | "fix_the_bug";
 
@@ -139,6 +140,24 @@ export interface CodeBuildPayload {
   terminal?: { build: string; run: string };
   /** Portrait-only dialogue (snake + hint giver share one presentation; see below). */
   dialogue?: DialogueConfig;
+}
+
+// --- logic_rules (Baba-style rule manipulation; ROOM-ONLY, no card renderer) ---
+// The game's own data contract (rule pattern + vocab + boards) lives in a separate
+// LOGIC pack (src/puzzles/logic/schema.ts) so a new language stays zero-engine-change.
+// This wrapper payload just POINTS the room at that pack.
+export interface LogicRulesPayload {
+  /** URL of the LogicPack (rule pattern + vocab + boards) this room draws from. */
+  pack_url: string;
+  /** WHICH board in that pack this room plays — one room per board, so the room's
+   *  floor is exactly the board (the engine renders it via the shared tile grid). */
+  board_id: string;
+  /** Optional room dialogue — same shared shape every room puzzle may declare. */
+  dialogue?: DialogueConfig;
+}
+export interface LogicRulesSolution {
+  /** Win conditions live in the logic pack's boards; there is nothing to compare here. */
+  note?: string;
 }
 
 // --- dialogue (two portrait-only speakers sharing one presentation) ---
@@ -315,6 +334,7 @@ export type Payload =
   | SentencePayload
   | CombinePayload
   | CodeBuildPayload
+  | LogicRulesPayload
   | CodePayload;
 export type Solution =
   | MatchSolution
@@ -322,6 +342,7 @@ export type Solution =
   | ReorderSolution
   | CombineSolution
   | CodeBuildSolution
+  | LogicRulesSolution
   | CodeSolution;
 
 // --- The puzzle itself ---

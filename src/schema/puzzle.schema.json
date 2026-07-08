@@ -31,6 +31,7 @@
         "sentence_build",
         "combine",
         "code_build",
+        "logic_rules",
         "predict_output",
         "fix_the_bug"
       ]
@@ -216,6 +217,24 @@
               "inputs": { "type": "array", "items": { "type": "string" }, "minItems": 2 }
             }
           }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "puzzle_type": { "const": "logic_rules" } } },
+      "then": {
+        "required": ["room"],
+        "properties": {
+          "payload": {
+            "type": "object",
+            "required": ["pack_url", "board_id"],
+            "properties": {
+              "pack_url": { "type": "string", "minLength": 1 },
+              "board_id": { "type": "string", "minLength": 1 },
+              "dialogue": { "type": "object" }
+            }
+          },
+          "solution": { "type": "object" }
         }
       }
     },

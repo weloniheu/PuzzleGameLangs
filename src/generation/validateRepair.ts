@@ -1,14 +1,15 @@
 import type {
   Puzzle, MatchPayload, MatchSolution, PuzzleType, ValidatorType,
   SentencePayload, ReorderSolution, CombinePayload, CombineSolution,
-  CodeBuildPayload, CodeBuildSolution,
+  CodeBuildPayload, CodeBuildSolution, LogicRulesPayload,
 } from "../schema/types";
 import { hasRenderer } from "../engine/renderers";
 import { hasValidator } from "../engine/validators";
+import { moduleFor } from "../puzzles";
 
 const PUZZLE_TYPES: PuzzleType[] = [
   "match", "fill_blank", "reorder", "sentence_build", "combine", "code_build",
-  "predict_output", "fix_the_bug",
+  "logic_rules", "predict_output", "fix_the_bug",
 ];
 const VALIDATOR_TYPES: ValidatorType[] = [
   "exact_match", "normalized_match", "set_match", "sequence_match",
@@ -35,8 +36,10 @@ export function validatePuzzle(p: unknown): { ok: boolean; errors: string[] } {
   if (!Array.isArray(o.hints)) errors.push(`hints must be an array`);
   if (!o.metadata || typeof o.metadata.reviewed !== "boolean") errors.push(`metadata.reviewed (bool) required`);
 
-  // --- the engine must actually be able to run it ---
-  if (o.puzzle_type && !hasRenderer(o.puzzle_type)) errors.push(`no renderer for "${o.puzzle_type}"`);
+  // --- the engine must actually be able to run it: a CARD renderer or a ROOM module ---
+  if (o.puzzle_type && !hasRenderer(o.puzzle_type) && !moduleFor(o.puzzle_type)) {
+    errors.push(`no renderer or room module for "${o.puzzle_type}"`);
+  }
   if (o.validator_type && !hasValidator(o.validator_type)) errors.push(`no validator for "${o.validator_type}" (deferred tier?)`);
 
   // --- self-consistency: the part that catches "valid JSON, unsolvable puzzle" ---
@@ -91,6 +94,14 @@ export function validatePuzzle(p: unknown): { ok: boolean; errors: string[] } {
       );
       if (!has) errors.push(`no recipe matches the winning solution.inputs set`);
     }
+  }
+
+  // logic_rules: room-only (no card renderer); the payload points at ONE board of its LOGIC pack.
+  if (o.puzzle_type === "logic_rules") {
+    const pay = o.payload as LogicRulesPayload | undefined;
+    if (typeof pay?.pack_url !== "string" || !pay.pack_url) errors.push(`logic_rules payload needs a pack_url`);
+    if (typeof pay?.board_id !== "string" || !pay.board_id) errors.push(`logic_rules payload needs a board_id`);
+    if (!o.room) errors.push(`logic_rules puzzles are room-only: "room" is required`);
   }
 
   // code_build: there must be tokens to assemble and a target output.

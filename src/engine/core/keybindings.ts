@@ -15,7 +15,8 @@ export type Bindings = Record<string, Binding[]>; // action → alternative bind
 
 export interface ActionDef { id: string; label: string; }
 
-/** Actions shared by both schemes. `interact` covers Build / Run / Talk (context-disambiguated). */
+/** Actions shared by both schemes. `interact` covers Build / Run / Talk (context-disambiguated).
+ *  `undo`/`reset` are claimed by modules that support them (e.g. the logic board); elsewhere no-op. */
 export const COMMON_ACTIONS: ActionDef[] = [
   { id: "up", label: "Move up" },
   { id: "down", label: "Move down" },
@@ -24,6 +25,8 @@ export const COMMON_ACTIONS: ActionDef[] = [
   { id: "pickup", label: "Pick up / inventory" },
   { id: "place", label: "Place token" },
   { id: "interact", label: "Interact (Build / Run / Talk)" },
+  { id: "undo", label: "Undo move" },
+  { id: "reset", label: "Reset puzzle" },
   { id: "debug", label: "Debug readout" },
 ];
 /** Vim adds the editing operator sequences. */
@@ -42,6 +45,7 @@ export function defaultBindings(scheme: SchemeId): Bindings {
     return {
       up: [["k"]], down: [["j"]], left: [["h"]], right: [["l"]],
       pickup: [["d", 'w']], place: [["p"]], interact: [["Enter"]], debug: [["`"]],
+      undo: [["u"]], reset: [["r"]],
       clearLine: [["d", "d"]], deleteToken: [["x"]],
     };
   }
@@ -49,6 +53,7 @@ export function defaultBindings(scheme: SchemeId): Bindings {
     up: [["ArrowUp"], ["w"]], down: [["ArrowDown"], ["s"]],
     left: [["ArrowLeft"], ["a"]], right: [["ArrowRight"], ["d"]],
     pickup: [["i"]], place: [["p"]], interact: [["Enter"]], debug: [["`"]],
+    undo: [["u"]], reset: [["r"]],
   };
 }
 

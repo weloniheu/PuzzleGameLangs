@@ -388,9 +388,8 @@ export function mountRoom(
     if (inv.isFull()) dialogue.fireFirstTime("first_inventory_full");
   }
 
-  /** pickup action: module claim (a placed token here) → pile here → toggle focus. */
+  /** pickup fallthrough (the module already declined): pile here → toggle focus. */
   function pressPickup() {
-    if (mounted?.onAction?.("pickup")) return; // e.g. pick a placed token back
     const here = pileAt(room, pos.x, pos.y);
     if (here) { tryPickup(here.token); return; }
     if (inv.focused()) { exitInventory(); } else { inv.enterFocus(); }
@@ -410,10 +409,13 @@ export function mountRoom(
   }
 
   function dispatchAction(action: string) {
+    // The module gets FIRST CLAIM on every action — a board module claims movement
+    // (the player drives the board, not the slime), coding claims place/dd/dw and a
+    // pickup on a placed token. A declined action falls through to the engine.
+    if (mounted?.onAction?.(action)) return;
     if (MOVE[action]) { moveOrCursor(MOVE[action]); return; }
     if (action === "pickup") { pressPickup(); return; }
-    if (action === "interact") { doInteract(); return; }
-    mounted?.onAction?.(action); // place / debug / clearLine / deleteToken / …
+    if (action === "interact") doInteract();
   }
 
   // ONE focus-aware input handler (see systems/inputDispatch): esc + dialogue are
