@@ -26,6 +26,13 @@ import { createTeardown, type Teardown } from "../../engine/core/teardown";
 
 export interface LogicMountHandle {
   destroy(): void;
+  /** Feed one movement step (in-room, the engine's input dispatch drives this). */
+  move(dir: Direction): void;
+  undo(): void;
+  reset(): void;
+  won(): boolean;
+  /** Enter-on-win: fires onSolved iff the puzzle is won. Returns true if consumed. */
+  confirmWin(): boolean;
 }
 
 // --- keyboard → direction (three schemes live at once; keyboard-only per Rule 4) ---
@@ -36,9 +43,10 @@ const MOVE_KEYS: Record<string, Direction> = {
   k: DIRECTIONS.up, j: DIRECTIONS.down, h: DIRECTIONS.left, l: DIRECTIONS.right,
 };
 
-// --- object-kind display (per-renderer visual default; unknown → tinted initial) ---
-const OBJECT_GLYPH: Record<string, string> = {
-  baba: "🐢", rock: "🪨", flag: "🚩", wall: "🧱", water: "💧", key: "🗝️", door: "🚪",
+// --- object-kind display (per-renderer visual default; unknown → tinted initial).
+//     Shared with the in-room module (index.ts) so both surfaces draw alike. ---
+export const OBJECT_GLYPH: Record<string, string> = {
+  slime: "🟢", rock: "🪨", flag: "🚩", wall: "🧱", water: "💧", key: "🗝️", door: "🚪",
 };
 
 const STYLE = `
@@ -67,19 +75,26 @@ const STYLE = `
   min-height: 24px; }
 `;
 
-function cloneEntities(entities: Entity[]): Entity[] {
+/** Deep-enough copy for the undo history (shared with the in-room module). */
+export function cloneEntities(entities: Entity[]): Entity[] {
   return entities.map((e) => ({ ...e, word: e.word ? { ...e.word } : undefined }));
 }
 
 /**
  * Mount ONE puzzle. Returns a handle whose destroy() runs full teardown (listener +
- * injected DOM). `onSolved` fires once when the puzzle is won.
+ * injected DOM). `onSolved` fires once when the player CONFIRMS a win (Enter).
+ *
+ * `standaloneKeys` (default true) wires this mount's OWN window keydown listener —
+ * the standalone /logic.html page uses that. The room engine passes FALSE and drives
+ * the returned handle through its shared input dispatch instead, so there is exactly
+ * ONE live input pipeline either way (no ghost input).
  */
 export function mountLogicPuzzle(
   container: HTMLElement,
   pack: LogicPack,
   puzzle: LogicPuzzle,
-  onSolved: () => void
+  onSolved: () => void,
+  opts: { standaloneKeys?: boolean } = {}
 ): LogicMountHandle {
   const td: Teardown = createTeardown();
 
@@ -169,29 +184,46 @@ export function mountLogicPuzzle(
     draw();
   }
 
-  function onKey(e: KeyboardEvent) {
-    const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
-    if (won && e.key === "Enter") { onSolved(); return; }
-    if (key === "u" || key === "z") { e.preventDefault(); undo(); return; }
-    if (key === "r") { e.preventDefault(); reset(); return; }
-    const dir = MOVE_KEYS[e.key] ?? MOVE_KEYS[key];
-    if (dir) { e.preventDefault(); move(dir); }
+  /** Enter-on-win: consume the confirm and report the solve (shared by both drivers). */
+  function confirmWin(): boolean {
+    if (!won) return false;
+    onSolved();
+    return true;
   }
-  window.addEventListener("keydown", onKey);
-  td.add(() => window.removeEventListener("keydown", onKey));
+
+  // Standalone driver ONLY (dev /logic.html): this mount's own window listener. The
+  // room engine sets standaloneKeys:false and routes its input dispatch to the handle.
+  if (opts.standaloneKeys ?? true) {
+    const onKey = (e: KeyboardEvent) => {
+      const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+      if (e.key === "Enter" && confirmWin()) return;
+      if (key === "u" || key === "z") { e.preventDefault(); undo(); return; }
+      if (key === "r") { e.preventDefault(); reset(); return; }
+      const dir = MOVE_KEYS[e.key] ?? MOVE_KEYS[key];
+      if (dir) { e.preventDefault(); move(dir); }
+    };
+    window.addEventListener("keydown", onKey);
+    td.add(() => window.removeEventListener("keydown", onKey));
+  }
 
   draw();
   if (isSolved(board)) finish(); // a puzzle may start already solved (edge case)
 
-  return { destroy: () => td.run() };
+  return { destroy: () => td.run(), move, undo, reset, won: () => won, confirmWin };
 }
 
 /**
  * Self-contained game shell: plays the pack's puzzles in order, advancing on win.
- * dev.ts (and, later, a RoomPuzzleModule adapter) calls this. Only one puzzle is
- * mounted at a time; each is fully torn down before the next mounts.
+ * dev.ts calls this standalone; the RoomPuzzleModule adapter (index.ts) calls it with
+ * `standaloneKeys: false` and drives the returned handle through the room engine's
+ * input dispatch. Only one puzzle is mounted at a time; each is fully torn down
+ * before the next mounts. `onSolved` fires on every confirmed win, before advancing.
  */
-export function startLogicGame(container: HTMLElement, pack: LogicPack): LogicMountHandle {
+export function startLogicGame(
+  container: HTMLElement,
+  pack: LogicPack,
+  opts: { standaloneKeys?: boolean; onSolved?: () => void } = {}
+): LogicMountHandle {
   const puzzles = [...pack.puzzles].sort((a, b) => a.difficulty - b.difficulty);
   let current: LogicMountHandle | null = null;
   let i = 0;
@@ -199,8 +231,19 @@ export function startLogicGame(container: HTMLElement, pack: LogicPack): LogicMo
   function mountAt(index: number) {
     current?.destroy();
     i = ((index % puzzles.length) + puzzles.length) % puzzles.length;
-    current = mountLogicPuzzle(container, pack, puzzles[i], () => mountAt(i + 1));
+    current = mountLogicPuzzle(
+      container, pack, puzzles[i],
+      () => { opts.onSolved?.(); mountAt(i + 1); },
+      { standaloneKeys: opts.standaloneKeys },
+    );
   }
   mountAt(0);
-  return { destroy: () => current?.destroy() };
+  return {
+    destroy: () => current?.destroy(),
+    move: (dir) => current?.move(dir),
+    undo: () => current?.undo(),
+    reset: () => current?.reset(),
+    won: () => current?.won() ?? false,
+    confirmWin: () => current?.confirmWin() ?? false,
+  };
 }

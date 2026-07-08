@@ -18,6 +18,7 @@ export type PuzzleType =
   | "sentence_build" // grammar: arrange tagged words into a sentence structure
   | "combine"        // word-logic: combine objects to reach a described outcome
   | "code_build"     // assemble code blocks from a discovered-command palette
+  | "logic_rules"    // Baba-style rule manipulation (room-only; see src/puzzles/logic/)
   | "predict_output"
   | "fix_the_bug";
 
@@ -141,6 +142,24 @@ export interface CodeBuildPayload {
   dialogue?: DialogueConfig;
 }
 
+// --- logic_rules (Baba-style rule manipulation; ROOM-ONLY, no card renderer) ---
+// The game's own data contract (rule pattern + vocab + boards) lives in a separate
+// LOGIC pack (src/puzzles/logic/schema.ts) so a new language stays zero-engine-change.
+// This wrapper payload just POINTS the room at that pack.
+export interface LogicRulesPayload {
+  /** URL of the LogicPack (rule pattern + vocab + boards) this room draws from. */
+  pack_url: string;
+  /** WHICH board in that pack this room plays — one room per board, so the room's
+   *  floor is exactly the board (the engine renders it via the shared tile grid). */
+  board_id: string;
+  /** Optional room dialogue — same shared shape every room puzzle may declare. */
+  dialogue?: DialogueConfig;
+}
+export interface LogicRulesSolution {
+  /** Win conditions live in the logic pack's boards; there is nothing to compare here. */
+  note?: string;
+}
+
 // --- dialogue (two portrait-only speakers sharing one presentation) ---
 export type DialogueTrigger =
   | "on_enter" | "build-first" | "wrong-order" | "wrong-indent" | "wrong-word" | "success" | "hint"
@@ -233,9 +252,10 @@ export interface CodingArea {
 }
 /** Optional, gateable room features. A room renders ONLY the features it declares; an
  *  undeclared feature is not built at all. CLOSED set (engine has a render branch per
- *  feature); content picks from these. Always-on basics (movement, settings, inventory
- *  HUD) are NOT features — they need no declaration. */
-export type RoomFeature = "terminal" | "coding_area";
+ *  feature); content picks from these. Always-on basics (movement, settings) are NOT
+ *  features — they need no declaration. The inventory HUD IS a feature: rooms that
+ *  carry tokens (hub, code levels) declare it; board rooms (logic) don't. */
+export type RoomFeature = "terminal" | "coding_area" | "inventory";
 
 export interface RoomLayout {
   width: number;  // columns
@@ -251,7 +271,8 @@ export interface RoomLayout {
   /** Region where tokens can be placed (and indent is measured from). */
   coding_area?: CodingArea;
   /** Features this room renders. Undeclared features are not built (see RoomFeature).
-   *  Coding-style puzzles declare ["terminal", "coding_area"]; the hub declares none. */
+   *  Coding-style puzzles declare ["terminal", "coding_area", "inventory"]; the hub
+   *  declares ["inventory"]; logic board rooms declare none. */
   features?: RoomFeature[];
   /** How many inventory slots the player has in this room. Resolved room-first, then by
    *  puzzle-type default, then a fallback (see engine/roomFeatures.ts). */
@@ -315,6 +336,7 @@ export type Payload =
   | SentencePayload
   | CombinePayload
   | CodeBuildPayload
+  | LogicRulesPayload
   | CodePayload;
 export type Solution =
   | MatchSolution
@@ -322,6 +344,7 @@ export type Solution =
   | ReorderSolution
   | CombineSolution
   | CodeBuildSolution
+  | LogicRulesSolution
   | CodeSolution;
 
 // --- The puzzle itself ---

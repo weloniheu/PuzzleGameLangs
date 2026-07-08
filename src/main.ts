@@ -9,6 +9,7 @@ import { createRoomManager, type RoomManager } from "./engine/roomManager";
 // the hub's doors transition to the Python code pack's puzzles via the room manager.
 const HUB_PACK = "/content/packs/hub.test.v1.json";
 const CODE_PACK = "/content/packs/python.code.v1.json";
+const LOGIC_ROOM_PACK = "/content/packs/logic.room.en.v1.json";
 
 // TEMPORARY dev-only switcher: with the dropdown gone, press 1–4 to load a pack's
 // first puzzle for testing (1 = code/fullscreen, 2–4 = the card games). Scaffolding
@@ -99,10 +100,12 @@ const levelsByType = new Map<PuzzleType, LevelEntry[]>(); // ordered level lists
 
 async function bootHub() {
   if (!roomRegistry.size) {
-    const [hub, code] = await Promise.all([loadPack(HUB_PACK), loadPack(CODE_PACK)]);
-    for (const p of [...hub.puzzles, ...code.puzzles]) roomRegistry.set(p.id, p);
+    const [hub, code, logic] = await Promise.all([
+      loadPack(HUB_PACK), loadPack(CODE_PACK), loadPack(LOGIC_ROOM_PACK),
+    ]);
+    for (const p of [...hub.puzzles, ...code.puzzles, ...logic.puzzles]) roomRegistry.set(p.id, p);
     // Merge each pack's progression into one type → ordered-levels map (drives the menu portal).
-    for (const pack of [hub, code]) {
+    for (const pack of [hub, code, logic]) {
       for (const prog of pack.progression ?? []) {
         levelsByType.set(prog.puzzle_type, [...(levelsByType.get(prog.puzzle_type) ?? []), ...prog.levels]);
       }

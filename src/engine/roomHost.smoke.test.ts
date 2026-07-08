@@ -12,7 +12,7 @@
 // module registry dispatch, and the transition sequence end-to-end.
 // ---------------------------------------------------------------------------
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { LevelEntry, Pack, Puzzle, PuzzleType } from "../schema/types";
@@ -25,14 +25,21 @@ const loadPack = (rel: string): Pack => JSON.parse(readFileSync(join(ROOT, rel),
 if (typeof globalThis.requestAnimationFrame === "undefined") {
   globalThis.requestAnimationFrame = (cb: FrameRequestCallback) => window.setTimeout(() => cb(0), 0);
 }
+// Serve runtime fetches (the logic module loads its LOGIC pack by URL) from disk.
+globalThis.fetch = (async (url: unknown) =>
+  new Response(readFileSync(join(ROOT, String(url)), "utf8"), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  })) as typeof fetch;
 
 function bootWorld() {
   const hub = loadPack("content/packs/hub.test.v1.json");
   const code = loadPack("content/packs/python.code.v1.json");
+  const logic = loadPack("content/packs/logic.room.en.v1.json");
   const registry = new Map<string, Puzzle>();
-  for (const p of [...hub.puzzles, ...code.puzzles]) registry.set(p.id, p);
+  for (const p of [...hub.puzzles, ...code.puzzles, ...logic.puzzles]) registry.set(p.id, p);
   const levelsByType = new Map<PuzzleType, LevelEntry[]>();
-  for (const pack of [hub, code]) {
+  for (const pack of [hub, code, logic]) {
     for (const prog of pack.progression ?? []) {
       levelsByType.set(prog.puzzle_type, [...(levelsByType.get(prog.puzzle_type) ?? []), ...prog.levels]);
     }
@@ -86,15 +93,16 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     expect(text(c, ".room-narrator")).toContain("Settings");
     press(c, "Enter"); // → final step: waits for enter_door
 
-    // PROBE a blocked door: the coming_soon Logic portal interjects, tutorial resumes after.
-    press(c, "ArrowUp", 2); // (5,4) → (5,2) Logic door
+    // PROBE a blocked door: the coming_soon Grammar portal interjects, tutorial resumes after.
+    press(c, "ArrowRight", 3); // (5,4) → (8,4)
+    press(c, "ArrowUp", 2);    // (8,4) → (8,2) Grammar door
     press(c, "Enter");
     expect(text(c, ".room-narrator")).toContain("coming soon");
     press(c, "Enter"); // dismiss the interjection → the stashed tutorial RESUMES
     expect(text(c, ".room-narrator")).toContain("Coding door");
 
     // Walk to the OPEN Coding door and go through → the manager swaps rooms.
-    press(c, "ArrowLeft", 3); // (5,2) → (2,2)
+    press(c, "ArrowLeft", 6); // (8,2) → (2,2)
     press(c, "Enter");
 
     // --- LEVEL 001: terminal + piles + menu portal; snake on_enter plays ---
@@ -176,6 +184,63 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     manager.teardown();
     expect(c.innerHTML).toBe("");
     manager.teardown(); // idempotent
+  });
+
+  it("logic room: the hub's Logic portal mounts the board; ENGINE input drives it", async () => {
+    const { container: c, manager } = world;
+    manager.enter("hub");
+    press(c, "Enter");      // tut-1
+    press(c, "ArrowLeft");  // tut-2 (move) → (5,4)
+    press(c, "Enter");      // tut-3 → tut-4 waits enter_door (input passes through)
+    press(c, "ArrowUp", 2); // (5,2) — the now-OPEN Logic door
+    press(c, "Enter");      // transition → the logic room (module fetches its pack)
+
+    // The board IS the room: the ENGINE's tile grid is the board floor (13×9 =
+    // an 11×7 board plus the wall ring) — no floating panel, no nested room.
+    // 7 entity boxes = 6 word tiles + the flag; the SLIME entity has NO glyph
+    // because the engine's slime IS it ("SLIME IS YOU" controls the player).
+    await vi.waitFor(() =>
+      expect(c.querySelectorAll(".logic-board-layer .logic-cell-box")).toHaveLength(7),
+    );
+    expect(c.querySelector(".logic-game")).toBeNull(); // the standalone panel never mounts in-room
+    expect(c.querySelectorAll(".room-tile-layer .tile-room")).toHaveLength(13 * 9);
+    expect(c.querySelectorAll(".room-world")).toHaveLength(1); // ONE room
+    expect(c.querySelectorAll(".slime")).toHaveLength(1);      // ONE player
+    expect(c.querySelector(".room-inventory")).toBeNull();     // no HUD (feature not declared)
+    expect(c.querySelector(".room-terminal")).toBeNull();      // no coding furniture
+
+    // ONE input pipeline, one body: arrows step the BOARD through the engine's
+    // dispatch, and the slime moves because it IS the YOU entity.
+    const slime0 = slimeAt(c);
+    const board0 = c.querySelector(".logic-board-layer")!.innerHTML;
+    press(c, "ArrowRight");
+    expect(slimeAt(c)).not.toBe(slime0); // the slime IS the controlled entity
+    press(c, "u"); // the shared undo binding routes to the module
+    expect(c.querySelector(".logic-board-layer")!.innerHTML).toBe(board0);
+    expect(slimeAt(c)).toBe(slime0); // undo pulls the player back too
+
+    // Enter while NOT won falls through to the engine's menu portal (under the
+    // slime's start cell) → the exit chooser.
+    press(c, "Enter");
+    expect([...c.querySelectorAll(".room-destmenu-option")].map((b) => b.textContent))
+      .toEqual(["⌂ Hub", "Logic I"]);
+    press(c, "Escape");
+    expect((c.querySelector(".room-destmenu") as HTMLElement).hidden).toBe(true);
+
+    // Walk the slime onto the flag → won → the unlock is granted and the frozen
+    // board RELEASES movement, so the engine walks the slime back to the portal.
+    press(c, "ArrowRight", 6);
+    expect(text(c, ".logic-room-banner")).toContain("Solved");
+    press(c, "ArrowLeft", 6); // engine movement now (board frozen)
+    press(c, "Enter");        // on the menu portal → chooser, with Logic II unlocked
+    expect([...c.querySelectorAll(".room-destmenu-option")].map((b) => b.textContent))
+      .toEqual(["⌂ Hub", "Logic I", "Logic II"]);
+    press(c, "Enter"); // select "⌂ Hub" → back through the portal system
+    expect(c.querySelectorAll(".room-door-layer .tile-portal")).toHaveLength(4);
+    expect(c.querySelector(".logic-board-layer")).toBeNull(); // board fully torn down
+
+    manager.teardown();
+    expect(c.innerHTML).toBe("");
   });
 
   it("inventory focus toggles with i and esc returns to the room (not settings)", () => {

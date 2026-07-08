@@ -6,8 +6,15 @@
     {
       "puzzle_type": "code_build",
       "levels": [
-        { "id": "py-code-hello-001", "label": "1 · Greeting" },
-        { "id": "py-code-name-002", "label": "2 · Your name", "unlock": "puzzle1.cleared" }
+        {
+          "id": "py-code-hello-001",
+          "label": "1 · Greeting"
+        },
+        {
+          "id": "py-code-name-002",
+          "label": "2 · Your name",
+          "unlock": "puzzle1.cleared"
+        }
       ]
     }
   ],
@@ -25,14 +32,39 @@
         "scenario": "You look around and find yourself looking at a blue planet. You can barely see them — they wave at you and wait for you to respond.",
         "goal": "Greet them. Make your program say: hello world",
         "tokens": [
-          { "text": "print", "kind": "function", "discovers": "print" },
-          { "text": "write", "kind": "decoy" },
-          { "text": "return", "kind": "decoy" },
-          { "text": "(", "kind": "punctuation" },
-          { "text": ")", "kind": "punctuation" },
-          { "text": "\"hello\"", "kind": "string" },
-          { "text": "\"world\"", "kind": "string" },
-          { "text": "\"goodbye\"", "kind": "string" }
+          {
+            "text": "print",
+            "kind": "function",
+            "discovers": "print"
+          },
+          {
+            "text": "write",
+            "kind": "decoy"
+          },
+          {
+            "text": "return",
+            "kind": "decoy"
+          },
+          {
+            "text": "(",
+            "kind": "punctuation"
+          },
+          {
+            "text": ")",
+            "kind": "punctuation"
+          },
+          {
+            "text": "\"hello\"",
+            "kind": "string"
+          },
+          {
+            "text": "\"world\"",
+            "kind": "string"
+          },
+          {
+            "text": "\"goodbye\"",
+            "kind": "string"
+          }
         ],
         "beats": {
           "build-first": "🐍 The snake isn't ready — you haven't BUILT the line yet. Stand on Build and press Enter first.",
@@ -43,35 +75,118 @@
           "success": "The aliens light up and wave back! ✅",
           "first_run_no_build": "🐍 Whoa — you ran before BUILDING. Stand on Build and press Enter to compile your line first, then come back to Run."
         },
-        "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
+        "terminal": {
+          "build": "$ python -m py_compile main.py",
+          "run": "$ python main.py"
+        },
         "dialogue": {
           "speakers": {
-            "snake": { "name": "Sss", "side": "left", "portrait": "🐍", "portrait2": "🐍" },
-            "hint":  { "name": "Helper", "side": "right", "portrait": "🛰️", "portrait2": "🛰️" }
+            "snake": {
+              "name": "Sss",
+              "side": "left",
+              "portrait": "🐍",
+              "portrait2": "🐍"
+            },
+            "hint": {
+              "name": "Helper",
+              "side": "right",
+              "portrait": "🛰️",
+              "portrait2": "🛰️"
+            }
           },
           "on_enter": [
-            { "id": "enter-1", "speaker": "snake", "text": "Sssss! Welcome to the play house.", "trigger": "on_enter", "autoAdvance": true },
-            { "id": "enter-2", "speaker": "snake", "text": "Maybe you could write a message for the friends watching from that little blue planet? They've waited so long to hear from someone.", "trigger": "on_enter" },
-            { "id": "enter-3", "speaker": "snake", "text": "I can't hold a pen — no hands! — but a printer can speak for me.", "trigger": "on_enter" },
-            { "id": "enter-friend", "speaker": "snake", "text": "Stuck? The friend over there with the ❓ can help.", "trigger": "on_enter", "highlight": "hint" }
+            {
+              "id": "enter-1",
+              "speaker": "snake",
+              "text": "Sssss! Welcome to the play house.",
+              "trigger": "on_enter",
+              "autoAdvance": true
+            },
+            {
+              "id": "enter-2",
+              "speaker": "snake",
+              "text": "Maybe you could write a message for the friends watching from that little blue planet? They've waited so long to hear from someone.",
+              "trigger": "on_enter"
+            },
+            {
+              "id": "enter-3",
+              "speaker": "snake",
+              "text": "I can't hold a pen — no hands! — but a printer can speak for me.",
+              "trigger": "on_enter"
+            },
+            {
+              "id": "enter-friend",
+              "speaker": "snake",
+              "text": "Stuck? The friend over there with the ❓ can help.",
+              "trigger": "on_enter",
+              "highlight": "hint"
+            }
           ],
           "hints": [
-            { "text": "Greet them — make the program say hello.", "tag": "intro" },
-            { "text": "The snake can't write, but it can use a printer. Reach for print.", "tag": "after:wrong-word" },
-            { "text": "Lay print then the word against the left wall (indent 0): print(\"hello\").", "tag": "after:wrong-order" }
+            {
+              "text": "Greet them — make the program say hello.",
+              "tag": "intro"
+            },
+            {
+              "text": "The snake can't write, but it can use a printer. Reach for print.",
+              "tag": "after:wrong-word"
+            },
+            {
+              "text": "Lay print then the word against the left wall (indent 0): print(\"hello\").",
+              "tag": "after:wrong-order"
+            }
           ],
           "guided_tutorial": [
-            { "id": "ctut-1", "speaker": "narrator", "text": "This is a code puzzle. Let's learn how it works.", "trigger": "guided_tutorial", "autoAdvance": false },
-            { "id": "ctut-2", "speaker": "narrator", "text": "Walk up to a word on the floor and press I to pick it up.", "trigger": "guided_tutorial", "waitFor": "pickup" },
-            { "id": "ctut-3", "speaker": "narrator", "text": "Walk to an empty tile and press P to place it down.", "trigger": "guided_tutorial", "waitFor": "place" },
-            { "id": "ctut-4", "speaker": "narrator", "text": "Stand on Build and press Enter to compile your line.", "trigger": "guided_tutorial", "waitFor": "build" },
-            { "id": "ctut-5", "speaker": "narrator", "text": "Stand on Run and press Enter to see what your line does.", "trigger": "guided_tutorial", "waitFor": "run" }
+            {
+              "id": "ctut-1",
+              "speaker": "narrator",
+              "text": "This is a code puzzle. Let's learn how it works.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            },
+            {
+              "id": "ctut-2",
+              "speaker": "narrator",
+              "text": "Walk up to a word on the floor and press I to pick it up.",
+              "trigger": "guided_tutorial",
+              "waitFor": "pickup"
+            },
+            {
+              "id": "ctut-3",
+              "speaker": "narrator",
+              "text": "Walk to an empty tile and press P to place it down.",
+              "trigger": "guided_tutorial",
+              "waitFor": "place"
+            },
+            {
+              "id": "ctut-4",
+              "speaker": "narrator",
+              "text": "Stand on Build and press Enter to compile your line.",
+              "trigger": "guided_tutorial",
+              "waitFor": "build"
+            },
+            {
+              "id": "ctut-5",
+              "speaker": "narrator",
+              "text": "Stand on Run and press Enter to see what your line does.",
+              "trigger": "guided_tutorial",
+              "waitFor": "run"
+            }
           ]
         }
       },
       "solution": {
         "output": "hello world",
-        "lines": [{ "content": ["print", "hello", "world"], "indent": 0 }]
+        "lines": [
+          {
+            "content": [
+              "print",
+              "hello",
+              "world"
+            ],
+            "indent": 0
+          }
+        ]
       },
       "hints": [
         "Greet them.",
@@ -80,7 +195,11 @@
       ],
       "metadata": {
         "concept": "print() — your first command",
-        "tags": ["beginner", "python", "output"],
+        "tags": [
+          "beginner",
+          "python",
+          "output"
+        ],
         "generator": "human",
         "reviewed": true
       },
@@ -99,20 +218,79 @@
           "#############"
         ],
         "piles": [
-          { "token": "write",   "pos": { "x": 9,  "y": 2 } },
-          { "token": "goodbye", "pos": { "x": 10, "y": 2 } },
-          { "token": "print",   "pos": { "x": 9,  "y": 6 } },
-          { "token": "hello",   "pos": { "x": 10, "y": 6 } },
-          { "token": "world",   "pos": { "x": 11, "y": 6 } }
+          {
+            "token": "write",
+            "pos": {
+              "x": 9,
+              "y": 2
+            }
+          },
+          {
+            "token": "goodbye",
+            "pos": {
+              "x": 10,
+              "y": 2
+            }
+          },
+          {
+            "token": "print",
+            "pos": {
+              "x": 9,
+              "y": 6
+            }
+          },
+          {
+            "token": "hello",
+            "pos": {
+              "x": 10,
+              "y": 6
+            }
+          },
+          {
+            "token": "world",
+            "pos": {
+              "x": 11,
+              "y": 6
+            }
+          }
         ],
-        "features": ["terminal", "coding_area"],
-        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "features": [
+          "terminal",
+          "coding_area",
+          "inventory"
+        ],
+        "coding_area": {
+          "x": 1,
+          "y": 1,
+          "width": 7,
+          "height": 7
+        },
         "inventory_slots": 5,
         "controls": [
-          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
-          { "action": "run",   "label": "Run",   "pos": { "x": 5, "y": 7 } }
+          {
+            "action": "build",
+            "label": "Build",
+            "pos": {
+              "x": 2,
+              "y": 7
+            }
+          },
+          {
+            "action": "run",
+            "label": "Run",
+            "pos": {
+              "x": 5,
+              "y": 7
+            }
+          }
         ],
-        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 4
+          },
+          "marker": "❓"
+        },
         "grants_unlock": "puzzle1.cleared"
       }
     },
@@ -128,17 +306,44 @@
         "scenario": "The aliens point at you, curious. A nameplate on your pod reads ‘Sam’. They want to know who you are.",
         "goal": "Tell them your name. Make your program say: Sam",
         "tokens": [
-          { "text": "print", "kind": "function", "discovers": "print" },
-          { "text": "return", "kind": "decoy" },
-          { "text": "(", "kind": "punctuation" },
-          { "text": ")", "kind": "punctuation" },
-          { "text": "\"Sam\"", "kind": "string" },
-          { "text": "\"name\"", "kind": "string" }
+          {
+            "text": "print",
+            "kind": "function",
+            "discovers": "print"
+          },
+          {
+            "text": "return",
+            "kind": "decoy"
+          },
+          {
+            "text": "(",
+            "kind": "punctuation"
+          },
+          {
+            "text": ")",
+            "kind": "punctuation"
+          },
+          {
+            "text": "\"Sam\"",
+            "kind": "string"
+          },
+          {
+            "text": "\"name\"",
+            "kind": "string"
+          }
         ]
       },
       "solution": {
         "output": "Sam",
-        "lines": [{ "content": ["print", "Sam"], "indent": 0 }]
+        "lines": [
+          {
+            "content": [
+              "print",
+              "Sam"
+            ],
+            "indent": 0
+          }
+        ]
       },
       "hints": [
         "You already know the command that shows text — check your Codex.",
@@ -147,14 +352,21 @@
       ],
       "metadata": {
         "concept": "reuse a discovered command",
-        "tags": ["beginner", "python", "output"],
+        "tags": [
+          "beginner",
+          "python",
+          "output"
+        ],
         "generator": "human",
         "reviewed": true
       },
       "room": {
         "width": 13,
         "height": 9,
-        "spawn": { "x": 9, "y": 4 },
+        "spawn": {
+          "x": 9,
+          "y": 4
+        },
         "flash_color": "#c850ff",
         "tiles": [
           "#############",
@@ -168,16 +380,57 @@
           "#############"
         ],
         "piles": [
-          { "token": "name", "pos": { "x": 9,  "y": 2 } },
-          { "token": "print", "pos": { "x": 9,  "y": 6 } },
-          { "token": "Sam",   "pos": { "x": 10, "y": 6 } }
+          {
+            "token": "name",
+            "pos": {
+              "x": 9,
+              "y": 2
+            }
+          },
+          {
+            "token": "print",
+            "pos": {
+              "x": 9,
+              "y": 6
+            }
+          },
+          {
+            "token": "Sam",
+            "pos": {
+              "x": 10,
+              "y": 6
+            }
+          }
         ],
-        "features": ["terminal", "coding_area"],
-        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "features": [
+          "terminal",
+          "coding_area",
+          "inventory"
+        ],
+        "coding_area": {
+          "x": 1,
+          "y": 1,
+          "width": 7,
+          "height": 7
+        },
         "inventory_slots": 5,
         "controls": [
-          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
-          { "action": "run",   "label": "Run",   "pos": { "x": 5, "y": 7 } }
+          {
+            "action": "build",
+            "label": "Build",
+            "pos": {
+              "x": 2,
+              "y": 7
+            }
+          },
+          {
+            "action": "run",
+            "label": "Run",
+            "pos": {
+              "x": 5,
+              "y": 7
+            }
+          }
         ],
         "grants_unlock": "puzzle2.cleared"
       }
@@ -194,16 +447,40 @@
         "scenario": "You reach a sealed door. A glowing panel listens for a single spoken word to release the lock.",
         "goal": "Make the panel hear the word: open",
         "tokens": [
-          { "text": "print", "kind": "function", "discovers": "print" },
-          { "text": "input", "kind": "decoy" },
-          { "text": "(", "kind": "punctuation" },
-          { "text": ")", "kind": "punctuation" },
-          { "text": "\"open\"", "kind": "string" },
-          { "text": "\"close\"", "kind": "string" },
-          { "text": "\"door\"", "kind": "string" }
+          {
+            "text": "print",
+            "kind": "function",
+            "discovers": "print"
+          },
+          {
+            "text": "input",
+            "kind": "decoy"
+          },
+          {
+            "text": "(",
+            "kind": "punctuation"
+          },
+          {
+            "text": ")",
+            "kind": "punctuation"
+          },
+          {
+            "text": "\"open\"",
+            "kind": "string"
+          },
+          {
+            "text": "\"close\"",
+            "kind": "string"
+          },
+          {
+            "text": "\"door\"",
+            "kind": "string"
+          }
         ]
       },
-      "solution": { "output": "open" },
+      "solution": {
+        "output": "open"
+      },
       "hints": [
         "Same command as before — just a different word.",
         "‘input’ asks for text; you want to SAY text.",
@@ -211,7 +488,11 @@
       ],
       "metadata": {
         "concept": "choosing the right argument",
-        "tags": ["beginner", "python", "output"],
+        "tags": [
+          "beginner",
+          "python",
+          "output"
+        ],
         "generator": "human",
         "reviewed": true
       }

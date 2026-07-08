@@ -57,12 +57,8 @@ export function createRoomManager(
     // puzzle type's level list; the hub is not a level, so it has no menu portal.
     const levels = levelsForType(puzzle.puzzle_type);
     const isLevel = levels.some((lv) => lv.id === puzzle.id);
-    const isHub = puzzle.id === HUB_ID;
 
     current = mountRoom(container, puzzle, {
-      // Arriving at the HUB plays the one TRANSIENT portal: a red pad flashes at the arrival
-      // point, the slime hops off, then it self-consumes (leaving the permanent hub portals).
-      transientArrivalColor: isHub ? portalFlashColor({ hub: true }) : undefined,
       // A transition (door OR menu-portal selection) is just "enter the target".
       onDoor: (target) => enter(target),
       // Solving a room can earn an unlock (e.g. reveal the next level in the menu/hub).
