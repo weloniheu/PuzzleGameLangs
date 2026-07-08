@@ -29,27 +29,55 @@ import {
   type Entity,
 } from "./ruleEngine";
 
-// Scoped style for the in-room board pieces (word chips + object glyphs + banner).
-// Injected once per mount, removed with the room DOM. `.logic-word` role colors
-// mirror the standalone page so both surfaces read alike.
+// Scoped skin for logic rooms (Rule 5: this game type's own look, nothing shared is
+// restyled — every rule sits under `.logic-room`, a class this module puts on the
+// container for the room's lifetime). The FLOOR keeps the coding game's tile grammar
+// (flat fill + inset border) in the logic game's own mossy palette; word chips and
+// glyphs are the board's pieces. Role colors mirror the standalone page.
 const ROOM_STYLE = `
+.logic-room .room-tile-layer .tile-floor {
+  background: #a3b381;
+  box-shadow: inset 0 0 0 1px rgba(84, 100, 58, 0.45);
+}
+/* Checkerboard read for the board (rooms are odd-width, so row-major parity works). */
+.logic-room .room-tile-layer .tile-floor:nth-child(2n) { background: #99aa75; }
+.logic-room .room-tile-layer .tile-wall {
+  background: #55603c;
+  box-shadow: inset 0 0 0 2px rgba(30, 37, 20, 0.55);
+}
+
 .logic-board-layer { position: absolute; top: 0; left: 0; }
 .logic-board-layer .logic-cell-box { position: absolute; display: flex;
   align-items: center; justify-content: center; }
-.logic-board-layer .logic-word { font-weight: 800; letter-spacing: .3px;
-  text-transform: uppercase; border-radius: 5px; padding: 2px 4px;
-  box-shadow: 0 2px 0 rgba(0,0,0,.3); }
-.logic-board-layer .logic-word.noun { background: #e8b04b; color: #2a1d09; }
-.logic-board-layer .logic-word.property { background: #6fae7a; color: #10240f; }
-.logic-board-layer .logic-word.connector { background: #b9b2a3; color: #241f16; }
-.logic-board-layer .logic-word.live { outline: 2px solid #ffe8a3; box-shadow: 0 0 10px #ffd76a; }
-.logic-board-layer .logic-obj { line-height: 1; }
+
+.logic-board-layer .logic-word { font-weight: 900; letter-spacing: .4px; line-height: 1;
+  text-transform: uppercase; border-radius: 6px; padding: 7% 9%;
+  border: 1px solid rgba(0,0,0,.28);
+  box-shadow: 0 2px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.28); }
+.logic-board-layer .logic-word.noun { background: linear-gradient(#f0bc57, #dda43c); color: #2a1d09; }
+.logic-board-layer .logic-word.property { background: linear-gradient(#82c08d, #5f9e6b); color: #0f2410; }
+.logic-board-layer .logic-word.connector { background: linear-gradient(#d4cdbd, #b3ab97); color: #241f16; }
+.logic-board-layer .logic-word.live {
+  outline: 2px solid #ffe8a3;
+  animation: logic-live-pulse 1.6s ease-in-out infinite;
+}
+@keyframes logic-live-pulse {
+  0%, 100% { box-shadow: 0 2px 0 rgba(0,0,0,.35), 0 0 8px rgba(255, 215, 106, 0.55); }
+  50%      { box-shadow: 0 2px 0 rgba(0,0,0,.35), 0 0 16px rgba(255, 215, 106, 0.95); }
+}
+
+.logic-board-layer .logic-obj { line-height: 1; filter: drop-shadow(0 3px 3px rgba(0,0,0,.35)); }
 .logic-board-layer .logic-obj.badge { font-weight: 700; border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
-  background: #c98a3a; color: #241a0f; }
+  background: #c98a3a; color: #241a0f;
+  box-shadow: 0 2px 0 rgba(0,0,0,.3), inset 0 0 0 1px rgba(0,0,0,.25); }
+
 .logic-room-banner { position: fixed; left: 50%; transform: translateX(-50%);
-  top: 56px; z-index: 40; font-weight: 800; font-size: 18px; color: #ffe08a;
-  text-shadow: 0 2px 6px rgba(0,0,0,.6); pointer-events: none; }
+  top: 52px; z-index: 40; pointer-events: none;
+  font-weight: 800; font-size: 17px; color: #ffe08a;
+  background: rgba(24, 19, 11, 0.88); border: 1px solid rgba(255, 224, 138, 0.5);
+  border-radius: 999px; padding: 8px 18px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45); }
 .logic-room-banner[hidden] { display: none; }
 `;
 
@@ -76,6 +104,7 @@ export const logicModule: RoomPuzzleModule = {
     styleEl.id = "logic-room-style";
     styleEl.textContent = ROOM_STYLE;
     ctx.container.appendChild(styleEl);
+    ctx.container.classList.add("logic-room"); // scopes the skin; removed at teardown
 
     // The board's entities render as ONE world layer: above the floor tiles,
     // below the player — the engine's grid is the board's grid.
@@ -121,14 +150,14 @@ export const logicModule: RoomPuzzleModule = {
           const chip = document.createElement("div");
           chip.className = `logic-word ${e.word.role}${live.has(`${e.x},${e.y}`) ? " live" : ""}`;
           chip.textContent = e.word.text;
-          chip.style.fontSize = `${Math.round(tile * 0.24)}px`;
+          chip.style.fontSize = `${Math.round(tile * 0.26)}px`;
           box.appendChild(chip);
         } else {
           const glyph = OBJECT_GLYPH[e.noun ?? ""];
           const obj = document.createElement("div");
           obj.className = glyph ? "logic-obj" : "logic-obj badge";
           obj.textContent = glyph ?? (e.noun ?? "?").slice(0, 3);
-          obj.style.fontSize = `${Math.round(tile * (glyph ? 0.55 : 0.3))}px`;
+          obj.style.fontSize = `${Math.round(tile * (glyph ? 0.6 : 0.3))}px`;
           if (!glyph) {
             obj.style.width = `${Math.round(tile * 0.66)}px`;
             obj.style.height = `${Math.round(tile * 0.66)}px`;
@@ -210,7 +239,10 @@ export const logicModule: RoomPuzzleModule = {
 
       relayout: () => drawBoard(), // re-render at the new tile size
       teardown: () => {
-        disposed = true; // DOM (layer, banner, style) dies with the room's container wipe
+        disposed = true;
+        // The container survives room swaps — take the skin class off it; the DOM
+        // (layer, banner, style el) dies with the room's container wipe.
+        ctx.container.classList.remove("logic-room");
       },
       panel: null,
     };
