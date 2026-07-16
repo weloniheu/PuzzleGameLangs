@@ -17,11 +17,15 @@ const VALIDATOR_TYPES: ValidatorType[] = [
   "combine_match", "code_match", "mc_index", "execution_match",
 ];
 // Closed registries for the difficulty axes (mirrors the puzzle/validator arrays above).
-const MECHANIC_TIERS: MechanicTier[] = ["guided", "punctuation", "randomized", "env_clues", "concept_modes"];
+const MECHANIC_TIERS: MechanicTier[] = ["base", "mixed", "explicit", "env_clues", "concept_modes"];
 const CODE_MODES: CodeMode[] = ["assemble", "debug", "predict"];
-const MODIFIERS: Modifier[] = ["lowlight"];
+const MODIFIERS: Modifier[] = ["randomized", "lowlight"];
 const CONCEPT_KEYS: ConceptKey[] = [
-  "pickup", "place", "build", "run", "punctuation", "randomized", "indent", "env_clues", "debug", "predict",
+  "pickup", "place", "build", "run", "indent",
+  "base", "mixed", "explicit", "punctuation", "env_clues",
+  "randomized", "lowlight",
+  "conditionals", "loops", "function_def", "function_call", "compose",
+  "debug", "predict",
 ];
 
 /**
@@ -178,21 +182,30 @@ export function validatePuzzle(p: unknown): { ok: boolean; errors: string[] } {
     if (!pay?.tokens?.length) errors.push(`code_build payload needs tokens`);
     if (!pay?.scenario) errors.push(`code_build payload needs a scenario`);
     if (typeof sol?.output !== "string") errors.push(`code_build solution needs an output string`);
-    // An ASSEMBLY room (one that declares the coding_area feature) is order-checked against
-    // solution.lines, so it must ship them. The hub — a code_build room WITHOUT a coding_area
-    // — is exempt (nothing to assemble there).
+    // All accepted programs (lines is sugar for one variant; accepted holds any alternates).
+    const variants = [
+      ...(sol?.lines ? [sol.lines] : []),
+      ...(sol?.accepted ?? []),
+    ];
+    // An ASSEMBLY room (one that declares the coding_area feature) is order-checked against an
+    // answer, so it must ship at least one (lines or accepted[]). The hub — a code_build room
+    // WITHOUT a coding_area — is exempt (nothing to assemble there).
     const isAssemblyRoom = o.room?.features?.includes("coding_area");
-    if (isAssemblyRoom && !(sol?.lines && sol.lines.length)) {
-      errors.push(`a coding_area code_build room needs solution.lines`);
+    if (isAssemblyRoom && !variants.length) {
+      errors.push(`a coding_area code_build room needs solution.lines or solution.accepted`);
     }
-    // punctuation tier consistency: if punctuation is REQUIRED, it must actually be
-    // collectible (in the palette) AND present in the answer — else the level is mislabeled.
-    const requirePunct = o.mechanics?.punctuationRequired || o.mechanics?.tier === "punctuation";
+    // mixed/explicit tier consistency: if punctuation is REQUIRED, it must be collectible in the
+    // palette AND appear in EVERY accepted variant (or be scaffolded via coding_area.prefilled) —
+    // else the level is mislabeled. (mixed scaffolds structural punctuation; explicit fetches all.)
+    const requirePunct = o.mechanics?.punctuationRequired || o.mechanics?.tier === "mixed" || o.mechanics?.tier === "explicit";
     if (requirePunct) {
-      const hasPunctToken = pay?.tokens?.some((t) => t.kind === "punctuation");
-      const answerHasPunct = sol?.lines?.some((l) => l.content.some((t) => /^[()[\]{}:;,]+$/.test(t.trim())));
-      if (!hasPunctToken) errors.push(`punctuation tier needs collectible punctuation tokens in the palette`);
-      if (!answerHasPunct) errors.push(`punctuation tier needs punctuation in solution.lines`);
+      const isPunct = (t: string) => /^[()[\]{}:;,]+$/.test(t.trim());
+      const prefilled = o.room?.coding_area?.prefilled ?? [];
+      const hasPunctToken = pay?.tokens?.some((t) => t.kind === "punctuation") || prefilled.some((p) => isPunct(p.token));
+      const everyVariantHasPunct = variants.length > 0 && variants.every((v) => v.some((l) => l.content.some(isPunct))
+        || prefilled.some((p) => isPunct(p.token)));
+      if (!hasPunctToken) errors.push(`${o.mechanics?.tier} tier needs punctuation tokens (collectible or prefilled)`);
+      if (!everyVariantHasPunct) errors.push(`${o.mechanics?.tier} tier needs punctuation in the accepted solution(s)`);
     }
   }
 

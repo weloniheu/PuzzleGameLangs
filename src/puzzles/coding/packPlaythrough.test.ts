@@ -31,8 +31,8 @@ describe("python.code.v1 — every level is solvable from its own floor tokens",
   }
 });
 
-describe("punctuation tier is actually enforced (py-code-punct-000)", () => {
-  const lvl = puzzles.find((p) => p.id === "py-code-punct-000")!;
+describe("explicit tier is actually enforced (py-code-explicit-000)", () => {
+  const lvl = puzzles.find((p) => p.id === "py-code-explicit-000")!;
   const answer = (lvl.solution as CodeBuildSolution).lines!;
   const withoutParens: CodeLine[] = answer.map((l) => ({
     ...l, content: l.content.filter((t) => !/^[()]+$/.test(t)),

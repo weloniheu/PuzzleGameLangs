@@ -11,8 +11,8 @@
           "label": "Tutorial"
         },
         {
-          "id": "py-code-punct-000",
-          "label": "P · Parentheses",
+          "id": "py-code-explicit-000",
+          "label": "Parentheses",
           "unlock": "coding.tutorial.cleared"
         }
       ]
@@ -28,7 +28,7 @@
       "difficulty": 1,
       "tutorial": true,
       "mechanics": {
-        "tier": "guided"
+        "tier": "base"
       },
       "prompt": "Learn the ropes: pick up words, place them, then Build and Run.",
       "payload": {
@@ -268,7 +268,7 @@
       }
     },
     {
-      "id": "py-code-punct-000",
+      "id": "py-code-explicit-000",
       "schema_version": "1.0.0",
       "language": "python",
       "puzzle_type": "code_build",
@@ -276,7 +276,7 @@
       "difficulty": 2,
       "tutorial": true,
       "mechanics": {
-        "tier": "punctuation"
+        "tier": "explicit"
       },
       "prompt": "Same words — but this time you place the parentheses too.",
       "payload": {
@@ -505,7 +505,7 @@
           },
           "marker": "❓"
         },
-        "grants_unlock": "coding.punct.cleared",
+        "grants_unlock": "coding.explicit.cleared",
         "theme": "tech"
       }
     }

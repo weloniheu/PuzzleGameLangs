@@ -147,10 +147,11 @@ describe("punctuation tier — requirePunctuation keeps ( ) : , in the order-che
 });
 
 describe("requiresPunctuation — derived from a level's mechanics", () => {
-  it("true for the punctuation tier or an explicit flag; false otherwise", () => {
-    expect(requiresPunctuation({ tier: "punctuation" })).toBe(true);
-    expect(requiresPunctuation({ tier: "guided", punctuationRequired: true })).toBe(true);
-    expect(requiresPunctuation({ tier: "guided" })).toBe(false);
+  it("true for the mixed/explicit tiers or an explicit flag; false for base", () => {
+    expect(requiresPunctuation({ tier: "mixed" })).toBe(true);
+    expect(requiresPunctuation({ tier: "explicit" })).toBe(true);
+    expect(requiresPunctuation({ tier: "base", punctuationRequired: true })).toBe(true);
+    expect(requiresPunctuation({ tier: "base" })).toBe(false);
     expect(requiresPunctuation(undefined)).toBe(false);
   });
 });

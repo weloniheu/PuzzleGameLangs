@@ -175,7 +175,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     const options = [...c.querySelectorAll(".room-destmenu-option")].map((b) => b.textContent);
     expect(options).toHaveLength(3);
     expect(options[0]).toContain("Hub");
-    expect(options).toContain("P · Parentheses");
+    expect(options).toContain("Parentheses");
     press(c, "Enter");             // select Hub → teleport away
 
     // --- BACK IN THE HUB: fresh mount, tutorial done (completed → no beats) ---
@@ -443,7 +443,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
   it("punctuation level: collecting and placing the parens yourself solves it", () => {
     const { container: c, manager } = world;
     skipCodingTutorial();
-    manager.enter("py-code-punct-000");
+    manager.enter("py-code-explicit-000");
     press(c, "Enter"); // dismiss the snake on_enter greeting (guided tutorial is skipped)
 
     // Collect print / ( / "hello world" / ) — in the order they'll be placed (FIFO).
@@ -482,7 +482,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
   it("punctuation level: omitting the parens does NOT solve it (the tier is enforced in-mount)", () => {
     const { container: c, manager } = world;
     skipCodingTutorial();
-    manager.enter("py-code-punct-000");
+    manager.enter("py-code-explicit-000");
     press(c, "Enter"); // dismiss on_enter
 
     // Collect only print and "hello world" — skip the parens.

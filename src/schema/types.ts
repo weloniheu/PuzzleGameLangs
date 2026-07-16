@@ -42,11 +42,14 @@ export type Difficulty = 1 | 2 | 3 | 4 | 5;
 //     reads `language` / `level` / `pack_id`, so CLAUDE.md Rule 1 holds. Content picks
 //     from these; a level is a (concept × tier × mode × modifiers) cell. ---
 
-/** Axis 2 — MECHANICAL depth (harder interaction, same concept). CLOSED. */
+/** Axis 2 — MECHANICAL depth: a syntax-scaffolding FADE (each tier removes one support).
+ *  CLOSED. NOTE: `randomized` used to live here; it is now an Axis-3 modifier. */
 export type MechanicTier =
-  | "guided"        // all tokens visible/near; punctuation pre-placed or omitted from the grammar
-  | "punctuation"   // punctuation is collectible AND required in the answer
-  | "randomized"    // token spawn positions shuffled per run (seeded)
+  | "base"          // the floor: distractors, scattered order, indentation-as-placement,
+                    // multi-line composition, goal/output-only display; NO punctuation required
+  | "mixed"         // structural punctuation is pre-placed/scaffolded; the player fetches the
+                    // loose punctuation (commas, arg parens). See CodingArea.prefilled.
+  | "explicit"      // no scaffolding; ALL punctuation (incl. colons) is fetched and placed
   | "env_clues"     // hints embedded in room decor (SCHEMA HOOK ONLY for now — no rendering)
   | "concept_modes"; // debug / predict interaction modes (see CodeMode)
 
@@ -60,34 +63,46 @@ export interface EnvClue {
   hint: string;    // the hint text embedded there
 }
 
-/** Per-level mechanical config. `tier` is the source of truth; the boolean switches default
- *  FROM the tier (punctuation ⇒ punctuationRequired, randomized ⇒ randomizeTokens) and may be
- *  set explicitly to compose off-tier variants. Omitting the whole block ⇒ guided + assemble. */
+/** Per-level mechanical config. `tier` is the source of truth; `punctuationRequired` defaults
+ *  FROM the tier (mixed/explicit ⇒ true) and may be set explicitly to compose off-tier
+ *  variants. Omitting the whole block ⇒ base + assemble (backward compatible). */
 export interface MechanicsConfig {
   tier: MechanicTier;
   /** Interaction mode. Omitted ⇒ "assemble". */
   mode?: CodeMode;
-  /** Order-checker REQUIRES punctuation tokens (stops normalizing them away). */
+  /** What the player is shown as the target — desired output and/or a plain-language
+   *  description. NEVER the target code (no tier reveals the answer). Display + success
+   *  echo only; validation order-matches solution.accepted (Rule 3: no execution). */
+  goalSpec?: { output?: string; description?: string };
+  /** Order-checker REQUIRES punctuation tokens (stops normalizing them away). Defaults from
+   *  the tier (mixed/explicit ⇒ true); set explicitly to compose onto another tier. */
   punctuationRequired?: boolean;
-  /** Shuffle pile spawn positions at mount (seeded). */
-  randomizeTokens?: boolean;
-  /** Fixed seed for reproducible arrangements (authoring / repro). Omitted ⇒ random at mount. */
-  seed?: number;
   /** Decor-embedded hints (SCHEMA HOOK ONLY — see EnvClue). */
   envClues?: EnvClue[];
 }
 
 /** Axis 3 — stackable environmental MODIFIERS, orthogonal to concept and tier. CLOSED
- *  registry (validated at load); defaults to [] for every level. */
-export type Modifier = "lowlight"; // grows as candidates are approved
+ *  registry (validated at load); defaults to [] for every level.
+ *  - randomized: pile spawn positions shuffled per run (seed is RUNTIME — random at mount,
+ *    injected fixed in tests; not stored in pack data).
+ *  - lowlight: limited vision radius (gameplay hook only for now; no visual rendering). */
+export type Modifier = "randomized" | "lowlight";
 
-/** Closed set of teaching CONCEPTS a guided-tutorial beat can be tagged with (see
- *  DialogueBeat.teaches). A beat replays only until its concept has been taught, so a
- *  player who jumps to a harder tier is re-taught only the mechanics they haven't seen. */
+/** Closed set of teaching CONCEPTS a tutorial beat can be tagged with (see DialogueBeat.teaches
+ *  and the pack-level tutorials map). A beat replays only until its concept has been taught, so
+ *  a player who jumps ahead is re-taught only what they haven't seen. Covers base mechanics,
+ *  the mechanical tiers, the modifiers, and the Axis-1 concepts. */
 export type ConceptKey =
-  | "pickup" | "place" | "build" | "run"
-  | "punctuation" | "randomized" | "indent"
-  | "env_clues" | "debug" | "predict";
+  // base mechanics
+  | "pickup" | "place" | "build" | "run" | "indent"
+  // mechanical tiers (Axis 2)
+  | "base" | "mixed" | "explicit" | "punctuation" | "env_clues"
+  // modifiers (Axis 3)
+  | "randomized" | "lowlight"
+  // concepts (Axis 1)
+  | "conditionals" | "loops" | "function_def" | "function_call" | "compose"
+  // concept modes
+  | "debug" | "predict";
 
 // --- Type-specific payload / solution shapes (discriminated by puzzle_type) ---
 
@@ -375,11 +390,16 @@ export interface CodeAnswerLine {
   indent: number;
 }
 export interface CodeBuildSolution {
-  /** The output the assembled program must produce. Checked by `code_match`. */
+  /** The output the assembled program must produce (display + success echo). Checked by
+   *  `code_match`. NB: this is NOT computed from the player's code (Rule 3: no execution). */
   output: string;
-  /** Order-check answer: a LIST of lines so multi-line difficulties slot in later;
-   *  difficulty 1 checks only line 0's content order (ignoring punctuation/quotes). */
+  /** Order-check answer: a LIST of lines (multi-line programs). Sugar for a single accepted
+   *  variant — see `accepted`. Normalization per the mechanical tier. */
   lines?: CodeAnswerLine[];
+  /** ACCEPTED programs: the placed program passes if it order-matches ANY entry (so genuinely
+   *  different-but-correct solutions all pass, without executing anything). `lines`, when set,
+   *  is treated as one accepted variant. Populated by base-tier levels with alternate orderings. */
+  accepted?: CodeAnswerLine[][];
 }
 
 // --- Room (world layer) ---
@@ -401,6 +421,10 @@ export interface CodingArea {
   y: number;       // top row
   width: number;   // columns
   height: number;  // rows
+  /** MIXED tier: structural punctuation SCAFFOLDED into the area (already placed), so the
+   *  player fetches only the loose punctuation. Each token sits at a cell and the order-checker
+   *  reads it exactly like a player-placed token. Omitted ⇒ nothing pre-placed. */
+  prefilled?: { token: string; x: number; y: number }[];
 }
 /** Optional, gateable room features. A room renders ONLY the features it declares; an
  *  undeclared feature is not built at all. CLOSED set (engine has a render branch per

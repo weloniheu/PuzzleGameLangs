@@ -112,11 +112,12 @@ export function normalizeContent(tokens: string[], requirePunctuation = false): 
     .map(stripQuotes);
 }
 
-/** Does this level's mechanics require punctuation in the answer? The punctuation TIER
- *  implies it; a level may also set the flag explicitly to compose it onto another tier.
- *  Shared by the coding module and its tests so the two never disagree. */
+/** Does this level's mechanics require punctuation in the answer? The MIXED and EXPLICIT
+ *  tiers imply it (the scaffolding fade — the player supplies punctuation); a level may also
+ *  set the flag explicitly to compose it onto another tier. Shared by the coding module and
+ *  its tests so the two never disagree. */
 export function requiresPunctuation(mechanics?: { tier?: string; punctuationRequired?: boolean }): boolean {
-  return !!(mechanics?.punctuationRequired || mechanics?.tier === "punctuation");
+  return !!(mechanics?.punctuationRequired || mechanics?.tier === "mixed" || mechanics?.tier === "explicit");
 }
 
 const sameOrder = (a: string[], b: string[]): boolean =>
