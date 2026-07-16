@@ -12,7 +12,7 @@ import type { DialogueBeat, RoomControl } from "../../schema/types";
 import { pileAt, type Cell } from "../../engine/core/room";
 import type { EngineContext } from "../../engine/puzzleModule";
 import {
-  run as runProgram,
+  runAny as runProgram,
   createBuildState,
   markBuilt,
   markDirty,
@@ -24,7 +24,7 @@ import {
 import type { TermState } from "./terminal";
 
 /** A token placed into the coding area at a cell. */
-export interface Placed { token: string; x: number; y: number; }
+export interface Placed { token: string; x: number; y: number; locked?: boolean; }
 
 // --- PURE run→feedback routing (testable): terminal echo + beat selection ----
 export interface RunFeedback {
@@ -59,10 +59,14 @@ export function runFeedback(
 
 export interface CodingAreaDeps {
   ctx: EngineContext;
-  /** The single correct answer (CONTENT — see CLAUDE.md Rule 2). */
-  answer: AnswerLine[];
+  /** The accepted programs (order-checked; the placed program passes if it matches ANY —
+   *  base tier may list several). `solution.lines` is sugar for one variant. CONTENT (Rule 2). */
+  accepted: AnswerLine[][];
   /** The output echoed on success (CONTENT). */
   output: string;
+  /** Punctuation tier: the order-checker keeps + requires punctuation tokens (see
+   *  codeGameLogic.requiresPunctuation). Derived from the puzzle's mechanics. */
+  requirePunctuation: boolean;
   /** Pretend shell command flavor (CONTENT). */
   termCmds: { build: string; run: string };
   /** Echo into the terminal; a room without one echoes nowhere (no-op). */
@@ -83,12 +87,20 @@ export interface CodingArea {
 }
 
 export function createCodingArea(deps: CodingAreaDeps): CodingArea {
-  const { ctx, answer, termCmds } = deps;
+  const { ctx, accepted, termCmds } = deps;
   const room = ctx.room;
   const hasCodingArea = ctx.features.has("coding_area");
   const dialogue = ctx.dialogue;
 
   const placed: Placed[] = [];
+  // MIXED tier: seed the SCAFFOLDED punctuation (already-placed) as LOCKED tokens. They render
+  // and count toward the order-check, but can't be picked up or deleted — the player fetches the
+  // rest of the punctuation. (mixed & explicit share the checker; only the scaffolding differs.)
+  if (hasCodingArea) {
+    for (const pf of ctx.layout.coding_area?.prefilled ?? []) {
+      placed.push({ token: pf.token, x: pf.x, y: pf.y, locked: true });
+    }
+  }
   let debugOn = false;
   let buildState = createBuildState(); // line is "dirty" until Built (see codeGameLogic)
 
@@ -170,7 +182,7 @@ export function createCodingArea(deps: CodingAreaDeps): CodingArea {
     placedLayer.innerHTML = "";
     for (const p of placed) {
       const t = document.createElement("div");
-      t.className = "tile-room tile-placed";
+      t.className = p.locked ? "tile-room tile-placed tile-prefilled" : "tile-room tile-placed";
       t.style.width = `${tile}px`;
       t.style.height = `${tile}px`;
       t.style.transform = `translate(${p.x * tile}px, ${p.y * tile}px)`;
@@ -222,7 +234,7 @@ export function createCodingArea(deps: CodingAreaDeps): CodingArea {
 
   function doRun() {
     dialogue.notify("run"); // GUIDED TUTORIAL: satisfies a step waiting on "run" (any attempt)
-    const res = runProgram(buildState, currentProgram(), answer);
+    const res = runProgram(buildState, currentProgram(), accepted, deps.requirePunctuation);
     // Terminal = pretend shell transcript (flavor); the SNAKE portrait delivers the beat.
     const fb = runFeedback(res, termCmds, deps.output);
     deps.termWrite(fb.term.lines, fb.term.state);
@@ -246,6 +258,7 @@ export function createCodingArea(deps: CodingAreaDeps): CodingArea {
   /** Pick a placed token back into inventory; if full, the drop/cancel flow (the
    *  token is lifted off the board and restored on cancel). */
   function tryPickPlaced(p: Placed) {
+    if (p.locked) return; // scaffolded (mixed tier) — provided structure, not the player's to move
     const inv = ctx.inventory;
     if (!inv) return; // a coding room always declares "inventory"; nowhere to put it otherwise
     if (inv.isFull()) {
@@ -286,7 +299,8 @@ export function createCodingArea(deps: CodingAreaDeps): CodingArea {
   }
 
   function vimClearLine() {            // dd — clear the player's CURRENT row only (any column,
-    const row = tokensOnRow(placed, ctx.pos().y); //  in or out of the coding area); other rows stay.
+    const row = tokensOnRow(placed, ctx.pos().y) //  in or out of the coding area); other rows stay.
+      .filter((p) => !(p as Placed).locked);      //  scaffolded (locked) tokens survive dd.
     if (!row.length) return;
     for (const p of row) placed.splice(placed.indexOf(p), 1);
     drawPlaced();
@@ -295,7 +309,7 @@ export function createCodingArea(deps: CodingAreaDeps): CodingArea {
   function vimDeleteToken() {          // dw — delete the placed token under the player (current line)
     const pos = ctx.pos();
     const p = placedAt(pos.x, pos.y);
-    if (!p) return;
+    if (!p || p.locked) return;        // nothing there, or a scaffolded (locked) token
     placed.splice(placed.indexOf(p), 1);
     drawPlaced();
     dirtyLine();

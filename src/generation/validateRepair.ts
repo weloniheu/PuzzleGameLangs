@@ -2,6 +2,7 @@ import type {
   Puzzle, MatchPayload, MatchSolution, PuzzleType, ValidatorType,
   SentencePayload, ReorderSolution, CombinePayload, CombineSolution,
   CodeBuildPayload, CodeBuildSolution, LogicRulesPayload, GrammarBuildPayload, VocabMatchPayload,
+  MechanicTier, CodeMode, Modifier,
 } from "../schema/types";
 import { hasRenderer } from "../engine/renderers";
 import { hasValidator } from "../engine/validators";
@@ -15,6 +16,10 @@ const VALIDATOR_TYPES: ValidatorType[] = [
   "exact_match", "normalized_match", "set_match", "sequence_match",
   "combine_match", "code_match", "mc_index", "execution_match",
 ];
+// Closed registries for the difficulty axes (mirrors the puzzle/validator arrays above).
+const MECHANIC_TIERS: MechanicTier[] = ["base", "mixed", "explicit", "env_clues", "concept_modes"];
+const CODE_MODES: CodeMode[] = ["assemble", "debug", "predict"];
+const MODIFIERS: Modifier[] = ["randomized", "lowlight"];
 
 /**
  * The single source of truth for "is this puzzle usable?". Used BOTH when loading
@@ -35,6 +40,21 @@ export function validatePuzzle(p: unknown): { ok: boolean; errors: string[] } {
   if (typeof o.difficulty !== "number" || o.difficulty < 1 || o.difficulty > 5) errors.push(`bad difficulty`);
   if (!Array.isArray(o.hints)) errors.push(`hints must be an array`);
   if (!o.metadata || typeof o.metadata.reviewed !== "boolean") errors.push(`metadata.reviewed (bool) required`);
+
+  // --- difficulty axes 2 & 3 (closed sets; optional, defaulting to guided/assemble/[]) ---
+  if (o.mechanics) {
+    if (!MECHANIC_TIERS.includes(o.mechanics.tier)) errors.push(`bad mechanics.tier "${o.mechanics.tier}"`);
+    if (o.mechanics.mode && !CODE_MODES.includes(o.mechanics.mode)) errors.push(`bad mechanics.mode "${o.mechanics.mode}"`);
+  }
+  if (o.modifiers !== undefined) {
+    if (!Array.isArray(o.modifiers)) errors.push(`modifiers must be an array`);
+    else for (const m of o.modifiers) if (!MODIFIERS.includes(m)) errors.push(`unknown modifier "${m}"`);
+  }
+  // tutorial_refs (shared first-encounter tutorials) — shape only; the pack-level cross-check
+  // that each id resolves lives in loadPack, which has the tutorials map.
+  if (o.tutorial_refs !== undefined && !Array.isArray(o.tutorial_refs)) {
+    errors.push(`tutorial_refs must be an array of tutorial ids`);
+  }
 
   // --- the engine must actually be able to run it: a CARD renderer or a ROOM module ---
   if (o.puzzle_type && !hasRenderer(o.puzzle_type) && !moduleFor(o.puzzle_type)) {
@@ -155,6 +175,31 @@ export function validatePuzzle(p: unknown): { ok: boolean; errors: string[] } {
     if (!pay?.tokens?.length) errors.push(`code_build payload needs tokens`);
     if (!pay?.scenario) errors.push(`code_build payload needs a scenario`);
     if (typeof sol?.output !== "string") errors.push(`code_build solution needs an output string`);
+    // All accepted programs (lines is sugar for one variant; accepted holds any alternates).
+    const variants = [
+      ...(sol?.lines ? [sol.lines] : []),
+      ...(sol?.accepted ?? []),
+    ];
+    // An ASSEMBLY room (one that declares the coding_area feature) is order-checked against an
+    // answer, so it must ship at least one (lines or accepted[]). The hub — a code_build room
+    // WITHOUT a coding_area — is exempt (nothing to assemble there).
+    const isAssemblyRoom = o.room?.features?.includes("coding_area");
+    if (isAssemblyRoom && !variants.length) {
+      errors.push(`a coding_area code_build room needs solution.lines or solution.accepted`);
+    }
+    // mixed/explicit tier consistency: if punctuation is REQUIRED, it must be collectible in the
+    // palette AND appear in EVERY accepted variant (or be scaffolded via coding_area.prefilled) —
+    // else the level is mislabeled. (mixed scaffolds structural punctuation; explicit fetches all.)
+    const requirePunct = o.mechanics?.punctuationRequired || o.mechanics?.tier === "mixed" || o.mechanics?.tier === "explicit";
+    if (requirePunct) {
+      const isPunct = (t: string) => /^[()[\]{}:;,]+$/.test(t.trim());
+      const prefilled = o.room?.coding_area?.prefilled ?? [];
+      const hasPunctToken = pay?.tokens?.some((t) => t.kind === "punctuation") || prefilled.some((p) => isPunct(p.token));
+      const everyVariantHasPunct = variants.length > 0 && variants.every((v) => v.some((l) => l.content.some(isPunct))
+        || prefilled.some((p) => isPunct(p.token)));
+      if (!hasPunctToken) errors.push(`${o.mechanics?.tier} tier needs punctuation tokens (collectible or prefilled)`);
+      if (!everyVariantHasPunct) errors.push(`${o.mechanics?.tier} tier needs punctuation in the accepted solution(s)`);
+    }
   }
 
   return { ok: errors.length === 0, errors };

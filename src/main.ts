@@ -1,5 +1,5 @@
 import "./style.css";
-import type { Pack, Puzzle, PuzzleType, LevelEntry } from "./schema/types";
+import type { Pack, Puzzle, PuzzleType, LevelEntry, TutorialBlock } from "./schema/types";
 import { loadPack } from "./engine/packLoader";
 import { runPuzzle } from "./engine/puzzleRunner";
 import { mountRoom } from "./engine/roomHost";
@@ -101,6 +101,7 @@ async function loadAndShow(url: string) {
 let roomManager: RoomManager | null = null;
 const roomRegistry = new Map<string, Puzzle>();
 const levelsByType = new Map<PuzzleType, LevelEntry[]>(); // ordered level lists per puzzle type
+const tutorialsById = new Map<string, TutorialBlock>();   // shared first-encounter tutorials
 
 async function bootHub() {
   if (!roomRegistry.size) {
@@ -112,11 +113,12 @@ async function bootHub() {
     for (const p of [...hub.puzzles, ...code.puzzles, ...logic.puzzles, ...logicHaw.puzzles, ...grammar.puzzles, ...vocab.puzzles, ...vocabEn.puzzles]) {
       roomRegistry.set(p.id, p);
     }
-    // Merge each pack's progression into one type → ordered-levels map (drives the menu portal).
+    // Merge each pack's progression → type map (menu portal) and tutorials → id map (first-encounter).
     for (const pack of [hub, code, logic, logicHaw, grammar, vocab, vocabEn]) {
       for (const prog of pack.progression ?? []) {
         levelsByType.set(prog.puzzle_type, [...(levelsByType.get(prog.puzzle_type) ?? []), ...prog.levels]);
       }
+      for (const [id, block] of Object.entries(pack.tutorials ?? {})) tutorialsById.set(id, block);
     }
   }
   if (!roomManager) {
@@ -124,7 +126,7 @@ async function bootHub() {
       gameRoot,
       (id) => roomRegistry.get(id) ?? null,
       (puzzleType) => levelsByType.get(puzzleType) ?? [],
-      { onBeforeMount: useFullscreen },
+      { onBeforeMount: useFullscreen, tutorialFor: (id) => tutorialsById.get(id) ?? null },
     );
   }
   roomManager.enter("hub");

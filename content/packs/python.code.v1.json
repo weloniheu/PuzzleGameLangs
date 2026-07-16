@@ -11,18 +11,120 @@
           "label": "Tutorial"
         },
         {
-          "id": "py-code-hello-001",
-          "label": "1 · Greeting",
+          "id": "py-code-base-001",
+          "label": "Variables",
           "unlock": "coding.tutorial.cleared"
         },
         {
-          "id": "py-code-name-002",
-          "label": "2 · Your name",
-          "unlock": "puzzle1.cleared"
+          "id": "py-code-mixed-000",
+          "label": "Assisted parens",
+          "unlock": "coding.base.vars.cleared"
+        },
+        {
+          "id": "py-code-explicit-000",
+          "label": "Parentheses",
+          "unlock": "coding.tutorial.cleared"
+        },
+        {
+          "id": "py-code-loops-001",
+          "label": "Loops I",
+          "unlock": "coding.base.vars.cleared"
+        },
+        {
+          "id": "py-code-loops-002",
+          "label": "Loops II",
+          "unlock": "coding.loops.1.cleared"
+        },
+        {
+          "id": "py-code-funcs-001",
+          "label": "Functions I",
+          "unlock": "coding.loops.2.cleared"
+        },
+        {
+          "id": "py-code-funcs-002",
+          "label": "Functions II",
+          "unlock": "coding.funcs.1.cleared"
+        },
+        {
+          "id": "py-code-args-001",
+          "label": "Arguments I",
+          "unlock": "coding.funcs.2.cleared"
+        },
+        {
+          "id": "py-code-args-002",
+          "label": "Arguments II",
+          "unlock": "coding.args.1.cleared"
         }
       ]
     }
   ],
+  "tutorials": {
+    "tier:mixed": {
+      "dialogue": [
+        {
+          "id": "t-mixed-1",
+          "speaker": "narrator",
+          "text": "New tier — MIXED. Some punctuation is already placed for you (the faded tiles). You supply the rest, in order, around it.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false
+        }
+      ]
+    },
+    "concept:loops": {
+      "dialogue": [
+        {
+          "id": "t-loops-1",
+          "speaker": "narrator",
+          "text": "New idea — a LOOP repeats work. 'for i in range(3)' runs the line below it three times.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false
+        },
+        {
+          "id": "t-loops-2",
+          "speaker": "narrator",
+          "text": "The repeated line is the loop's BODY. Place it one tile to the RIGHT — that indent is how Python knows it lives inside the loop.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false
+        }
+      ]
+    },
+    "concept:function_def": {
+      "dialogue": [
+        {
+          "id": "t-func-1",
+          "speaker": "narrator",
+          "text": "New idea — a FUNCTION is a named, reusable block. 'def greet' names it; the indented lines below are its body.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false
+        },
+        {
+          "id": "t-func-2",
+          "speaker": "narrator",
+          "text": "Defining it doesn't run it. To run it, write its name on its own line (back at indent 0) BELOW the definition.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false
+        }
+      ]
+    },
+    "concept:function_call": {
+      "dialogue": [
+        {
+          "id": "t-args-1",
+          "speaker": "narrator",
+          "text": "A function can take an ARGUMENT — a value you hand it. 'def greet(name)' declares a slot called name.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false
+        },
+        {
+          "id": "t-args-2",
+          "speaker": "narrator",
+          "text": "Calling greet(\"Sam\") fills that slot with \"Sam\". Inside the body, use the slot's name — not a quoted word.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false
+        }
+      ]
+    }
+  },
   "puzzles": [
     {
       "id": "py-code-tutorial-000",
@@ -32,10 +134,17 @@
       "validator_type": "code_match",
       "difficulty": 1,
       "tutorial": true,
+      "mechanics": {
+        "tier": "base",
+        "goalSpec": {
+          "output": "hello world",
+          "description": "Make the panel say: hello world"
+        }
+      },
       "prompt": "Learn the ropes: pick up words, place them, then Build and Run.",
       "payload": {
-        "scenario": "A quiet practice pod. Nothing out there yet — just you, a snake, and a blinking panel waiting for its very first word.",
-        "goal": "Warm up the panel. Make your program say: hi",
+        "scenario": "A quiet practice pod. Nothing out there yet — just you, a snake, and a blinking panel waiting for its very first words.",
+        "goal": "Warm up the panel. Make your program say: hello world",
         "tokens": [
           {
             "text": "print",
@@ -51,17 +160,21 @@
             "kind": "punctuation"
           },
           {
-            "text": "\"hi\"",
+            "text": "\"hello\"",
+            "kind": "string"
+          },
+          {
+            "text": "\"world\"",
             "kind": "string"
           }
         ],
         "beats": {
           "build-first": "🐍 The snake isn't ready — you haven't BUILT the line yet. Stand on Build and press Enter first.",
-          "wrong-order": "The words tumble out jumbled. Try them in a different order: the command first, then the word.",
+          "wrong-order": "The words tumble out jumbled. Try them in a different order: the command first, then the words.",
           "wrong-indent": "The line drifts off its margin. Slide it left until it sits against the wall (indent 0).",
           "wrong-word": "The panel doesn't recognize one of those words. Pick different words and try again.",
-          "extra-code": "There's more than one line of code in the panel. Clear everything except a single print hi against the left wall.",
-          "success": "The panel hums to life: hi. You're ready! ✅",
+          "extra-code": "There's more than one line of code in the panel. Clear everything except a single print hello world against the left wall.",
+          "success": "The panel hums to life: hello world. You're ready! ✅",
           "first_run_no_build": "🐍 Whoa — you ran before BUILDING. Stand on Build and press Enter to compile your line first, then come back to Run."
         },
         "terminal": {
@@ -100,15 +213,15 @@
           ],
           "hints": [
             {
-              "text": "Pick up print and \"hi\" from the floor.",
+              "text": "Pick up print, \"hello\" and \"world\" from the floor.",
               "tag": "intro"
             },
             {
-              "text": "Place print first, then the word, starting against the left wall.",
+              "text": "Place print first, then the words, starting against the left wall.",
               "tag": "after:wrong-order"
             },
             {
-              "text": "Try building: print(\"hi\")",
+              "text": "Try building: print(\"hello\", \"world\")",
               "tag": "after:wrong-word"
             }
           ],
@@ -152,21 +265,22 @@
         }
       },
       "solution": {
-        "output": "hi",
+        "output": "hello world",
         "lines": [
           {
             "content": [
               "print",
-              "hi"
+              "hello",
+              "world"
             ],
             "indent": 0
           }
         ]
       },
       "hints": [
-        "Pick up print and \"hi\".",
-        "Place print first, then \"hi\", against the left wall.",
-        "Try building: print(\"hi\")"
+        "Pick up print, \"hello\" and \"world\".",
+        "Place print first, then the words, against the left wall.",
+        "Try building: print(\"hello\", \"world\")"
       ],
       "metadata": {
         "concept": "the controls — pick up, place, build, run",
@@ -197,237 +311,6 @@
           "#############"
         ],
         "piles": [
-          {
-            "token": "print",
-            "pos": {
-              "x": 9,
-              "y": 6
-            }
-          },
-          {
-            "token": "hi",
-            "pos": {
-              "x": 10,
-              "y": 6
-            }
-          }
-        ],
-        "features": [
-          "terminal",
-          "coding_area",
-          "inventory"
-        ],
-        "coding_area": {
-          "x": 1,
-          "y": 1,
-          "width": 7,
-          "height": 7
-        },
-        "inventory_slots": 5,
-        "controls": [
-          {
-            "action": "build",
-            "label": "Build",
-            "pos": {
-              "x": 2,
-              "y": 7
-            }
-          },
-          {
-            "action": "run",
-            "label": "Run",
-            "pos": {
-              "x": 5,
-              "y": 7
-            }
-          }
-        ],
-        "hint_giver": {
-          "pos": {
-            "x": 11,
-            "y": 4
-          },
-          "marker": "❓"
-        },
-        "grants_unlock": "coding.tutorial.cleared",
-        "theme": "tech"
-      }
-    },
-    {
-      "id": "py-code-hello-001",
-      "schema_version": "1.0.0",
-      "language": "python",
-      "puzzle_type": "code_build",
-      "validator_type": "code_match",
-      "difficulty": 1,
-      "prompt": "Assemble one line of code to respond. Walk onto blocks and press Enter to build your line, then stand on ▶ Run.",
-      "payload": {
-        "scenario": "You look around and find yourself looking at a blue planet. You can barely see them — they wave at you and wait for you to respond.",
-        "goal": "Greet them. Make your program say: hello world",
-        "tokens": [
-          {
-            "text": "print",
-            "kind": "function",
-            "discovers": "print"
-          },
-          {
-            "text": "write",
-            "kind": "decoy"
-          },
-          {
-            "text": "return",
-            "kind": "decoy"
-          },
-          {
-            "text": "(",
-            "kind": "punctuation"
-          },
-          {
-            "text": ")",
-            "kind": "punctuation"
-          },
-          {
-            "text": "\"hello\"",
-            "kind": "string"
-          },
-          {
-            "text": "\"world\"",
-            "kind": "string"
-          },
-          {
-            "text": "\"goodbye\"",
-            "kind": "string"
-          }
-        ],
-        "beats": {
-          "build-first": "🐍 The snake isn't ready — you haven't BUILT the line yet. Stand on Build and press Enter first.",
-          "wrong-order": "The words tumble out jumbled. The aliens tilt their heads. Try them in a different order.",
-          "wrong-indent": "The line drifts off its margin. Slide it left until it sits against the wall (indent 0).",
-          "wrong-word": "The panel doesn't recognize one of those words. Pick different words and try again.",
-          "extra-code": "There's more than one line of code in the panel. Clear everything except a single print hello world against the left wall.",
-          "success": "The aliens light up and wave back! ✅",
-          "first_run_no_build": "🐍 Whoa — you ran before BUILDING. Stand on Build and press Enter to compile your line first, then come back to Run."
-        },
-        "terminal": {
-          "build": "$ python -m py_compile main.py",
-          "run": "$ python main.py"
-        },
-        "dialogue": {
-          "speakers": {
-            "snake": {
-              "name": "Sss",
-              "side": "left",
-              "portrait": "/assets/closeMouthSnake.png",
-              "portrait2": "/assets/talkingSnake.png"
-            },
-            "hint": {
-              "name": "Helper",
-              "side": "right",
-              "portrait": "🛰️",
-              "portrait2": "🛰️"
-            }
-          },
-          "on_enter": [
-            {
-              "id": "enter-1",
-              "speaker": "snake",
-              "text": "Sssss! Welcome to the play house.",
-              "trigger": "on_enter",
-              "autoAdvance": true
-            },
-            {
-              "id": "enter-2",
-              "speaker": "snake",
-              "text": "Maybe you could write a message for the friends watching from that little blue planet? They've waited so long to hear from someone.",
-              "trigger": "on_enter"
-            },
-            {
-              "id": "enter-3",
-              "speaker": "snake",
-              "text": "I can't hold a pen — no hands! — but a printer can speak for me.",
-              "trigger": "on_enter"
-            },
-            {
-              "id": "enter-friend",
-              "speaker": "snake",
-              "text": "Stuck? The friend over there with the ❓ can help.",
-              "trigger": "on_enter",
-              "highlight": "hint"
-            }
-          ],
-          "hints": [
-            {
-              "text": "Greet them — make the program say hello.",
-              "tag": "intro"
-            },
-            {
-              "text": "The snake can't write, but it can use a printer. Reach for print.",
-              "tag": "after:wrong-word"
-            },
-            {
-              "text": "Lay print then the word against the left wall (indent 0): print(\"hello\").",
-              "tag": "after:wrong-order"
-            }
-          ]
-        }
-      },
-      "solution": {
-        "output": "hello world",
-        "lines": [
-          {
-            "content": [
-              "print",
-              "hello",
-              "world"
-            ],
-            "indent": 0
-          }
-        ]
-      },
-      "hints": [
-        "Greet them.",
-        "The snake doesn't have hands to write, but it can use a printer.",
-        "Try building: print(\"hello\")"
-      ],
-      "metadata": {
-        "concept": "print() — your first command",
-        "tags": [
-          "beginner",
-          "python",
-          "output"
-        ],
-        "generator": "human",
-        "reviewed": true
-      },
-      "room": {
-        "width": 13,
-        "height": 9,
-        "tiles": [
-          "######D######",
-          "#...........#",
-          "#...........#",
-          "#....###....#",
-          "#...........#",
-          "#...........#",
-          "#...........#",
-          "#...........#",
-          "#############"
-        ],
-        "piles": [
-          {
-            "token": "write",
-            "pos": {
-              "x": 9,
-              "y": 2
-            }
-          },
-          {
-            "token": "goodbye",
-            "pos": {
-              "x": 10,
-              "y": 2
-            }
-          },
           {
             "token": "print",
             "pos": {
@@ -487,21 +370,28 @@
           },
           "marker": "❓"
         },
-        "grants_unlock": "puzzle1.cleared",
+        "grants_unlock": "coding.tutorial.cleared",
         "theme": "tech"
       }
     },
     {
-      "id": "py-code-name-002",
+      "id": "py-code-base-001",
       "schema_version": "1.0.0",
       "language": "python",
       "puzzle_type": "code_build",
       "validator_type": "code_match",
       "difficulty": 2,
-      "prompt": "Use what you discovered to introduce yourself.",
+      "mechanics": {
+        "tier": "base",
+        "goalSpec": {
+          "output": "5",
+          "description": "Store 5 in x, then print x."
+        }
+      },
+      "prompt": "Two lines this time: make a variable, then use it.",
       "payload": {
-        "scenario": "The aliens point at you, curious. A nameplate on your pod reads ‘Sam’. They want to know who you are.",
-        "goal": "Tell them your name. Make your program say: Sam",
+        "scenario": "The panel grew a second line. It can remember a value in a name — a variable — and use it later.",
+        "goal": "Store 5 in x, then print x. Output: 5",
         "tokens": [
           {
             "text": "print",
@@ -509,8 +399,462 @@
             "discovers": "print"
           },
           {
-            "text": "return",
+            "text": "x",
+            "kind": "value"
+          },
+          {
+            "text": "=",
+            "kind": "keyword"
+          },
+          {
+            "text": "5",
+            "kind": "value"
+          },
+          {
+            "text": "y",
             "kind": "decoy"
+          },
+          {
+            "text": "3",
+            "kind": "decoy"
+          },
+          {
+            "text": "prnt",
+            "kind": "decoy"
+          }
+        ],
+        "beats": {
+          "build-first": "🐍 Nothing's built yet — stand on Build and press Enter first.",
+          "wrong-order": "The lines are out of order. Give x its value FIRST, then print it on the line below.",
+          "wrong-indent": "Both lines sit against the left wall (indent 0) — slide them left.",
+          "wrong-word": "One of those isn't right — read carefully (prnt is not print). Use print, x, =, 5.",
+          "extra-code": "Too many lines. Keep exactly two: x = 5, then print x.",
+          "success": "x remembers 5, and the panel prints it: 5. ✅",
+          "first_run_no_build": "🐍 You ran before BUILDING. Stand on Build and press Enter first, then Run."
+        },
+        "terminal": {
+          "build": "$ python -m py_compile main.py",
+          "run": "$ python main.py"
+        },
+        "dialogue": {
+          "speakers": {
+            "snake": {
+              "name": "Sss",
+              "side": "left",
+              "portrait": "/assets/closeMouthSnake.png",
+              "portrait2": "/assets/talkingSnake.png"
+            },
+            "hint": {
+              "name": "Helper",
+              "side": "right",
+              "portrait": "🛰️",
+              "portrait2": "🛰️"
+            }
+          },
+          "on_enter": [
+            {
+              "id": "vars-enter-1",
+              "speaker": "snake",
+              "text": "Ssss — a name can hold a value. Set it on one line, use it on the next.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "First line: x = 5. Second line: print x.",
+              "tag": "intro"
+            },
+            {
+              "text": "Watch out for look-alikes on the floor (prnt, y, 3) — they're traps.",
+              "tag": "after:wrong-word"
+            }
+          ],
+          "guided_tutorial": [
+            {
+              "id": "vars-tut-compose",
+              "speaker": "narrator",
+              "text": "This program is TWO lines. Build the first line, then start the next one on the row below it.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            }
+          ]
+        }
+      },
+      "solution": {
+        "output": "5",
+        "lines": [
+          {
+            "content": [
+              "x",
+              "=",
+              "5"
+            ],
+            "indent": 0
+          },
+          {
+            "content": [
+              "print",
+              "x"
+            ],
+            "indent": 0
+          }
+        ]
+      },
+      "hints": [
+        "Line one: x = 5.",
+        "Line two: print x.",
+        "Ignore the look-alikes (prnt, y, 3)."
+      ],
+      "metadata": {
+        "concept": "variables — store a value, then use it",
+        "tags": [
+          "python",
+          "variables",
+          "composition"
+        ],
+        "generator": "human",
+        "reviewed": true
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#....###....#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "piles": [
+          {
+            "token": "print",
+            "pos": {
+              "x": 9,
+              "y": 6
+            }
+          },
+          {
+            "token": "x",
+            "pos": {
+              "x": 11,
+              "y": 3
+            }
+          },
+          {
+            "token": "=",
+            "pos": {
+              "x": 9,
+              "y": 4
+            }
+          },
+          {
+            "token": "5",
+            "pos": {
+              "x": 11,
+              "y": 6
+            }
+          },
+          {
+            "token": "y",
+            "pos": {
+              "x": 10,
+              "y": 2
+            }
+          },
+          {
+            "token": "3",
+            "pos": {
+              "x": 9,
+              "y": 2
+            }
+          },
+          {
+            "token": "prnt",
+            "pos": {
+              "x": 11,
+              "y": 4
+            }
+          }
+        ],
+        "features": [
+          "terminal",
+          "coding_area",
+          "inventory"
+        ],
+        "coding_area": {
+          "x": 1,
+          "y": 1,
+          "width": 7,
+          "height": 7
+        },
+        "inventory_slots": 5,
+        "controls": [
+          {
+            "action": "build",
+            "label": "Build",
+            "pos": {
+              "x": 2,
+              "y": 7
+            }
+          },
+          {
+            "action": "run",
+            "label": "Run",
+            "pos": {
+              "x": 5,
+              "y": 7
+            }
+          }
+        ],
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 2
+          },
+          "marker": "❓"
+        },
+        "grants_unlock": "coding.base.vars.cleared",
+        "theme": "tech"
+      }
+    },
+    {
+      "id": "py-code-mixed-000",
+      "schema_version": "1.0.0",
+      "language": "python",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 2,
+      "tutorial": true,
+      "mechanics": {
+        "tier": "mixed",
+        "goalSpec": {
+          "output": "hello world",
+          "description": "The closing ) is already placed — build the rest."
+        }
+      },
+      "tutorial_refs": [
+        "tier:mixed"
+      ],
+      "prompt": "Some of the punctuation is provided; you supply the rest.",
+      "payload": {
+        "scenario": "The panel meets you halfway: it drops the closing bracket in for you. You still place everything else, in order.",
+        "goal": "Make it say: hello world. The ) is already in place.",
+        "tokens": [
+          {
+            "text": "print",
+            "kind": "function",
+            "discovers": "print"
+          },
+          {
+            "text": "(",
+            "kind": "punctuation"
+          },
+          {
+            "text": "\"hello world\"",
+            "kind": "string"
+          },
+          {
+            "text": "]",
+            "kind": "decoy"
+          }
+        ],
+        "beats": {
+          "build-first": "🐍 Nothing's built yet — stand on Build and press Enter first.",
+          "wrong-order": "Close, but the order's off. It reads: print, open paren, the words, and the ) that's already there.",
+          "wrong-indent": "Slide the line left until it sits against the wall (indent 0).",
+          "wrong-word": "One piece is wrong — an open paren is ( , not ] . Use print, ( and the words.",
+          "extra-code": "Keep it to a single line: print(\"hello world\").",
+          "success": "You filled in around the provided ) and it runs: hello world. ✅",
+          "first_run_no_build": "🐍 You ran before BUILDING. Stand on Build and press Enter first, then Run."
+        },
+        "terminal": {
+          "build": "$ python -m py_compile main.py",
+          "run": "$ python main.py"
+        },
+        "dialogue": {
+          "speakers": {
+            "snake": {
+              "name": "Sss",
+              "side": "left",
+              "portrait": "/assets/closeMouthSnake.png",
+              "portrait2": "/assets/talkingSnake.png"
+            },
+            "hint": {
+              "name": "Helper",
+              "side": "right",
+              "portrait": "🛰️",
+              "portrait2": "🛰️"
+            }
+          },
+          "on_enter": [
+            {
+              "id": "mixed-enter-1",
+              "speaker": "snake",
+              "text": "Ssss — see the faded ) already down? That one's on the house. You place the rest.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Build print ( \"hello world\" to the LEFT of the provided ).",
+              "tag": "intro"
+            }
+          ]
+        }
+      },
+      "solution": {
+        "output": "hello world",
+        "lines": [
+          {
+            "content": [
+              "print",
+              "(",
+              "\"hello world\"",
+              ")"
+            ],
+            "indent": 0
+          }
+        ]
+      },
+      "hints": [
+        "The ) is already there — build to its left.",
+        "Order: print ( \"hello world\" )",
+        "An open paren is ( , not the decoy ]."
+      ],
+      "metadata": {
+        "concept": "some punctuation is provided, some is yours",
+        "tags": [
+          "python",
+          "punctuation",
+          "mixed"
+        ],
+        "generator": "human",
+        "reviewed": true
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#....###....#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "piles": [
+          {
+            "token": "print",
+            "pos": {
+              "x": 9,
+              "y": 6
+            }
+          },
+          {
+            "token": "(",
+            "pos": {
+              "x": 10,
+              "y": 6
+            }
+          },
+          {
+            "token": "\"hello world\"",
+            "pos": {
+              "x": 9,
+              "y": 4
+            }
+          },
+          {
+            "token": "]",
+            "pos": {
+              "x": 11,
+              "y": 6
+            }
+          }
+        ],
+        "features": [
+          "terminal",
+          "coding_area",
+          "inventory"
+        ],
+        "coding_area": {
+          "x": 1,
+          "y": 1,
+          "width": 7,
+          "height": 7,
+          "prefilled": [
+            {
+              "token": ")",
+              "x": 4,
+              "y": 1
+            }
+          ]
+        },
+        "inventory_slots": 5,
+        "controls": [
+          {
+            "action": "build",
+            "label": "Build",
+            "pos": {
+              "x": 2,
+              "y": 7
+            }
+          },
+          {
+            "action": "run",
+            "label": "Run",
+            "pos": {
+              "x": 5,
+              "y": 7
+            }
+          }
+        ],
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 2
+          },
+          "marker": "❓"
+        },
+        "grants_unlock": "coding.mixed.cleared",
+        "theme": "tech"
+      }
+    },
+    {
+      "id": "py-code-explicit-000",
+      "schema_version": "1.0.0",
+      "language": "python",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 2,
+      "tutorial": true,
+      "mechanics": {
+        "tier": "explicit"
+      },
+      "prompt": "Same words — but this time you place the parentheses too.",
+      "payload": {
+        "scenario": "The panel got stricter overnight. It won't accept a bare command anymore: a print needs its parentheses wrapped around the words.",
+        "goal": "This time YOU place the parentheses. Make it say: hello world",
+        "tokens": [
+          {
+            "text": "print",
+            "kind": "function",
+            "discovers": "print"
           },
           {
             "text": "(",
@@ -521,37 +865,119 @@
             "kind": "punctuation"
           },
           {
-            "text": "\"Sam\"",
-            "kind": "string"
-          },
-          {
-            "text": "\"name\"",
+            "text": "\"hello world\"",
             "kind": "string"
           }
-        ]
+        ],
+        "beats": {
+          "build-first": "🐍 Nothing's built yet — stand on Build and press Enter first.",
+          "wrong-order": "The pieces are jumbled. It reads left to right: print, then an open paren, the words, then a close paren.",
+          "wrong-indent": "The line drifts off its margin. Slide it left until it sits against the wall (indent 0).",
+          "wrong-word": "Python needs parentheses around what print says. Grab ( and ) and wrap your words: print( \"hello world\" ).",
+          "extra-code": "There's more than one line in the panel. Keep a single print(\"hello world\") against the left wall.",
+          "success": "The stricter panel accepts it: hello world. Parentheses and all. ✅",
+          "first_run_no_build": "🐍 You ran before BUILDING. Stand on Build and press Enter first, then Run."
+        },
+        "terminal": {
+          "build": "$ python -m py_compile main.py",
+          "run": "$ python main.py"
+        },
+        "dialogue": {
+          "speakers": {
+            "snake": {
+              "name": "Sss",
+              "side": "left",
+              "portrait": "/assets/closeMouthSnake.png",
+              "portrait2": "/assets/talkingSnake.png"
+            },
+            "hint": {
+              "name": "Helper",
+              "side": "right",
+              "portrait": "🛰️",
+              "portrait2": "🛰️"
+            }
+          },
+          "on_enter": [
+            {
+              "id": "punct-enter-1",
+              "speaker": "snake",
+              "text": "Ssss — the panel's fussy today. It wants proper parentheses now.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "A print needs ( ) around its words. Both parens are on the floor now.",
+              "tag": "intro"
+            },
+            {
+              "text": "Order: print ( \"hello world\" )",
+              "tag": "after:wrong-order"
+            }
+          ],
+          "guided_tutorial": [
+            {
+              "id": "punct-tut-intro",
+              "speaker": "narrator",
+              "text": "New rule: print needs parentheses around its words. You'll collect the ( and ) yourself and place them in order.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            },
+            {
+              "id": "punct-tut-pickup",
+              "speaker": "narrator",
+              "text": "Walk up to a word on the floor and press I to pick it up.",
+              "trigger": "guided_tutorial",
+              "waitFor": "pickup"
+            },
+            {
+              "id": "punct-tut-place",
+              "speaker": "narrator",
+              "text": "Walk to an empty tile and press P to place it down.",
+              "trigger": "guided_tutorial",
+              "waitFor": "place"
+            },
+            {
+              "id": "punct-tut-build",
+              "speaker": "narrator",
+              "text": "Stand on Build and press Enter to compile your line.",
+              "trigger": "guided_tutorial",
+              "waitFor": "build"
+            },
+            {
+              "id": "punct-tut-run",
+              "speaker": "narrator",
+              "text": "Stand on Run and press Enter to see what your line does.",
+              "trigger": "guided_tutorial",
+              "waitFor": "run"
+            }
+          ]
+        }
       },
       "solution": {
-        "output": "Sam",
+        "output": "hello world",
         "lines": [
           {
             "content": [
               "print",
-              "Sam"
+              "(",
+              "\"hello world\"",
+              ")"
             ],
             "indent": 0
           }
         ]
       },
       "hints": [
-        "You already know the command that shows text — check your Codex.",
-        "Put the right name inside the quotes.",
-        "Try: print(\"Sam\")"
+        "A print needs ( ) around its words.",
+        "Both parentheses are on the floor — collect them too.",
+        "Try building: print(\"hello world\")"
       ],
       "metadata": {
-        "concept": "reuse a discovered command",
+        "concept": "parentheses are yours to place",
         "tags": [
-          "beginner",
           "python",
+          "punctuation",
           "output"
         ],
         "generator": "human",
@@ -561,15 +987,14 @@
         "width": 13,
         "height": 9,
         "spawn": {
-          "x": 9,
-          "y": 4
+          "x": 6,
+          "y": 7
         },
-        "flash_color": "#c850ff",
         "tiles": [
           "#############",
           "#...........#",
           "#...........#",
-          "#...........#",
+          "#....###....#",
           "#...........#",
           "#...........#",
           "#...........#",
@@ -578,13 +1003,6 @@
         ],
         "piles": [
           {
-            "token": "name",
-            "pos": {
-              "x": 9,
-              "y": 2
-            }
-          },
-          {
             "token": "print",
             "pos": {
               "x": 9,
@@ -592,9 +1010,23 @@
             }
           },
           {
-            "token": "Sam",
+            "token": "\"hello world\"",
+            "pos": {
+              "x": 9,
+              "y": 4
+            }
+          },
+          {
+            "token": "(",
             "pos": {
               "x": 10,
+              "y": 6
+            }
+          },
+          {
+            "token": ")",
+            "pos": {
+              "x": 11,
               "y": 6
             }
           }
@@ -629,70 +1061,666 @@
             }
           }
         ],
-        "grants_unlock": "puzzle2.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 2
+          },
+          "marker": "❓"
+        },
+        "grants_unlock": "coding.explicit.cleared",
         "theme": "tech"
       }
     },
     {
-      "id": "py-code-open-003",
+      "id": "py-code-loops-001",
       "schema_version": "1.0.0",
       "language": "python",
       "puzzle_type": "code_build",
       "validator_type": "code_match",
       "difficulty": 3,
-      "prompt": "A locked door panel is waiting for the right word.",
+      "mechanics": {
+        "tier": "base",
+        "goalSpec": {
+          "output": "hi\nhi\nhi",
+          "description": "Say hi three times — with a loop, not three prints."
+        }
+      },
+      "tutorial_refs": [
+        "concept:loops"
+      ],
+      "prompt": "A loop repeats a line. Build the loop, then its indented body.",
       "payload": {
-        "scenario": "You reach a sealed door. A glowing panel listens for a single spoken word to release the lock.",
-        "goal": "Make the panel hear the word: open",
+        "scenario": "The panel is tired of repetition. It offers a loop: write the line once, run it many times.",
+        "goal": "Print hi three times using a loop. Body sits one tile in.",
         "tokens": [
-          {
-            "text": "print",
-            "kind": "function",
-            "discovers": "print"
+          { "text": "for", "kind": "keyword" },
+          { "text": "i", "kind": "value" },
+          { "text": "in", "kind": "keyword" },
+          { "text": "range", "kind": "function", "discovers": "range" },
+          { "text": "3", "kind": "value" },
+          { "text": "print", "kind": "function", "discovers": "print" },
+          { "text": "\"hi\"", "kind": "string" },
+          { "text": "while", "kind": "decoy" },
+          { "text": "4", "kind": "decoy" }
+        ],
+        "beats": {
+          "build-first": "🐍 Build the line first — stand on Build and press Enter.",
+          "wrong-order": "The header reads: for i in range 3. Then the body on the next line.",
+          "wrong-indent": "The body belongs INSIDE the loop — place it one tile to the right (indent 1).",
+          "wrong-word": "Read carefully — 'while' is a different loop. Use for, i, in, range, 3.",
+          "extra-code": "Two lines only: the for-header, then one indented print.",
+          "success": "The loop spins three times: hi, hi, hi. ✅",
+          "first_run_no_build": "🐍 You ran before BUILDING. Build first, then Run."
+        },
+        "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
+        "dialogue": {
+          "speakers": {
+            "snake": { "name": "Sss", "side": "left", "portrait": "/assets/closeMouthSnake.png", "portrait2": "/assets/talkingSnake.png" },
+            "hint": { "name": "Helper", "side": "right", "portrait": "🛰️", "portrait2": "🛰️" }
           },
-          {
-            "text": "input",
-            "kind": "decoy"
-          },
-          {
-            "text": "(",
-            "kind": "punctuation"
-          },
-          {
-            "text": ")",
-            "kind": "punctuation"
-          },
-          {
-            "text": "\"open\"",
-            "kind": "string"
-          },
-          {
-            "text": "\"close\"",
-            "kind": "string"
-          },
-          {
-            "text": "\"door\"",
-            "kind": "string"
-          }
-        ]
+          "on_enter": [
+            { "id": "loops1-enter", "speaker": "snake", "text": "Ssss — one line, many runs. Watch the indent on the body.", "trigger": "on_enter" }
+          ],
+          "hints": [
+            { "text": "Header: for i in range 3. Body (indented): print \"hi\".", "tag": "intro" },
+            { "text": "The body must sit one tile to the RIGHT of the for.", "tag": "after:wrong-indent" }
+          ]
+        }
       },
       "solution": {
-        "output": "open"
+        "output": "hi\nhi\nhi",
+        "lines": [
+          { "content": ["for", "i", "in", "range", "3"], "indent": 0 },
+          { "content": ["print", "hi"], "indent": 1 }
+        ]
       },
       "hints": [
-        "Same command as before — just a different word.",
-        "‘input’ asks for text; you want to SAY text.",
-        "Try: print(\"open\")"
+        "Header first: for i in range 3.",
+        "Then an indented body: print \"hi\".",
+        "Indent the body one tile (it's inside the loop)."
       ],
       "metadata": {
-        "concept": "choosing the right argument",
-        "tags": [
-          "beginner",
-          "python",
-          "output"
-        ],
+        "concept": "loops — repeat a line",
+        "tags": ["python", "loops", "indentation"],
         "generator": "human",
         "reviewed": true
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": { "x": 6, "y": 7 },
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "piles": [
+          { "token": "for", "pos": { "x": 7, "y": 6 } },
+          { "token": "i", "pos": { "x": 8, "y": 6 } },
+          { "token": "in", "pos": { "x": 9, "y": 6 } },
+          { "token": "range", "pos": { "x": 10, "y": 6 } },
+          { "token": "3", "pos": { "x": 11, "y": 6 } },
+          { "token": "print", "pos": { "x": 7, "y": 4 } },
+          { "token": "\"hi\"", "pos": { "x": 8, "y": 4 } },
+          { "token": "while", "pos": { "x": 10, "y": 2 } },
+          { "token": "4", "pos": { "x": 11, "y": 2 } }
+        ],
+        "features": ["terminal", "coding_area", "inventory"],
+        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "inventory_slots": 7,
+        "controls": [
+          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
+          { "action": "run", "label": "Run", "pos": { "x": 5, "y": 7 } }
+        ],
+        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
+        "grants_unlock": "coding.loops.1.cleared",
+        "theme": "tech"
+      }
+    },
+    {
+      "id": "py-code-loops-002",
+      "schema_version": "1.0.0",
+      "language": "python",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 3,
+      "mechanics": {
+        "tier": "base",
+        "goalSpec": {
+          "output": "0\n1\n2",
+          "description": "Print 0, 1, 2 — use the loop's counter, i."
+        }
+      },
+      "tutorial_refs": [
+        "concept:loops"
+      ],
+      "prompt": "The loop counts for you. Print the counter each time.",
+      "payload": {
+        "scenario": "The loop hands you a number each turn — its counter, i. Show it.",
+        "goal": "Print 0, 1, 2 by printing i inside the loop.",
+        "tokens": [
+          { "text": "for", "kind": "keyword" },
+          { "text": "i", "kind": "value" },
+          { "text": "in", "kind": "keyword" },
+          { "text": "range", "kind": "function", "discovers": "range" },
+          { "text": "3", "kind": "value" },
+          { "text": "print", "kind": "function", "discovers": "print" },
+          { "text": "n", "kind": "decoy" },
+          { "text": "\"i\"", "kind": "decoy" }
+        ],
+        "beats": {
+          "build-first": "🐍 Build the line first — stand on Build and press Enter.",
+          "wrong-order": "Header: for i in range 3. Body: print i.",
+          "wrong-indent": "The body sits one tile in (indent 1) — it's inside the loop.",
+          "wrong-word": "You want the counter i itself — not the letter \"i\" in quotes, and not n.",
+          "extra-code": "Two lines only: the for-header, then one indented print i.",
+          "success": "Each turn prints the counter: 0, 1, 2. ✅",
+          "first_run_no_build": "🐍 You ran before BUILDING. Build first, then Run."
+        },
+        "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
+        "dialogue": {
+          "speakers": {
+            "snake": { "name": "Sss", "side": "left", "portrait": "/assets/closeMouthSnake.png", "portrait2": "/assets/talkingSnake.png" },
+            "hint": { "name": "Helper", "side": "right", "portrait": "🛰️", "portrait2": "🛰️" }
+          },
+          "on_enter": [
+            { "id": "loops2-enter", "speaker": "snake", "text": "Ssss — the same i from the header is yours to print.", "trigger": "on_enter" }
+          ],
+          "hints": [
+            { "text": "Body: print i (the counter), not \"i\" in quotes.", "tag": "intro" }
+          ]
+        }
+      },
+      "solution": {
+        "output": "0\n1\n2",
+        "lines": [
+          { "content": ["for", "i", "in", "range", "3"], "indent": 0 },
+          { "content": ["print", "i"], "indent": 1 }
+        ]
+      },
+      "hints": [
+        "Header first: for i in range 3.",
+        "Then an indented body: print i.",
+        "Use the counter i, not the text \"i\"."
+      ],
+      "metadata": {
+        "concept": "loops — use the counter",
+        "tags": ["python", "loops", "variables"],
+        "generator": "human",
+        "reviewed": true
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": { "x": 6, "y": 7 },
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "piles": [
+          { "token": "for", "pos": { "x": 7, "y": 6 } },
+          { "token": "i", "pos": { "x": 8, "y": 6 } },
+          { "token": "in", "pos": { "x": 9, "y": 6 } },
+          { "token": "range", "pos": { "x": 10, "y": 6 } },
+          { "token": "3", "pos": { "x": 11, "y": 6 } },
+          { "token": "print", "pos": { "x": 7, "y": 4 } },
+          { "token": "n", "pos": { "x": 10, "y": 2 } },
+          { "token": "\"i\"", "pos": { "x": 11, "y": 2 } }
+        ],
+        "features": ["terminal", "coding_area", "inventory"],
+        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "inventory_slots": 7,
+        "controls": [
+          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
+          { "action": "run", "label": "Run", "pos": { "x": 5, "y": 7 } }
+        ],
+        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
+        "grants_unlock": "coding.loops.2.cleared",
+        "theme": "tech"
+      }
+    },
+    {
+      "id": "py-code-funcs-001",
+      "schema_version": "1.0.0",
+      "language": "python",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 4,
+      "mechanics": {
+        "tier": "base",
+        "goalSpec": {
+          "output": "hi",
+          "description": "Define a greet function, then call it to say hi."
+        }
+      },
+      "tutorial_refs": [
+        "concept:function_def"
+      ],
+      "prompt": "Define a function, then call it on a line of its own.",
+      "payload": {
+        "scenario": "The panel lets you name a block of code — a function — and run it whenever you call its name.",
+        "goal": "Define greet (body: print hi), then call greet.",
+        "tokens": [
+          { "text": "def", "kind": "keyword" },
+          { "text": "greet", "kind": "value", "discovers": "def" },
+          { "text": "print", "kind": "function", "discovers": "print" },
+          { "text": "\"hi\"", "kind": "string" },
+          { "text": "return", "kind": "decoy" },
+          { "text": "gret", "kind": "decoy" }
+        ],
+        "beats": {
+          "build-first": "🐍 Build the lines first — stand on Build and press Enter.",
+          "wrong-order": "Define first: def greet, then the indented body, then call greet at the bottom.",
+          "wrong-indent": "The body is INSIDE greet — indent it one tile. The call sits back at indent 0.",
+          "wrong-word": "Read carefully — it's greet, not gret; and you don't need return here.",
+          "extra-code": "Three lines: def greet, the indented print, then greet on its own.",
+          "success": "You defined greet and called it: hi. ✅"
+        },
+        "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
+        "dialogue": {
+          "speakers": {
+            "snake": { "name": "Sss", "side": "left", "portrait": "/assets/closeMouthSnake.png", "portrait2": "/assets/talkingSnake.png" },
+            "hint": { "name": "Helper", "side": "right", "portrait": "🛰️", "portrait2": "🛰️" }
+          },
+          "on_enter": [
+            { "id": "funcs1-enter", "speaker": "snake", "text": "Ssss — name it, fill its body, then call it below.", "trigger": "on_enter" }
+          ],
+          "hints": [
+            { "text": "def greet — then an indented print \"hi\" — then greet on its own line.", "tag": "intro" },
+            { "text": "The call 'greet' sits back at indent 0, below the body.", "tag": "after:wrong-indent" }
+          ]
+        }
+      },
+      "solution": {
+        "output": "hi",
+        "lines": [
+          { "content": ["def", "greet"], "indent": 0 },
+          { "content": ["print", "hi"], "indent": 1 },
+          { "content": ["greet"], "indent": 0 }
+        ]
+      },
+      "hints": [
+        "Define first: def greet.",
+        "Indented body: print \"hi\".",
+        "Then call it: greet (indent 0)."
+      ],
+      "metadata": {
+        "concept": "functions — define and call",
+        "tags": ["python", "functions"],
+        "generator": "human",
+        "reviewed": true
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": { "x": 6, "y": 7 },
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "piles": [
+          { "token": "def", "pos": { "x": 7, "y": 6 } },
+          { "token": "greet", "pos": { "x": 8, "y": 6 } },
+          { "token": "print", "pos": { "x": 9, "y": 6 } },
+          { "token": "\"hi\"", "pos": { "x": 10, "y": 6 } },
+          { "token": "return", "pos": { "x": 10, "y": 2 } },
+          { "token": "gret", "pos": { "x": 11, "y": 2 } }
+        ],
+        "features": ["terminal", "coding_area", "inventory"],
+        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "inventory_slots": 7,
+        "controls": [
+          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
+          { "action": "run", "label": "Run", "pos": { "x": 5, "y": 7 } }
+        ],
+        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
+        "grants_unlock": "coding.funcs.1.cleared",
+        "theme": "tech"
+      }
+    },
+    {
+      "id": "py-code-funcs-002",
+      "schema_version": "1.0.0",
+      "language": "python",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 4,
+      "mechanics": {
+        "tier": "base",
+        "goalSpec": {
+          "output": "hi\nbye",
+          "description": "Give greet a two-line body, then call it once."
+        }
+      },
+      "tutorial_refs": [
+        "concept:function_def"
+      ],
+      "prompt": "A function body can be several indented lines.",
+      "payload": {
+        "scenario": "One name, several lines. Everything indented under def belongs to the function.",
+        "goal": "greet should print hi then bye. Define it, then call greet once.",
+        "tokens": [
+          { "text": "def", "kind": "keyword" },
+          { "text": "greet", "kind": "value", "discovers": "def" },
+          { "text": "print", "kind": "function", "discovers": "print" },
+          { "text": "\"hi\"", "kind": "string" },
+          { "text": "\"bye\"", "kind": "string" },
+          { "text": "gret", "kind": "decoy" }
+        ],
+        "beats": {
+          "build-first": "🐍 Build the lines first — stand on Build and press Enter.",
+          "wrong-order": "def greet, then print hi, then print bye (both indented), then call greet.",
+          "wrong-indent": "BOTH body lines are indented one tile. Only the call sits at indent 0.",
+          "wrong-word": "It's greet, not gret.",
+          "extra-code": "Four lines: def greet, two indented prints, then greet.",
+          "success": "greet runs its whole body: hi, then bye. ✅"
+        },
+        "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
+        "dialogue": {
+          "speakers": {
+            "snake": { "name": "Sss", "side": "left", "portrait": "/assets/closeMouthSnake.png", "portrait2": "/assets/talkingSnake.png" },
+            "hint": { "name": "Helper", "side": "right", "portrait": "🛰️", "portrait2": "🛰️" }
+          },
+          "on_enter": [
+            { "id": "funcs2-enter", "speaker": "snake", "text": "Ssss — everything indented under def is part of greet.", "trigger": "on_enter" }
+          ],
+          "hints": [
+            { "text": "Two indented body lines (print hi, print bye), then greet at indent 0.", "tag": "intro" }
+          ]
+        }
+      },
+      "solution": {
+        "output": "hi\nbye",
+        "lines": [
+          { "content": ["def", "greet"], "indent": 0 },
+          { "content": ["print", "hi"], "indent": 1 },
+          { "content": ["print", "bye"], "indent": 1 },
+          { "content": ["greet"], "indent": 0 }
+        ]
+      },
+      "hints": [
+        "def greet, then two indented prints.",
+        "print \"hi\" then print \"bye\", both indented one tile.",
+        "Call greet last, at indent 0."
+      ],
+      "metadata": {
+        "concept": "functions — a multi-line body",
+        "tags": ["python", "functions"],
+        "generator": "human",
+        "reviewed": true
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": { "x": 6, "y": 7 },
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "piles": [
+          { "token": "def", "pos": { "x": 7, "y": 6 } },
+          { "token": "greet", "pos": { "x": 8, "y": 6 } },
+          { "token": "print", "pos": { "x": 9, "y": 6 } },
+          { "token": "\"hi\"", "pos": { "x": 10, "y": 6 } },
+          { "token": "\"bye\"", "pos": { "x": 11, "y": 6 } },
+          { "token": "gret", "pos": { "x": 11, "y": 2 } }
+        ],
+        "features": ["terminal", "coding_area", "inventory"],
+        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "inventory_slots": 7,
+        "controls": [
+          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
+          { "action": "run", "label": "Run", "pos": { "x": 5, "y": 7 } }
+        ],
+        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
+        "grants_unlock": "coding.funcs.2.cleared",
+        "theme": "tech"
+      }
+    },
+    {
+      "id": "py-code-args-001",
+      "schema_version": "1.0.0",
+      "language": "python",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 4,
+      "mechanics": {
+        "tier": "base",
+        "goalSpec": {
+          "output": "Sam",
+          "description": "Give greet a name to say, then call it with \"Sam\"."
+        }
+      },
+      "tutorial_refs": [
+        "concept:function_call"
+      ],
+      "prompt": "Functions can take a value — an argument. Declare a slot, then fill it.",
+      "payload": {
+        "scenario": "greet is more useful if you can tell it WHO. Give it a slot and hand it a name.",
+        "goal": "def greet(name), print the name, then call greet with \"Sam\".",
+        "tokens": [
+          { "text": "def", "kind": "keyword" },
+          { "text": "greet", "kind": "value", "discovers": "def" },
+          { "text": "name", "kind": "value" },
+          { "text": "print", "kind": "function", "discovers": "print" },
+          { "text": "\"Sam\"", "kind": "string" },
+          { "text": "\"name\"", "kind": "decoy" },
+          { "text": "gret", "kind": "decoy" }
+        ],
+        "beats": {
+          "build-first": "🐍 Build the lines first — stand on Build and press Enter.",
+          "wrong-order": "def greet name, then (indented) print name, then call greet \"Sam\".",
+          "wrong-indent": "The body prints name at indent 1; the call sits at indent 0.",
+          "wrong-word": "Inside, print the slot name (no quotes) — \"name\" would print the literal word.",
+          "extra-code": "Three lines: the def with its slot, the indented print, then the call.",
+          "success": "You passed \"Sam\" into the name slot: Sam. ✅"
+        },
+        "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
+        "dialogue": {
+          "speakers": {
+            "snake": { "name": "Sss", "side": "left", "portrait": "/assets/closeMouthSnake.png", "portrait2": "/assets/talkingSnake.png" },
+            "hint": { "name": "Helper", "side": "right", "portrait": "🛰️", "portrait2": "🛰️" }
+          },
+          "on_enter": [
+            { "id": "args1-enter", "speaker": "snake", "text": "Ssss — a slot in the ( ), a value when you call. Print the slot, not a quoted word.", "trigger": "on_enter" }
+          ],
+          "hints": [
+            { "text": "def greet name → print name (indented) → greet \"Sam\".", "tag": "intro" },
+            { "text": "print name, not print \"name\" — the slot, not the literal word.", "tag": "after:wrong-word" }
+          ]
+        }
+      },
+      "solution": {
+        "output": "Sam",
+        "lines": [
+          { "content": ["def", "greet", "name"], "indent": 0 },
+          { "content": ["print", "name"], "indent": 1 },
+          { "content": ["greet", "\"Sam\""], "indent": 0 }
+        ]
+      },
+      "hints": [
+        "Header with a slot: def greet name.",
+        "Body: print name (the slot, indented).",
+        "Call it with a value: greet \"Sam\"."
+      ],
+      "metadata": {
+        "concept": "functions — arguments",
+        "tags": ["python", "functions", "arguments"],
+        "generator": "human",
+        "reviewed": true
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": { "x": 6, "y": 7 },
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "piles": [
+          { "token": "def", "pos": { "x": 7, "y": 6 } },
+          { "token": "greet", "pos": { "x": 8, "y": 6 } },
+          { "token": "name", "pos": { "x": 9, "y": 6 } },
+          { "token": "print", "pos": { "x": 10, "y": 6 } },
+          { "token": "\"Sam\"", "pos": { "x": 11, "y": 6 } },
+          { "token": "\"name\"", "pos": { "x": 10, "y": 2 } },
+          { "token": "gret", "pos": { "x": 11, "y": 2 } }
+        ],
+        "features": ["terminal", "coding_area", "inventory"],
+        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "inventory_slots": 7,
+        "controls": [
+          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
+          { "action": "run", "label": "Run", "pos": { "x": 5, "y": 7 } }
+        ],
+        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
+        "grants_unlock": "coding.args.1.cleared",
+        "theme": "tech"
+      }
+    },
+    {
+      "id": "py-code-args-002",
+      "schema_version": "1.0.0",
+      "language": "python",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 5,
+      "mechanics": {
+        "tier": "base",
+        "goalSpec": {
+          "output": "Sam\nLee",
+          "description": "Two slots, two values: print first then last."
+        }
+      },
+      "tutorial_refs": [
+        "concept:function_call"
+      ],
+      "prompt": "More than one argument: declare two slots, fill both in order.",
+      "payload": {
+        "scenario": "One name isn't enough — greet a first and a last. Two slots, two values, matched by order.",
+        "goal": "def greet(first, last); print first then last; call greet with \"Sam\" \"Lee\".",
+        "tokens": [
+          { "text": "def", "kind": "keyword" },
+          { "text": "greet", "kind": "value", "discovers": "def" },
+          { "text": "first", "kind": "value" },
+          { "text": "last", "kind": "value" },
+          { "text": "print", "kind": "function", "discovers": "print" },
+          { "text": "\"Sam\"", "kind": "string" },
+          { "text": "\"Lee\"", "kind": "string" },
+          { "text": "gret", "kind": "decoy" }
+        ],
+        "beats": {
+          "build-first": "🐍 Build the lines first — stand on Build and press Enter.",
+          "wrong-order": "Header: def greet first last. Body: print first, then print last. Then call greet \"Sam\" \"Lee\".",
+          "wrong-indent": "Both prints are indent 1 (inside greet); the call is indent 0.",
+          "wrong-word": "Use the slots first and last (no quotes) in the body.",
+          "extra-code": "Four lines: the def, two indented prints, then the call.",
+          "success": "Both slots filled in order: Sam, then Lee. ✅"
+        },
+        "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
+        "dialogue": {
+          "speakers": {
+            "snake": { "name": "Sss", "side": "left", "portrait": "/assets/closeMouthSnake.png", "portrait2": "/assets/talkingSnake.png" },
+            "hint": { "name": "Helper", "side": "right", "portrait": "🛰️", "portrait2": "🛰️" }
+          },
+          "on_enter": [
+            { "id": "args2-enter", "speaker": "snake", "text": "Ssss — two slots, filled by ORDER: the first value lands in the first slot.", "trigger": "on_enter" }
+          ],
+          "hints": [
+            { "text": "def greet first last → print first → print last → greet \"Sam\" \"Lee\".", "tag": "intro" }
+          ]
+        }
+      },
+      "solution": {
+        "output": "Sam\nLee",
+        "lines": [
+          { "content": ["def", "greet", "first", "last"], "indent": 0 },
+          { "content": ["print", "first"], "indent": 1 },
+          { "content": ["print", "last"], "indent": 1 },
+          { "content": ["greet", "\"Sam\"", "\"Lee\""], "indent": 0 }
+        ]
+      },
+      "hints": [
+        "Header with two slots: def greet first last.",
+        "Body: print first, then print last (both indented).",
+        "Call with two values in order: greet \"Sam\" \"Lee\"."
+      ],
+      "metadata": {
+        "concept": "functions — multiple arguments",
+        "tags": ["python", "functions", "arguments"],
+        "generator": "human",
+        "reviewed": true
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": { "x": 6, "y": 7 },
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "piles": [
+          { "token": "def", "pos": { "x": 7, "y": 6 } },
+          { "token": "greet", "pos": { "x": 8, "y": 6 } },
+          { "token": "first", "pos": { "x": 9, "y": 6 } },
+          { "token": "last", "pos": { "x": 10, "y": 6 } },
+          { "token": "print", "pos": { "x": 11, "y": 6 } },
+          { "token": "\"Sam\"", "pos": { "x": 7, "y": 4 } },
+          { "token": "\"Lee\"", "pos": { "x": 8, "y": 4 } },
+          { "token": "gret", "pos": { "x": 11, "y": 2 } }
+        ],
+        "features": ["terminal", "coding_area", "inventory"],
+        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "inventory_slots": 7,
+        "controls": [
+          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
+          { "action": "run", "label": "Run", "pos": { "x": 5, "y": 7 } }
+        ],
+        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
+        "grants_unlock": "coding.args.2.cleared",
+        "theme": "tech"
       }
     }
   ]

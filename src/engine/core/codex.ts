@@ -111,9 +111,10 @@ export function resetCodex(): void {
   writeTutorials([]);
 }
 
-// --- guided-tutorial "seen" flags (persisted alongside the Codex) --------------------
-// A guided tutorial (see DialogueConfig.guided_tutorial) plays ONCE ever, keyed by the
-// room/puzzle id. Settings offers a lightweight "replay" that only clears this list —
+// --- tutorial "seen" flags (persisted alongside the Codex) --------------------
+// A tutorial plays ONCE ever, keyed by a stable id: a room id (guided_tutorial) or a shared
+// tutorial id (Pack.tutorials, referenced via tutorial_refs). It always plays in full — there
+// is no partial replay. Settings offers a lightweight "replay" that only clears this list —
 // it does NOT touch discovered commands or unlocks.
 
 const TUTORIAL_KEY = "codex.tutorials.v1";
@@ -137,18 +138,18 @@ function writeTutorials(ids: string[]): void {
   }
 }
 
-/** Has this room/puzzle's guided tutorial already played (ever)? */
+/** Has this tutorial (room id or shared tutorial id) already played (ever)? */
 export function hasCompletedTutorial(id: string): boolean {
   return readTutorials().includes(id);
 }
 
-/** Mark a guided tutorial as seen — it won't auto-play again until replayed. */
+/** Mark a tutorial (room id or shared tutorial id) as seen — it won't auto-play again until replayed. */
 export function completeTutorial(id: string): void {
   const current = readTutorials();
   if (!current.includes(id)) writeTutorials([...current, id]);
 }
 
-/** Clear every "seen" flag — the next visit to each room plays its guided tutorial again. */
+/** Clear every "seen" flag — the next encounter plays each tutorial (room or shared) again. */
 export function resetTutorials(): void {
   writeTutorials([]);
 }

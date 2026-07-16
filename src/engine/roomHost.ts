@@ -13,7 +13,7 @@
 // button, panel dragging, and to focus the room for keyboard (Rule 4).
 // ---------------------------------------------------------------------------
 
-import type { DialogueBeat, DialogueConfig, DialogueSpeaker, Puzzle } from "../schema/types";
+import type { DialogueBeat, DialogueConfig, DialogueSpeaker, Puzzle, TutorialBlock } from "../schema/types";
 import { parseRoom, step, pileAt, MOVE, type Cell, type Direction } from "./core/room";
 import {
   resetCodex, resetTutorials, getUnlocks, hasCompletedTutorial, completeTutorial,
@@ -56,6 +56,9 @@ export interface RoomCallbacks {
   /** Resolve the teleport flash color for a target id (the manager has the registry).
    *  Used by hub PORTALS so their transition flashes in the destination's color. */
   flashColorFor?: (target: string) => string;
+  /** Resolve a SHARED tutorial by id (the manager merges every pack's `tutorials` map).
+   *  Used for the level's `tutorial_refs` first-encounter playback. */
+  tutorialFor?: (id: string) => TutorialBlock | null;
 }
 /** Handle to a mounted room. `teardown()` destroys EVERYTHING the room created. */
 export interface RoomHandle {
@@ -135,6 +138,18 @@ export function mountRoom(
   hudTitle.className = "room-hud-title";
   hudTitle.textContent = puzzle.metadata?.concept ?? "";
   topbar.appendChild(hudTitle);
+  // Goal display (CONTENT): the desired output / plain-language description — NEVER the target
+  // code (no tier reveals the answer; see MechanicsConfig.goalSpec). Generic: any room puzzle
+  // may declare a goalSpec; the engine never branches on type. Omitted ⇒ no goal line.
+  const goalSpec = puzzle.mechanics?.goalSpec;
+  if (goalSpec && (goalSpec.description || goalSpec.output)) {
+    const goalEl = document.createElement("div");
+    goalEl.className = "room-hud-goal";
+    goalEl.textContent = goalSpec.description
+      ? `🎯 ${goalSpec.description}`
+      : `🎯 Output: ${goalSpec.output}`;
+    topbar.appendChild(goalEl);
+  }
   container.appendChild(topbar);
 
   // --- stage (centers the viewport in the available space) → viewport → world ---
@@ -369,7 +384,11 @@ export function mountRoom(
     for (const pile of room.piles) {
       const p = document.createElement("div");
       p.className = "tile-room tile-pile";
-      p.style.width = `${tile}px`;
+      // Long tokens (e.g. "hello world") span multiple tiles so they stay readable instead of
+      // truncating. The pile is still ONE logical cell — pickup is on its anchor (pile.pos); the
+      // box just extends to the right. ~6 monospace chars fit one tile at the label size.
+      const span = Math.max(1, Math.ceil(pile.token.length / 6));
+      p.style.width = `${span * tile}px`;
       p.style.height = `${tile}px`;
       p.style.transform = `translate(${pile.pos.x * tile}px, ${pile.pos.y * tile}px)`;
       const label = document.createElement("span");
@@ -530,9 +549,24 @@ export function mountRoom(
   // as ONE unskippable sequence, then marked seen (see codex.ts). Every later visit just
   // gets the normal on_enter greeting. Entering a room NEVER auto-opens the menu — the
   // auto-menu is a solve-time reward (see ctx.onSolved), so the first room plays normally.
+  // First-encounter teaching, WHOLE-UNIT (always the same, never partial): play each unseen
+  // SHARED tutorial the level references (in order), then the room's own guided_tutorial if the
+  // room itself is unseen. Each is keyed by its own id; a played sequence marks them all seen.
+  // "Replay tutorials" (settings) clears the flags so they play in full again.
+  const firstVisit: DialogueBeat[] = [];
+  const toMarkSeen: string[] = [];
+  for (const refId of puzzle.tutorial_refs ?? []) {
+    if (hasCompletedTutorial(refId)) continue;
+    const block = callbacks.tutorialFor?.(refId);
+    if (block?.dialogue?.length) { firstVisit.push(...block.dialogue); toMarkSeen.push(refId); }
+  }
   if (guidedTutorialBeats.length && !hasCompletedTutorial(puzzle.id)) {
-    dialogue.play([...onEnterBeats, ...guidedTutorialBeats], {
-      onComplete: () => completeTutorial(puzzle.id),
+    firstVisit.push(...guidedTutorialBeats);
+    toMarkSeen.push(puzzle.id);
+  }
+  if (firstVisit.length) {
+    dialogue.play([...onEnterBeats, ...firstVisit], {
+      onComplete: () => { for (const id of toMarkSeen) completeTutorial(id); },
       skippable: false,
     });
   } else if (onEnterBeats.length) {

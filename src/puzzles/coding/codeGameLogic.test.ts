@@ -2,8 +2,11 @@ import { describe, it, expect } from "vitest";
 import {
   checkLine,
   checkProgram,
+  checkProgramAny,
   run,
+  runAny,
   normalizeContent,
+  requiresPunctuation,
   createBuildState,
   markBuilt,
   markDirty,
@@ -102,9 +105,80 @@ describe("checkProgram — the coding area must hold EXACTLY the answer's lines"
 });
 
 describe("normalizeContent", () => {
-  it("drops punctuation tokens and strips surrounding quotes", () => {
+  it("drops punctuation tokens and strips surrounding quotes (guided default)", () => {
     expect(normalizeContent(["print", "(", '"hello"', ")"])).toEqual(["print", "hello"]);
     expect(normalizeContent(["  print  ", "'x'"])).toEqual(["print", "x"]);
+  });
+
+  it("keeps punctuation but still strips quotes when requirePunctuation is on", () => {
+    expect(normalizeContent(["print", "(", '"hello"', ")"], true)).toEqual(["print", "(", "hello", ")"]);
+  });
+});
+
+// The PUNCTUATION tier: the same tokens that difficulty-1 ignores are now REQUIRED and
+// order-checked. The player has to collect and place the parens/colons/commas themselves.
+describe("punctuation tier — requirePunctuation keeps ( ) : , in the order-check", () => {
+  const ANS: AnswerLine[] = [{ content: ["print", "(", '"hello"', ")"], indent: 0 }];
+  const L = ANS[0];
+
+  it("accepts the fully punctuated line (quotes are still normalized away)", () => {
+    expect(checkLine(["print", "(", "hello", ")"], 0, L, true)).toEqual({ ok: true });
+    expect(checkLine(["print", "(", '"hello"', ")"], 0, L, true)).toEqual({ ok: true });
+  });
+
+  it("rejects a line MISSING required punctuation → wrong-word", () => {
+    expect(checkLine(["print", "hello"], 0, L, true)).toEqual({ ok: false, reason: "wrong-word" });
+  });
+
+  it("flags punctuation placed in the wrong order → wrong-order", () => {
+    expect(checkLine(["print", ")", "hello", "("], 0, L, true)).toEqual({ ok: false, reason: "wrong-order" });
+  });
+
+  it("guided mode (default) still treats that punctuation as optional", () => {
+    expect(checkLine(["print", "hello"], 0, L)).toEqual({ ok: true });
+  });
+
+  it("run threads the flag through the whole program", () => {
+    const built = markBuilt(createBuildState());
+    const good: CodeLine[] = [{ content: ["print", "(", "hello", ")"], indent: 0 }];
+    const missing: CodeLine[] = [{ content: ["print", "hello"], indent: 0 }];
+    expect(run(built, good, ANS, true)).toEqual({ ok: true });
+    expect(run(built, missing, ANS, true)).toEqual({ ok: false, reason: "wrong-word" });
+    expect(run(built, missing, ANS, false)).toEqual({ ok: true }); // guided ignores punctuation
+  });
+});
+
+// Base tier accepts multiple valid programs (order-matched against a SET — never executed).
+describe("checkProgramAny / runAny — multiple accepted solutions", () => {
+  const V1: AnswerLine[] = [{ content: ["x", "=", "5"], indent: 0 }, { content: ["print", "x"], indent: 0 }];
+  const V2: AnswerLine[] = [{ content: ["y", "=", "5"], indent: 0 }, { content: ["print", "y"], indent: 0 }];
+  const accepted = [V1, V2];
+  const prog = (v: AnswerLine[]): CodeLine[] => v.map((l) => ({ ...l }));
+
+  it("passes when the program matches ANY accepted variant", () => {
+    expect(checkProgramAny(prog(V1), accepted)).toEqual({ ok: true });
+    expect(checkProgramAny(prog(V2), accepted)).toEqual({ ok: true });
+  });
+
+  it("on no match, reports the CLOSEST variant's reason", () => {
+    // line 0 reversed → wrong-order vs V1 (right words), only wrong-word vs V2 → wrong-order wins
+    const reordered: CodeLine[] = [{ content: ["5", "=", "x"], indent: 0 }, { content: ["print", "x"], indent: 0 }];
+    expect(checkProgramAny(reordered, accepted)).toEqual({ ok: false, reason: "wrong-order" });
+  });
+
+  it("runAny still requires a built program first", () => {
+    expect(runAny(createBuildState(), prog(V1), accepted)).toEqual({ ok: false, reason: "build-first" });
+    expect(runAny(markBuilt(createBuildState()), prog(V1), accepted)).toEqual({ ok: true });
+  });
+});
+
+describe("requiresPunctuation — derived from a level's mechanics", () => {
+  it("true for the mixed/explicit tiers or an explicit flag; false for base", () => {
+    expect(requiresPunctuation({ tier: "mixed" })).toBe(true);
+    expect(requiresPunctuation({ tier: "explicit" })).toBe(true);
+    expect(requiresPunctuation({ tier: "base", punctuationRequired: true })).toBe(true);
+    expect(requiresPunctuation({ tier: "base" })).toBe(false);
+    expect(requiresPunctuation(undefined)).toBe(false);
   });
 });
 

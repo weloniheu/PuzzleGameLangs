@@ -10,7 +10,7 @@ import type { CodeBuildPayload, CodeBuildSolution, DialogueBeat, Puzzle } from "
 import type { EngineContext, MountedPuzzle, RoomPuzzleModule } from "../../engine/puzzleModule";
 import { createTerminal, type Terminal } from "./terminal";
 import { createCodingArea } from "./codingArea";
-import type { AnswerLine } from "./codeGameLogic";
+import { requiresPunctuation, type AnswerLine } from "./codeGameLogic";
 
 export const codingModule: RoomPuzzleModule = {
   puzzleType: "code_build",
@@ -19,7 +19,8 @@ export const codingModule: RoomPuzzleModule = {
     // Code-game CONTENT (engine hardcodes none): the answer, beats, and terminal flavor.
     const payload = puzzle.payload as CodeBuildPayload;
     const solution = puzzle.solution as CodeBuildSolution;
-    const answer: AnswerLine[] = solution.lines ?? [];
+    // Accepted programs: `accepted` when the level lists alternates, else `lines` as one variant.
+    const accepted: AnswerLine[][] = solution.accepted ?? (solution.lines ? [solution.lines] : []);
     const beats: Record<string, string> = payload.beats ?? {};
     const termCmds = payload.terminal ?? { build: "$ build", run: "$ run" };
 
@@ -46,8 +47,9 @@ export const codingModule: RoomPuzzleModule = {
 
     const area = createCodingArea({
       ctx,
-      answer,
+      accepted,
       output: solution.output,
+      requirePunctuation: requiresPunctuation(puzzle.mechanics), // punctuation tier keeps ( ) : ,
       termCmds,
       termWrite: (lines, state) => terminal?.write(lines, state), // no terminal → nowhere to echo
       snakeBeat,

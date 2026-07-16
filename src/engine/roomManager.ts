@@ -8,7 +8,7 @@
 // puzzle and swaps. The EXIT door is just a door whose target is the hub.
 // ---------------------------------------------------------------------------
 
-import type { Puzzle, LevelEntry, PuzzleType } from "../schema/types";
+import type { Puzzle, LevelEntry, PuzzleType, TutorialBlock } from "../schema/types";
 import { mountRoom, type RoomHandle } from "./roomHost";
 import { addUnlock, getUnlocks } from "./core/codex";
 import { destinationMenu, HUB_ID, type DestinationOption } from "./core/progression";
@@ -31,7 +31,7 @@ export function createRoomManager(
   container: HTMLElement,
   resolve: (id: string) => Puzzle | null,
   levelsForType: (puzzleType: PuzzleType) => LevelEntry[],
-  hooks: { onBeforeMount?: () => void } = {},
+  hooks: { onBeforeMount?: () => void; tutorialFor?: (id: string) => TutorialBlock | null } = {},
 ): RoomManager {
   let current: RoomHandle | null = null;
 
@@ -73,6 +73,9 @@ export function createRoomManager(
     };
 
     current = mountRoom(container, puzzle, {
+      // Shared first-encounter tutorials the level references (Pack.tutorials); the manager
+      // owns the cross-pack lookup, the host owns the seen-check + playback.
+      tutorialFor: hooks.tutorialFor,
       // A transition (door OR menu-portal selection) is just "enter the target".
       onDoor: (target) => enter(target),
       // Solving a room can earn an unlock (e.g. reveal the next level in the menu/hub).

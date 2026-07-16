@@ -15,9 +15,9 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { LevelEntry, Pack, Puzzle, PuzzleType } from "../schema/types";
+import type { LevelEntry, Pack, Puzzle, PuzzleType, TutorialBlock } from "../schema/types";
 import { createRoomManager, type RoomManager } from "./roomManager";
-import { addUnlock } from "./core/codex";
+import { addUnlock, completeTutorial } from "./core/codex";
 import { roomSettings } from "./systems/settingsPanel";
 
 const ROOT = join(__dirname, "..", "..");
@@ -47,10 +47,12 @@ function bootWorld() {
     registry.set(p.id, p);
   }
   const levelsByType = new Map<PuzzleType, LevelEntry[]>();
+  const tutorialsById = new Map<string, TutorialBlock>();
   for (const pack of [hub, code, logic, logicHaw, grammar, vocab, vocabEn]) {
     for (const prog of pack.progression ?? []) {
       levelsByType.set(prog.puzzle_type, [...(levelsByType.get(prog.puzzle_type) ?? []), ...prog.levels]);
     }
+    for (const [id, block] of Object.entries(pack.tutorials ?? {})) tutorialsById.set(id, block);
   }
   const container = document.createElement("div");
   document.body.appendChild(container);
@@ -58,6 +60,7 @@ function bootWorld() {
     container,
     (id) => registry.get(id) ?? null,
     (t) => levelsByType.get(t) ?? [],
+    { tutorialFor: (id) => tutorialsById.get(id) ?? null },
   );
   return { container, manager };
 }
@@ -105,55 +108,60 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     //  gone with the last blocked door.)
     // Walk to the OPEN Coding door: the portal opens ITS OWN chooser (that type's
     // unlocked levels, titled by the door, no Hub entry — we're standing in it).
-    press(c, "ArrowLeft", 3); // (5,4) → (2,4)
-    press(c, "ArrowUp", 2);   // (2,4) → (2,2) Coding door
+    press(c, "ArrowLeft", 4); // (5,4) → (1,4)
+    press(c, "ArrowUp", 2);   // (1,4) → (1,2) Coding door
     press(c, "Enter");
     expect(text(c, ".room-destmenu-title")).toBe("Coding");
     expect([...c.querySelectorAll(".room-destmenu-option")].map((b) => b.textContent))
-      .toEqual(["Tutorial"]); // level 1 is gated behind the tutorial
+      .toEqual(["Tutorial"]); // only the tutorial is authored (concept levels land later)
     press(c, "Enter"); // select it → the actual door transition (satisfies enter_door)
 
     // --- CODING TUTORIAL: terminal + piles + menu portal; snake on_enter plays ---
     expect(c.querySelector(".room-terminal")).toBeTruthy();
-    expect(c.querySelectorAll(".tile-pile")).toHaveLength(2);
+    expect(c.querySelectorAll(".tile-pile")).toHaveLength(3); // print, hello, world
     expect(text(c, ".room-dialogue")).toContain("Welcome to the practice pod");
     press(c, "Enter", 2); // through the on_enter beats → tutorial step 1
     expect(text(c, ".room-narrator")).toContain("code puzzle");
     press(c, "Enter");    // → waits for pickup
 
-    // Pick up print / hi (FIFO), from spawn (6,7).
+    // Pick up print / hello / world (FIFO), from spawn (6,7).
     press(c, "ArrowUp");           // (6,6)
     press(c, "ArrowRight", 3);     // (9,6) print pile
     press(c, "i");
     expect(text(c, ".room-inventory")).toContain("print");
     expect(text(c, ".room-narrator")).toContain("press P"); // tutorial advanced to "place"
-    press(c, "ArrowRight");        // (10,6) hi
+    press(c, "ArrowRight");        // (10,6) hello
+    press(c, "i");
+    press(c, "ArrowRight");        // (11,6) world
     press(c, "i");
 
-    // Place the line at indent 0: (1,1) (2,1).
-    press(c, "ArrowUp", 5);        // (10,1)
-    press(c, "ArrowLeft", 9);      // (1,1) — the coding area's left edge
+    // Place the line at indent 0: (1,1) (2,1) (3,1).
+    press(c, "ArrowUp", 5);        // (11,1)
+    press(c, "ArrowLeft", 10);     // (1,1) — the coding area's left edge
     press(c, "p");
     expect(c.querySelectorAll(".tile-placed")).toHaveLength(1);
     expect(text(c, ".room-narrator")).toContain("Build"); // tutorial advanced to "build"
-    press(c, "ArrowRight");
+    press(c, "ArrowRight");        // (2,1)
     press(c, "p");
-    expect(c.querySelectorAll(".tile-placed")).toHaveLength(2);
+    press(c, "ArrowRight");        // (3,1)
+    press(c, "p");
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(3);
 
     // PROBE the debug readout (position-dependent, module-owned).
     press(c, "`");
-    expect(text(c, ".room-debug")).toContain("[print, hi]");
+    expect(text(c, ".room-debug")).toContain("[print, hello, world]");
     expect(text(c, ".room-debug")).toContain("indent=0");
     press(c, "`");
 
     // Build, then Run → success beat + terminal output + earned unlock.
-    press(c, "ArrowDown", 6);      // (2,7) Build
+    press(c, "ArrowDown", 6);      // (3,1) → (3,7)
+    press(c, "ArrowLeft");         // (2,7) Build
     press(c, "Enter");
     expect(text(c, ".room-terminal-body")).toContain("compiled");
     expect(text(c, ".room-narrator")).toContain("Run"); // tutorial advanced to "run"
     press(c, "ArrowRight", 3);     // (5,7) Run
     press(c, "Enter");
-    expect(text(c, ".room-terminal-body")).toContain("hi");
+    expect(text(c, ".room-terminal-body")).toContain("hello world");
     expect(c.querySelector(".room-terminal-body")!.classList.contains("term-success")).toBe(true);
     expect(text(c, ".room-dialogue").length).toBeGreaterThan(0); // snake success beat
     press(c, "Enter"); // dismiss it
@@ -164,12 +172,14 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "Escape");
     expect((c.querySelector(".room-settings-panel") as HTMLElement).hidden).toBe(true);
 
-    // Menu portal at spawn → chooser lists Hub + Tutorial + the JUST-UNLOCKED level 1.
-    press(c, "ArrowRight");        // (6,7) spawn / menu portal
+    // Menu portal at spawn → chooser lists Hub + Tutorial + the JUST-UNLOCKED punctuation tier.
+    press(c, "ArrowRight");        // (5,7) → (6,7) spawn / menu portal
     press(c, "Enter");
     const options = [...c.querySelectorAll(".room-destmenu-option")].map((b) => b.textContent);
-    expect(options).toHaveLength(3);
+    expect(options).toHaveLength(4); // Hub + Tutorial + the two just-unlocked levels
     expect(options[0]).toContain("Hub");
+    expect(options).toContain("Variables");
+    expect(options).toContain("Parentheses");
     press(c, "Enter");             // select Hub → teleport away
 
     // --- BACK IN THE HUB: fresh mount, tutorial done (completed → no beats) ---
@@ -195,7 +205,8 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "Enter");      // tut-1
     press(c, "ArrowLeft");  // tut-2 (move) → (5,4)
     press(c, "Enter");      // tut-3 → tut-4 waits enter_door (input passes through)
-    press(c, "ArrowUp", 2); // (5,2) — the now-OPEN Logic door
+    press(c, "ArrowLeft");  // (5,4) → (4,4)
+    press(c, "ArrowUp", 3); // (4,4) → (4,1) — the now-OPEN Logic door
     press(c, "Enter");      // the portal's own chooser (only the Tutorial unlocked)
     press(c, "Enter");      // select it → the logic tutorial (module fetches its pack)
 
@@ -261,7 +272,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "ArrowLeft");  // tut-2 (move) → (5,4)
     press(c, "Enter");      // tut-3 → tut-4 waits enter_door
     press(c, "ArrowRight", 3); // (8,4)
-    press(c, "ArrowUp", 2);    // (8,2) — the now-OPEN Grammar door
+    press(c, "ArrowUp", 3);    // (8,4) → (8,1) — the now-OPEN Grammar door
     press(c, "Enter");         // the portal's own chooser (only the Tutorial unlocked)
     press(c, "Enter");         // select it → the grammar tutorial
 
@@ -424,5 +435,245 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "Escape"); // esc ladder: exit inventory, do NOT open settings
     expect(c.querySelector(".room-inventory")!.classList.contains("focused")).toBe(false);
     expect((c.querySelector(".room-settings-panel") as HTMLElement).hidden).toBe(true);
+  });
+
+  // The punctuation TIER, driven through the real mount (proves the module threads
+  // requirePunctuation into doRun — not just the pure checker). The guided tutorial is
+  // pre-satisfied (every concept marked taught) so these drive the mechanic directly.
+  // Mark tutorials seen so these tests drive the mechanic directly (whole-unit model: a tutorial
+  // is skipped by marking its id — the room id for a guided_tutorial, or the shared tutorial id).
+  const skipTutorial = (...ids: string[]) => { for (const id of ids) completeTutorial(id); };
+
+  it("punctuation level: collecting and placing the parens yourself solves it", () => {
+    const { container: c, manager } = world;
+    skipTutorial("py-code-explicit-000");
+    manager.enter("py-code-explicit-000");
+    press(c, "Enter"); // dismiss the snake on_enter greeting (guided tutorial is skipped)
+
+    // Collect print / ( / "hello world" / ) — in the order they'll be placed (FIFO).
+    press(c, "ArrowUp");           // (6,6)
+    press(c, "ArrowRight", 3);     // (9,6) print
+    press(c, "i");
+    press(c, "ArrowRight");        // (10,6) (
+    press(c, "i");
+    press(c, "ArrowUp", 2);        // (10,4)
+    press(c, "ArrowLeft");         // (9,4) "hello world"
+    press(c, "i");
+    press(c, "ArrowRight", 2);     // (11,4)
+    press(c, "ArrowDown", 2);      // (11,6) )
+    press(c, "i");
+
+    // Place print ( "hello world" ) at indent 0: (1,1) (2,1) (3,1) (4,1).
+    press(c, "ArrowUp", 5);        // (11,1)
+    press(c, "ArrowLeft", 10);     // (1,1)
+    press(c, "p");
+    press(c, "ArrowRight"); press(c, "p"); // (2,1)
+    press(c, "ArrowRight"); press(c, "p"); // (3,1)
+    press(c, "ArrowRight"); press(c, "p"); // (4,1)
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(4);
+
+    // Build, then Run → success.
+    press(c, "ArrowDown", 6);      // (4,1) → (4,7)
+    press(c, "ArrowLeft", 2);      // (2,7) Build
+    press(c, "Enter");
+    press(c, "ArrowRight", 3);     // (5,7) Run
+    press(c, "Enter");
+    expect(c.querySelector(".room-terminal-body")!.classList.contains("term-success")).toBe(true);
+    expect(text(c, ".room-terminal-body")).toContain("hello world");
+    manager.teardown();
+  });
+
+  it("punctuation level: omitting the parens does NOT solve it (the tier is enforced in-mount)", () => {
+    const { container: c, manager } = world;
+    skipTutorial("py-code-explicit-000");
+    manager.enter("py-code-explicit-000");
+    press(c, "Enter"); // dismiss on_enter
+
+    // Collect only print and "hello world" — skip the parens.
+    press(c, "ArrowUp");           // (6,6)
+    press(c, "ArrowRight", 3);     // (9,6) print
+    press(c, "i");
+    press(c, "ArrowUp", 2);        // (9,4) "hello world"
+    press(c, "i");
+
+    // Place print "hello world" (no parens) at (1,1) (2,1).
+    press(c, "ArrowUp", 3);        // (9,1)
+    press(c, "ArrowLeft", 8);      // (1,1)
+    press(c, "p");
+    press(c, "ArrowRight"); press(c, "p"); // (2,1)
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(2);
+
+    // Build + Run → rejected (guided mode would have accepted this; the tier does not).
+    press(c, "ArrowDown", 6);      // (2,1) → (2,7) Build
+    press(c, "Enter");
+    press(c, "ArrowRight", 3);     // (5,7) Run
+    press(c, "Enter");
+    expect(c.querySelector(".room-terminal-body")!.classList.contains("term-success")).toBe(false);
+    expect(text(c, ".room-terminal-body")).toContain("no output");
+    manager.teardown();
+  });
+
+  it("base 'Variables' level: a two-line program (define x, then print it) solves it", () => {
+    const { container: c, manager } = world;
+    skipTutorial("py-code-base-001");
+    manager.enter("py-code-base-001");
+    press(c, "Enter"); // dismiss on_enter (guided tutorial skipped)
+
+    // The goal chip shows the desired output/description — never the target code.
+    expect(text(c, ".room-hud-goal")).toContain("Store 5 in x");
+
+    // Batch 1: collect x, =, 5 and lay line 0 "x = 5" at row 1.
+    press(c, "ArrowRight", 5);  // (6,7) → (11,7)
+    press(c, "ArrowUp", 4);     // (11,3) x pile
+    press(c, "i");
+    press(c, "ArrowDown");      // (11,4)
+    press(c, "ArrowLeft", 2);   // (9,4) = pile
+    press(c, "i");
+    press(c, "ArrowRight", 2);  // (11,4)
+    press(c, "ArrowDown", 2);   // (11,6) 5 pile
+    press(c, "i");
+    press(c, "ArrowUp", 5);     // (11,1)
+    press(c, "ArrowLeft", 10);  // (1,1)
+    press(c, "p");                          // x
+    press(c, "ArrowRight"); press(c, "p");  // (2,1) =
+    press(c, "ArrowRight"); press(c, "p");  // (3,1) 5
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(3);
+
+    // Batch 2: collect print, x and lay line 1 "print x" at row 2.
+    press(c, "ArrowDown", 6);   // (3,1) → (3,7)
+    press(c, "ArrowRight", 6);  // (9,7)
+    press(c, "ArrowUp");        // (9,6) print pile
+    press(c, "i");
+    press(c, "ArrowRight", 2);  // (11,6)
+    press(c, "ArrowUp", 3);     // (11,3) x pile
+    press(c, "i");
+    press(c, "ArrowUp");        // (11,2) — climb above the row-3 wall block before going left
+    press(c, "ArrowLeft", 10);  // (1,2) — row 2 is clear of the walls
+    press(c, "p");                          // print at (1,2)
+    press(c, "ArrowRight"); press(c, "p");  // (2,2) x
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(5);
+
+    // Build + Run → success, output 5.
+    press(c, "ArrowDown", 5);   // (2,2) → (2,7) Build
+    press(c, "Enter");
+    press(c, "ArrowRight", 3);  // (5,7) Run
+    press(c, "Enter");
+    expect(c.querySelector(".room-terminal-body")!.classList.contains("term-success")).toBe(true);
+    expect(text(c, ".room-terminal-body")).toContain("5");
+    manager.teardown();
+  });
+
+  it("mixed 'Assisted parens': the scaffolded ) is prefilled and locked; you build the rest", () => {
+    const { container: c, manager } = world;
+    skipTutorial("py-code-mixed-000", "tier:mixed");
+    manager.enter("py-code-mixed-000");
+    press(c, "Enter"); // dismiss on_enter (guided tutorial skipped)
+
+    // The closing paren is already on the board (scaffolded) — one placed tile at mount.
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(1);
+    expect(c.querySelector(".tile-placed")!.classList.contains("tile-prefilled")).toBe(true);
+
+    // It's LOCKED: standing on it (4,1) and pressing pickup does nothing.
+    press(c, "ArrowLeft", 2);  // (6,7) → (4,7)
+    press(c, "ArrowUp", 6);    // (4,1) the prefilled )
+    press(c, "i");
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(1); // still there — not pickable
+
+    // Collect print, (, "hello world".
+    press(c, "ArrowDown", 6);  // (4,7)
+    press(c, "ArrowRight", 5); // (9,7)
+    press(c, "ArrowUp");       // (9,6) print
+    press(c, "i");
+    press(c, "ArrowRight");    // (10,6) (
+    press(c, "i");
+    press(c, "ArrowUp", 2);    // (10,4)
+    press(c, "ArrowLeft");     // (9,4) "hello world"
+    press(c, "i");
+
+    // Place print ( "hello world" at (1,1)(2,1)(3,1); the locked ) already sits at (4,1).
+    press(c, "ArrowUp", 3);    // (9,1)
+    press(c, "ArrowLeft", 8);  // (1,1)
+    press(c, "p");
+    press(c, "ArrowRight"); press(c, "p"); // (2,1)
+    press(c, "ArrowRight"); press(c, "p"); // (3,1)
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(4); // 3 placed + 1 scaffolded
+
+    // Build + Run → success (the scaffolded ) completes the line).
+    press(c, "ArrowDown", 6);  // (3,1) → (3,7)
+    press(c, "ArrowLeft");     // (2,7) Build
+    press(c, "Enter");
+    press(c, "ArrowRight", 3); // (5,7) Run
+    press(c, "Enter");
+    expect(c.querySelector(".room-terminal-body")!.classList.contains("term-success")).toBe(true);
+    expect(text(c, ".room-terminal-body")).toContain("hello world");
+    manager.teardown();
+  });
+
+  it("base 'Loops II': a for-loop with an INDENTED body prints the counter (indent-as-placement)", () => {
+    const { container: c, manager } = world;
+    skipTutorial("concept:loops");
+    manager.enter("py-code-loops-002");
+    press(c, "Enter"); // dismiss on_enter
+
+    // Header batch: collect for i in range 3 (row 6), then lay it at row 1, indent 0.
+    press(c, "ArrowUp");           // (6,6)
+    press(c, "ArrowRight"); press(c, "i"); // (7,6) for
+    press(c, "ArrowRight"); press(c, "i"); // (8,6) i
+    press(c, "ArrowRight"); press(c, "i"); // (9,6) in
+    press(c, "ArrowRight"); press(c, "i"); // (10,6) range
+    press(c, "ArrowRight"); press(c, "i"); // (11,6) 3
+    press(c, "ArrowUp", 5);        // (11,1)
+    press(c, "ArrowLeft", 10);     // (1,1)
+    press(c, "p");                          // for
+    press(c, "ArrowRight"); press(c, "p");  // (2,1) i
+    press(c, "ArrowRight"); press(c, "p");  // (3,1) in
+    press(c, "ArrowRight"); press(c, "p");  // (4,1) range
+    press(c, "ArrowRight"); press(c, "p");  // (5,1) 3
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(5);
+
+    // Body batch: collect print, i and lay it at row 2, INDENT 1 (cols 2,3 — one tile in).
+    press(c, "ArrowDown", 3);      // (5,4)
+    press(c, "ArrowRight", 2);     // (7,4) print
+    press(c, "i");
+    press(c, "ArrowRight");        // (8,4)
+    press(c, "ArrowDown", 2);      // (8,6) i
+    press(c, "i");
+    press(c, "ArrowUp", 4);        // (8,2)
+    press(c, "ArrowLeft", 6);      // (2,2) — indent 1
+    press(c, "p");                          // print
+    press(c, "ArrowRight"); press(c, "p");  // (3,2) i
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(7);
+
+    // PROBE the indent: the body row reads indent=1 (it sits inside the loop).
+    press(c, "`");
+    expect(text(c, ".room-debug")).toContain("[print, i]");
+    expect(text(c, ".room-debug")).toContain("indent=1");
+    press(c, "`");
+
+    // Build + Run → success, counter output.
+    press(c, "ArrowDown", 5);      // (3,2) → (3,7)
+    press(c, "ArrowLeft");         // (2,7) Build
+    press(c, "Enter");
+    press(c, "ArrowRight", 3);     // (5,7) Run
+    press(c, "Enter");
+    expect(c.querySelector(".room-terminal-body")!.classList.contains("term-success")).toBe(true);
+    expect(text(c, ".room-terminal-body")).toContain("0");
+    manager.teardown();
+  });
+
+  it("shared tutorial: a level's tutorial_refs play in full on first entry, not on the next", () => {
+    const { container: c, manager } = world;
+    // First visit: the shared "tier:mixed" tutorial plays after the snake greeting.
+    manager.enter("py-code-mixed-000");
+    press(c, "Enter"); // past the snake on_enter greeting → into the shared tier tutorial
+    expect(text(c, ".room-narrator")).toContain("New tier");
+    press(c, "Enter"); // finish the tutorial → the whole sequence completes → marked seen
+    manager.teardown();
+
+    // Second visit: tier:mixed already seen → greeting only, the tutorial does not replay.
+    manager.enter("py-code-mixed-000");
+    press(c, "Enter"); // greeting; nothing follows
+    expect(text(c, ".room-narrator")).not.toContain("New tier");
+    manager.teardown();
   });
 });

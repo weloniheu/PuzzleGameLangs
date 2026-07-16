@@ -37,6 +37,57 @@ export type ValidatorType =
 
 export type Difficulty = 1 | 2 | 3 | 4 | 5;
 
+// --- Difficulty axes 2 & 3 (CLOSED sets — new engine dispatch axes, siblings of
+//     `difficulty`). The engine reads these like it reads `puzzle_type`; it still never
+//     reads `language` / `level` / `pack_id`, so CLAUDE.md Rule 1 holds. Content picks
+//     from these; a level is a (concept × tier × mode × modifiers) cell. ---
+
+/** Axis 2 — MECHANICAL depth: a syntax-scaffolding FADE (each tier removes one support).
+ *  CLOSED. NOTE: `randomized` used to live here; it is now an Axis-3 modifier. */
+export type MechanicTier =
+  | "base"          // the floor: distractors, scattered order, indentation-as-placement,
+                    // multi-line composition, goal/output-only display; NO punctuation required
+  | "mixed"         // structural punctuation is pre-placed/scaffolded; the player fetches the
+                    // loose punctuation (commas, arg parens). See CodingArea.prefilled.
+  | "explicit"      // no scaffolding; ALL punctuation (incl. colons) is fetched and placed
+  | "env_clues"     // hints embedded in room decor (SCHEMA HOOK ONLY for now — no rendering)
+  | "concept_modes"; // debug / predict interaction modes (see CodeMode)
+
+/** Axis 2, tier 5 — the coding interaction MODE. CLOSED. Dispatched inside the coding module. */
+export type CodeMode = "assemble" | "debug" | "predict";
+
+/** A decor-embedded hint (env_clues tier). SCHEMA HOOK ONLY — rendering lands in a later
+ *  design task; the engine stores the shape but draws nothing yet. */
+export interface EnvClue {
+  decorId: string; // which decor object carries the clue
+  hint: string;    // the hint text embedded there
+}
+
+/** Per-level mechanical config. `tier` is the source of truth; `punctuationRequired` defaults
+ *  FROM the tier (mixed/explicit ⇒ true) and may be set explicitly to compose off-tier
+ *  variants. Omitting the whole block ⇒ base + assemble (backward compatible). */
+export interface MechanicsConfig {
+  tier: MechanicTier;
+  /** Interaction mode. Omitted ⇒ "assemble". */
+  mode?: CodeMode;
+  /** What the player is shown as the target — desired output and/or a plain-language
+   *  description. NEVER the target code (no tier reveals the answer). Display + success
+   *  echo only; validation order-matches solution.accepted (Rule 3: no execution). */
+  goalSpec?: { output?: string; description?: string };
+  /** Order-checker REQUIRES punctuation tokens (stops normalizing them away). Defaults from
+   *  the tier (mixed/explicit ⇒ true); set explicitly to compose onto another tier. */
+  punctuationRequired?: boolean;
+  /** Decor-embedded hints (SCHEMA HOOK ONLY — see EnvClue). */
+  envClues?: EnvClue[];
+}
+
+/** Axis 3 — stackable environmental MODIFIERS, orthogonal to concept and tier. CLOSED
+ *  registry (validated at load); defaults to [] for every level.
+ *  - randomized: pile spawn positions shuffled per run (seed is RUNTIME — random at mount,
+ *    injected fixed in tests; not stored in pack data).
+ *  - lowlight: limited vision radius (gameplay hook only for now; no visual rendering). */
+export type Modifier = "randomized" | "lowlight";
+
 // --- Type-specific payload / solution shapes (discriminated by puzzle_type) ---
 
 export interface MatchPayload {
@@ -313,17 +364,34 @@ export interface DialogueConfig {
    *  the persisted flag so it plays again next visit. */
   guided_tutorial?: DialogueBeat[];
 }
+
+/** A SHARED, reusable first-encounter tutorial (concept / mechanic tier / modifier), stored in
+ *  the pack's `tutorials` map and referenced by levels via `tutorial_refs`. Whole-unit: it plays
+ *  its full `dialogue` the first time a referencing level is entered, then is marked seen (one
+ *  flag per id); "Replay tutorials" clears the flag and it plays the same sequence again. */
+export interface TutorialBlock {
+  /** The full sequence, delivered through the two-speaker dialogue system. */
+  dialogue: DialogueBeat[];
+  /** OPTIONAL id of a level that demonstrates the concept (schema hook; not yet auto-used). */
+  demoLevel?: string;
+}
+
 /** One expected code line for the order-checker: content tokens (in order) + indent. */
 export interface CodeAnswerLine {
   content: string[];
   indent: number;
 }
 export interface CodeBuildSolution {
-  /** The output the assembled program must produce. Checked by `code_match`. */
+  /** The output the assembled program must produce (display + success echo). Checked by
+   *  `code_match`. NB: this is NOT computed from the player's code (Rule 3: no execution). */
   output: string;
-  /** Order-check answer: a LIST of lines so multi-line difficulties slot in later;
-   *  difficulty 1 checks only line 0's content order (ignoring punctuation/quotes). */
+  /** Order-check answer: a LIST of lines (multi-line programs). Sugar for a single accepted
+   *  variant — see `accepted`. Normalization per the mechanical tier. */
   lines?: CodeAnswerLine[];
+  /** ACCEPTED programs: the placed program passes if it order-matches ANY entry (so genuinely
+   *  different-but-correct solutions all pass, without executing anything). `lines`, when set,
+   *  is treated as one accepted variant. Populated by base-tier levels with alternate orderings. */
+  accepted?: CodeAnswerLine[][];
 }
 
 // --- Room (world layer) ---
@@ -345,6 +413,10 @@ export interface CodingArea {
   y: number;       // top row
   width: number;   // columns
   height: number;  // rows
+  /** MIXED tier: structural punctuation SCAFFOLDED into the area (already placed), so the
+   *  player fetches only the loose punctuation. Each token sits at a cell and the order-checker
+   *  reads it exactly like a player-placed token. Omitted ⇒ nothing pre-placed. */
+  prefilled?: { token: string; x: number; y: number }[];
 }
 /** Optional, gateable room features. A room renders ONLY the features it declares; an
  *  undeclared feature is not built at all. CLOSED set (engine has a render branch per
@@ -483,6 +555,14 @@ export interface Puzzle {
   solution: Solution;
   hints: string[];
   metadata: PuzzleMetadata;
+  /** OPTIONAL Axis-2 mechanical config (tier / mode / switches). Omitted ⇒ guided + assemble,
+   *  so every existing level keeps its behavior unchanged (see MechanicsConfig). */
+  mechanics?: MechanicsConfig;
+  /** OPTIONAL Axis-3 stackable modifiers (validated against the closed registry). Omitted ⇒ []. */
+  modifiers?: Modifier[];
+  /** OPTIONAL ids of SHARED tutorials (see Pack.tutorials) to play on first entry, in order,
+   *  BEFORE this room's own guided_tutorial. Each plays whole, once (per-id seen flag). */
+  tutorial_refs?: string[];
   /** OPTIONAL world layer. When present, the puzzle opens in a walkable room. */
   room?: RoomLayout;
   /** OPTIONAL label marking this as a tutorial room. Purely a content label — the engine
@@ -528,6 +608,9 @@ export interface Pack {
   puzzles: Puzzle[];
   /** Ordered level lists per puzzle type (drives the menu portal's destination chooser). */
   progression?: ProgressionEntry[];
+  /** SHARED first-encounter tutorials, keyed by a content-defined id (e.g. "tier:mixed",
+   *  "concept:loops"). Levels opt in via `tutorial_refs`. See TutorialBlock. */
+  tutorials?: Record<string, TutorialBlock>;
 }
 
 // --- Engine-facing interfaces (Phase 2.2) ---
