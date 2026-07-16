@@ -34,6 +34,16 @@
           "id": "py-code-loops-002",
           "label": "Loops II",
           "unlock": "coding.loops.1.cleared"
+        },
+        {
+          "id": "py-code-funcs-001",
+          "label": "Functions I",
+          "unlock": "coding.loops.2.cleared"
+        },
+        {
+          "id": "py-code-funcs-002",
+          "label": "Functions II",
+          "unlock": "coding.funcs.1.cleared"
         }
       ]
     }
@@ -63,6 +73,24 @@
           "id": "t-loops-2",
           "speaker": "narrator",
           "text": "The repeated line is the loop's BODY. Place it one tile to the RIGHT — that indent is how Python knows it lives inside the loop.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false
+        }
+      ]
+    },
+    "concept:function_def": {
+      "dialogue": [
+        {
+          "id": "t-func-1",
+          "speaker": "narrator",
+          "text": "New idea — a FUNCTION is a named, reusable block. 'def greet' names it; the indented lines below are its body.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false
+        },
+        {
+          "id": "t-func-2",
+          "speaker": "narrator",
+          "text": "Defining it doesn't run it. To run it, write its name on its own line (back at indent 0) BELOW the definition.",
           "trigger": "guided_tutorial",
           "autoAdvance": false
         }
@@ -1234,6 +1262,218 @@
         ],
         "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
         "grants_unlock": "coding.loops.2.cleared",
+        "theme": "tech"
+      }
+    },
+    {
+      "id": "py-code-funcs-001",
+      "schema_version": "1.0.0",
+      "language": "python",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 4,
+      "mechanics": {
+        "tier": "base",
+        "goalSpec": {
+          "output": "hi",
+          "description": "Define a greet function, then call it to say hi."
+        }
+      },
+      "tutorial_refs": [
+        "concept:function_def"
+      ],
+      "prompt": "Define a function, then call it on a line of its own.",
+      "payload": {
+        "scenario": "The panel lets you name a block of code — a function — and run it whenever you call its name.",
+        "goal": "Define greet (body: print hi), then call greet.",
+        "tokens": [
+          { "text": "def", "kind": "keyword" },
+          { "text": "greet", "kind": "value", "discovers": "def" },
+          { "text": "print", "kind": "function", "discovers": "print" },
+          { "text": "\"hi\"", "kind": "string" },
+          { "text": "return", "kind": "decoy" },
+          { "text": "gret", "kind": "decoy" }
+        ],
+        "beats": {
+          "build-first": "🐍 Build the lines first — stand on Build and press Enter.",
+          "wrong-order": "Define first: def greet, then the indented body, then call greet at the bottom.",
+          "wrong-indent": "The body is INSIDE greet — indent it one tile. The call sits back at indent 0.",
+          "wrong-word": "Read carefully — it's greet, not gret; and you don't need return here.",
+          "extra-code": "Three lines: def greet, the indented print, then greet on its own.",
+          "success": "You defined greet and called it: hi. ✅"
+        },
+        "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
+        "dialogue": {
+          "speakers": {
+            "snake": { "name": "Sss", "side": "left", "portrait": "/assets/closeMouthSnake.png", "portrait2": "/assets/talkingSnake.png" },
+            "hint": { "name": "Helper", "side": "right", "portrait": "🛰️", "portrait2": "🛰️" }
+          },
+          "on_enter": [
+            { "id": "funcs1-enter", "speaker": "snake", "text": "Ssss — name it, fill its body, then call it below.", "trigger": "on_enter" }
+          ],
+          "hints": [
+            { "text": "def greet — then an indented print \"hi\" — then greet on its own line.", "tag": "intro" },
+            { "text": "The call 'greet' sits back at indent 0, below the body.", "tag": "after:wrong-indent" }
+          ]
+        }
+      },
+      "solution": {
+        "output": "hi",
+        "lines": [
+          { "content": ["def", "greet"], "indent": 0 },
+          { "content": ["print", "hi"], "indent": 1 },
+          { "content": ["greet"], "indent": 0 }
+        ]
+      },
+      "hints": [
+        "Define first: def greet.",
+        "Indented body: print \"hi\".",
+        "Then call it: greet (indent 0)."
+      ],
+      "metadata": {
+        "concept": "functions — define and call",
+        "tags": ["python", "functions"],
+        "generator": "human",
+        "reviewed": true
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": { "x": 6, "y": 7 },
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "piles": [
+          { "token": "def", "pos": { "x": 7, "y": 6 } },
+          { "token": "greet", "pos": { "x": 8, "y": 6 } },
+          { "token": "print", "pos": { "x": 9, "y": 6 } },
+          { "token": "\"hi\"", "pos": { "x": 10, "y": 6 } },
+          { "token": "return", "pos": { "x": 10, "y": 2 } },
+          { "token": "gret", "pos": { "x": 11, "y": 2 } }
+        ],
+        "features": ["terminal", "coding_area", "inventory"],
+        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "inventory_slots": 7,
+        "controls": [
+          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
+          { "action": "run", "label": "Run", "pos": { "x": 5, "y": 7 } }
+        ],
+        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
+        "grants_unlock": "coding.funcs.1.cleared",
+        "theme": "tech"
+      }
+    },
+    {
+      "id": "py-code-funcs-002",
+      "schema_version": "1.0.0",
+      "language": "python",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 4,
+      "mechanics": {
+        "tier": "base",
+        "goalSpec": {
+          "output": "hi\nbye",
+          "description": "Give greet a two-line body, then call it once."
+        }
+      },
+      "tutorial_refs": [
+        "concept:function_def"
+      ],
+      "prompt": "A function body can be several indented lines.",
+      "payload": {
+        "scenario": "One name, several lines. Everything indented under def belongs to the function.",
+        "goal": "greet should print hi then bye. Define it, then call greet once.",
+        "tokens": [
+          { "text": "def", "kind": "keyword" },
+          { "text": "greet", "kind": "value", "discovers": "def" },
+          { "text": "print", "kind": "function", "discovers": "print" },
+          { "text": "\"hi\"", "kind": "string" },
+          { "text": "\"bye\"", "kind": "string" },
+          { "text": "gret", "kind": "decoy" }
+        ],
+        "beats": {
+          "build-first": "🐍 Build the lines first — stand on Build and press Enter.",
+          "wrong-order": "def greet, then print hi, then print bye (both indented), then call greet.",
+          "wrong-indent": "BOTH body lines are indented one tile. Only the call sits at indent 0.",
+          "wrong-word": "It's greet, not gret.",
+          "extra-code": "Four lines: def greet, two indented prints, then greet.",
+          "success": "greet runs its whole body: hi, then bye. ✅"
+        },
+        "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
+        "dialogue": {
+          "speakers": {
+            "snake": { "name": "Sss", "side": "left", "portrait": "/assets/closeMouthSnake.png", "portrait2": "/assets/talkingSnake.png" },
+            "hint": { "name": "Helper", "side": "right", "portrait": "🛰️", "portrait2": "🛰️" }
+          },
+          "on_enter": [
+            { "id": "funcs2-enter", "speaker": "snake", "text": "Ssss — everything indented under def is part of greet.", "trigger": "on_enter" }
+          ],
+          "hints": [
+            { "text": "Two indented body lines (print hi, print bye), then greet at indent 0.", "tag": "intro" }
+          ]
+        }
+      },
+      "solution": {
+        "output": "hi\nbye",
+        "lines": [
+          { "content": ["def", "greet"], "indent": 0 },
+          { "content": ["print", "hi"], "indent": 1 },
+          { "content": ["print", "bye"], "indent": 1 },
+          { "content": ["greet"], "indent": 0 }
+        ]
+      },
+      "hints": [
+        "def greet, then two indented prints.",
+        "print \"hi\" then print \"bye\", both indented one tile.",
+        "Call greet last, at indent 0."
+      ],
+      "metadata": {
+        "concept": "functions — a multi-line body",
+        "tags": ["python", "functions"],
+        "generator": "human",
+        "reviewed": true
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": { "x": 6, "y": 7 },
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "piles": [
+          { "token": "def", "pos": { "x": 7, "y": 6 } },
+          { "token": "greet", "pos": { "x": 8, "y": 6 } },
+          { "token": "print", "pos": { "x": 9, "y": 6 } },
+          { "token": "\"hi\"", "pos": { "x": 10, "y": 6 } },
+          { "token": "\"bye\"", "pos": { "x": 11, "y": 6 } },
+          { "token": "gret", "pos": { "x": 11, "y": 2 } }
+        ],
+        "features": ["terminal", "coding_area", "inventory"],
+        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "inventory_slots": 7,
+        "controls": [
+          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
+          { "action": "run", "label": "Run", "pos": { "x": 5, "y": 7 } }
+        ],
+        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
+        "grants_unlock": "coding.funcs.2.cleared",
         "theme": "tech"
       }
     }

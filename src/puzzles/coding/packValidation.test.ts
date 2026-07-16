@@ -13,20 +13,33 @@ describe("python.code.v1 — every puzzle passes load validation", () => {
     });
   }
 
-  it("ladder: tutorial → variables → mixed → explicit → loops I → loops II, with the right tiers", () => {
+  it("ladder: tutorial → variables → mixed → explicit → loops ×2 → functions ×2, right tiers", () => {
     const byId = (id: string) => (pack.puzzles as unknown as Puzzle[]).find((p) => p.id === id)!;
     const prog = pack.progression?.find((x) => x.puzzle_type === "code_build");
     expect(prog?.levels.map((l) => l.id)).toEqual([
       "py-code-tutorial-000", "py-code-base-001", "py-code-mixed-000", "py-code-explicit-000",
-      "py-code-loops-001", "py-code-loops-002",
+      "py-code-loops-001", "py-code-loops-002", "py-code-funcs-001", "py-code-funcs-002",
     ]);
     expect(byId("py-code-tutorial-000").mechanics?.tier).toBe("base");
     expect((byId("py-code-tutorial-000").solution as { output: string }).output).toBe("hello world");
-    expect(byId("py-code-base-001").mechanics?.tier).toBe("base");
     expect(byId("py-code-mixed-000").mechanics?.tier).toBe("mixed");
     expect(byId("py-code-explicit-000").mechanics?.tier).toBe("explicit");
-    expect(byId("py-code-loops-001").mechanics?.tier).toBe("base");
-    expect(byId("py-code-loops-002").mechanics?.tier).toBe("base");
+    for (const id of ["py-code-base-001", "py-code-loops-001", "py-code-loops-002",
+                      "py-code-funcs-001", "py-code-funcs-002"]) {
+      expect(byId(id).mechanics?.tier).toBe("base");
+    }
+  });
+
+  it("the function levels DEFINE then CALL: indented body, then the call back at indent 0", () => {
+    const byId = (id: string) => (pack.puzzles as unknown as Puzzle[]).find((p) => p.id === id)!;
+    for (const id of ["py-code-funcs-001", "py-code-funcs-002"]) {
+      const lvl = byId(id);
+      const lines = (lvl.solution as { lines: { content: string[]; indent: number }[] }).lines;
+      expect(lines[0]).toEqual({ content: ["def", "greet"], indent: 0 }); // definition header
+      expect(lines[1].indent).toBe(1);                                     // body indented
+      expect(lines[lines.length - 1]).toEqual({ content: ["greet"], indent: 0 }); // the call, dedented
+      expect(lvl.tutorial_refs).toContain("concept:function_def");
+    }
   });
 
   it("the loop levels have an INDENTED body (indentation-as-placement) and share concept:loops", () => {
