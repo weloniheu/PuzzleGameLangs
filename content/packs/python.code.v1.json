@@ -24,6 +24,16 @@
           "id": "py-code-explicit-000",
           "label": "Parentheses",
           "unlock": "coding.tutorial.cleared"
+        },
+        {
+          "id": "py-code-loops-001",
+          "label": "Loops I",
+          "unlock": "coding.base.vars.cleared"
+        },
+        {
+          "id": "py-code-loops-002",
+          "label": "Loops II",
+          "unlock": "coding.loops.1.cleared"
         }
       ]
     }
@@ -35,6 +45,24 @@
           "id": "t-mixed-1",
           "speaker": "narrator",
           "text": "New tier — MIXED. Some punctuation is already placed for you (the faded tiles). You supply the rest, in order, around it.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false
+        }
+      ]
+    },
+    "concept:loops": {
+      "dialogue": [
+        {
+          "id": "t-loops-1",
+          "speaker": "narrator",
+          "text": "New idea — a LOOP repeats work. 'for i in range(3)' runs the line below it three times.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false
+        },
+        {
+          "id": "t-loops-2",
+          "speaker": "narrator",
+          "text": "The repeated line is the loop's BODY. Place it one tile to the RIGHT — that indent is how Python knows it lives inside the loop.",
           "trigger": "guided_tutorial",
           "autoAdvance": false
         }
@@ -985,6 +1013,227 @@
           "marker": "❓"
         },
         "grants_unlock": "coding.explicit.cleared",
+        "theme": "tech"
+      }
+    },
+    {
+      "id": "py-code-loops-001",
+      "schema_version": "1.0.0",
+      "language": "python",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 3,
+      "mechanics": {
+        "tier": "base",
+        "goalSpec": {
+          "output": "hi\nhi\nhi",
+          "description": "Say hi three times — with a loop, not three prints."
+        }
+      },
+      "tutorial_refs": [
+        "concept:loops"
+      ],
+      "prompt": "A loop repeats a line. Build the loop, then its indented body.",
+      "payload": {
+        "scenario": "The panel is tired of repetition. It offers a loop: write the line once, run it many times.",
+        "goal": "Print hi three times using a loop. Body sits one tile in.",
+        "tokens": [
+          { "text": "for", "kind": "keyword" },
+          { "text": "i", "kind": "value" },
+          { "text": "in", "kind": "keyword" },
+          { "text": "range", "kind": "function", "discovers": "range" },
+          { "text": "3", "kind": "value" },
+          { "text": "print", "kind": "function", "discovers": "print" },
+          { "text": "\"hi\"", "kind": "string" },
+          { "text": "while", "kind": "decoy" },
+          { "text": "4", "kind": "decoy" }
+        ],
+        "beats": {
+          "build-first": "🐍 Build the line first — stand on Build and press Enter.",
+          "wrong-order": "The header reads: for i in range 3. Then the body on the next line.",
+          "wrong-indent": "The body belongs INSIDE the loop — place it one tile to the right (indent 1).",
+          "wrong-word": "Read carefully — 'while' is a different loop. Use for, i, in, range, 3.",
+          "extra-code": "Two lines only: the for-header, then one indented print.",
+          "success": "The loop spins three times: hi, hi, hi. ✅",
+          "first_run_no_build": "🐍 You ran before BUILDING. Build first, then Run."
+        },
+        "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
+        "dialogue": {
+          "speakers": {
+            "snake": { "name": "Sss", "side": "left", "portrait": "/assets/closeMouthSnake.png", "portrait2": "/assets/talkingSnake.png" },
+            "hint": { "name": "Helper", "side": "right", "portrait": "🛰️", "portrait2": "🛰️" }
+          },
+          "on_enter": [
+            { "id": "loops1-enter", "speaker": "snake", "text": "Ssss — one line, many runs. Watch the indent on the body.", "trigger": "on_enter" }
+          ],
+          "hints": [
+            { "text": "Header: for i in range 3. Body (indented): print \"hi\".", "tag": "intro" },
+            { "text": "The body must sit one tile to the RIGHT of the for.", "tag": "after:wrong-indent" }
+          ]
+        }
+      },
+      "solution": {
+        "output": "hi\nhi\nhi",
+        "lines": [
+          { "content": ["for", "i", "in", "range", "3"], "indent": 0 },
+          { "content": ["print", "hi"], "indent": 1 }
+        ]
+      },
+      "hints": [
+        "Header first: for i in range 3.",
+        "Then an indented body: print \"hi\".",
+        "Indent the body one tile (it's inside the loop)."
+      ],
+      "metadata": {
+        "concept": "loops — repeat a line",
+        "tags": ["python", "loops", "indentation"],
+        "generator": "human",
+        "reviewed": true
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": { "x": 6, "y": 7 },
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "piles": [
+          { "token": "for", "pos": { "x": 7, "y": 6 } },
+          { "token": "i", "pos": { "x": 8, "y": 6 } },
+          { "token": "in", "pos": { "x": 9, "y": 6 } },
+          { "token": "range", "pos": { "x": 10, "y": 6 } },
+          { "token": "3", "pos": { "x": 11, "y": 6 } },
+          { "token": "print", "pos": { "x": 7, "y": 4 } },
+          { "token": "\"hi\"", "pos": { "x": 8, "y": 4 } },
+          { "token": "while", "pos": { "x": 10, "y": 2 } },
+          { "token": "4", "pos": { "x": 11, "y": 2 } }
+        ],
+        "features": ["terminal", "coding_area", "inventory"],
+        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "inventory_slots": 7,
+        "controls": [
+          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
+          { "action": "run", "label": "Run", "pos": { "x": 5, "y": 7 } }
+        ],
+        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
+        "grants_unlock": "coding.loops.1.cleared",
+        "theme": "tech"
+      }
+    },
+    {
+      "id": "py-code-loops-002",
+      "schema_version": "1.0.0",
+      "language": "python",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 3,
+      "mechanics": {
+        "tier": "base",
+        "goalSpec": {
+          "output": "0\n1\n2",
+          "description": "Print 0, 1, 2 — use the loop's counter, i."
+        }
+      },
+      "tutorial_refs": [
+        "concept:loops"
+      ],
+      "prompt": "The loop counts for you. Print the counter each time.",
+      "payload": {
+        "scenario": "The loop hands you a number each turn — its counter, i. Show it.",
+        "goal": "Print 0, 1, 2 by printing i inside the loop.",
+        "tokens": [
+          { "text": "for", "kind": "keyword" },
+          { "text": "i", "kind": "value" },
+          { "text": "in", "kind": "keyword" },
+          { "text": "range", "kind": "function", "discovers": "range" },
+          { "text": "3", "kind": "value" },
+          { "text": "print", "kind": "function", "discovers": "print" },
+          { "text": "n", "kind": "decoy" },
+          { "text": "\"i\"", "kind": "decoy" }
+        ],
+        "beats": {
+          "build-first": "🐍 Build the line first — stand on Build and press Enter.",
+          "wrong-order": "Header: for i in range 3. Body: print i.",
+          "wrong-indent": "The body sits one tile in (indent 1) — it's inside the loop.",
+          "wrong-word": "You want the counter i itself — not the letter \"i\" in quotes, and not n.",
+          "extra-code": "Two lines only: the for-header, then one indented print i.",
+          "success": "Each turn prints the counter: 0, 1, 2. ✅",
+          "first_run_no_build": "🐍 You ran before BUILDING. Build first, then Run."
+        },
+        "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
+        "dialogue": {
+          "speakers": {
+            "snake": { "name": "Sss", "side": "left", "portrait": "/assets/closeMouthSnake.png", "portrait2": "/assets/talkingSnake.png" },
+            "hint": { "name": "Helper", "side": "right", "portrait": "🛰️", "portrait2": "🛰️" }
+          },
+          "on_enter": [
+            { "id": "loops2-enter", "speaker": "snake", "text": "Ssss — the same i from the header is yours to print.", "trigger": "on_enter" }
+          ],
+          "hints": [
+            { "text": "Body: print i (the counter), not \"i\" in quotes.", "tag": "intro" }
+          ]
+        }
+      },
+      "solution": {
+        "output": "0\n1\n2",
+        "lines": [
+          { "content": ["for", "i", "in", "range", "3"], "indent": 0 },
+          { "content": ["print", "i"], "indent": 1 }
+        ]
+      },
+      "hints": [
+        "Header first: for i in range 3.",
+        "Then an indented body: print i.",
+        "Use the counter i, not the text \"i\"."
+      ],
+      "metadata": {
+        "concept": "loops — use the counter",
+        "tags": ["python", "loops", "variables"],
+        "generator": "human",
+        "reviewed": true
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": { "x": 6, "y": 7 },
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "piles": [
+          { "token": "for", "pos": { "x": 7, "y": 6 } },
+          { "token": "i", "pos": { "x": 8, "y": 6 } },
+          { "token": "in", "pos": { "x": 9, "y": 6 } },
+          { "token": "range", "pos": { "x": 10, "y": 6 } },
+          { "token": "3", "pos": { "x": 11, "y": 6 } },
+          { "token": "print", "pos": { "x": 7, "y": 4 } },
+          { "token": "n", "pos": { "x": 10, "y": 2 } },
+          { "token": "\"i\"", "pos": { "x": 11, "y": 2 } }
+        ],
+        "features": ["terminal", "coding_area", "inventory"],
+        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "inventory_slots": 7,
+        "controls": [
+          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
+          { "action": "run", "label": "Run", "pos": { "x": 5, "y": 7 } }
+        ],
+        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
+        "grants_unlock": "coding.loops.2.cleared",
         "theme": "tech"
       }
     }

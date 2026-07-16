@@ -609,6 +609,58 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     manager.teardown();
   });
 
+  it("base 'Loops II': a for-loop with an INDENTED body prints the counter (indent-as-placement)", () => {
+    const { container: c, manager } = world;
+    skipTutorial("concept:loops");
+    manager.enter("py-code-loops-002");
+    press(c, "Enter"); // dismiss on_enter
+
+    // Header batch: collect for i in range 3 (row 6), then lay it at row 1, indent 0.
+    press(c, "ArrowUp");           // (6,6)
+    press(c, "ArrowRight"); press(c, "i"); // (7,6) for
+    press(c, "ArrowRight"); press(c, "i"); // (8,6) i
+    press(c, "ArrowRight"); press(c, "i"); // (9,6) in
+    press(c, "ArrowRight"); press(c, "i"); // (10,6) range
+    press(c, "ArrowRight"); press(c, "i"); // (11,6) 3
+    press(c, "ArrowUp", 5);        // (11,1)
+    press(c, "ArrowLeft", 10);     // (1,1)
+    press(c, "p");                          // for
+    press(c, "ArrowRight"); press(c, "p");  // (2,1) i
+    press(c, "ArrowRight"); press(c, "p");  // (3,1) in
+    press(c, "ArrowRight"); press(c, "p");  // (4,1) range
+    press(c, "ArrowRight"); press(c, "p");  // (5,1) 3
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(5);
+
+    // Body batch: collect print, i and lay it at row 2, INDENT 1 (cols 2,3 — one tile in).
+    press(c, "ArrowDown", 3);      // (5,4)
+    press(c, "ArrowRight", 2);     // (7,4) print
+    press(c, "i");
+    press(c, "ArrowRight");        // (8,4)
+    press(c, "ArrowDown", 2);      // (8,6) i
+    press(c, "i");
+    press(c, "ArrowUp", 4);        // (8,2)
+    press(c, "ArrowLeft", 6);      // (2,2) — indent 1
+    press(c, "p");                          // print
+    press(c, "ArrowRight"); press(c, "p");  // (3,2) i
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(7);
+
+    // PROBE the indent: the body row reads indent=1 (it sits inside the loop).
+    press(c, "`");
+    expect(text(c, ".room-debug")).toContain("[print, i]");
+    expect(text(c, ".room-debug")).toContain("indent=1");
+    press(c, "`");
+
+    // Build + Run → success, counter output.
+    press(c, "ArrowDown", 5);      // (3,2) → (3,7)
+    press(c, "ArrowLeft");         // (2,7) Build
+    press(c, "Enter");
+    press(c, "ArrowRight", 3);     // (5,7) Run
+    press(c, "Enter");
+    expect(c.querySelector(".room-terminal-body")!.classList.contains("term-success")).toBe(true);
+    expect(text(c, ".room-terminal-body")).toContain("0");
+    manager.teardown();
+  });
+
   it("shared tutorial: a level's tutorial_refs play in full on first entry, not on the next", () => {
     const { container: c, manager } = world;
     // First visit: the shared "tier:mixed" tutorial plays after the snake greeting.

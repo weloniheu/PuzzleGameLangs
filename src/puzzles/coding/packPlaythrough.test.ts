@@ -5,7 +5,8 @@
 import { describe, it, expect } from "vitest";
 import pack from "../../../content/packs/python.code.v1.json";
 import {
-  run, runAny, createBuildState, markBuilt, requiresPunctuation, type AnswerLine, type CodeLine,
+  run, runAny, createBuildState, markBuilt, requiresPunctuation, normalizeContent,
+  type AnswerLine, type CodeLine,
 } from "./codeGameLogic";
 import type { Puzzle, CodeBuildSolution, RoomPile } from "../../schema/types";
 
@@ -33,10 +34,12 @@ describe("python.code.v1 — every level is solvable from its own floor tokens",
 
     it(`${p.id}: every token an accepted variant needs is available (floor pile or scaffolded)`, () => {
       // A token can be FETCHED (a floor pile) or PROVIDED (prefilled/scaffolded in the area).
+      // Compare under the SAME normalization the checker uses (quotes stripped; punctuation kept
+      // only for mixed/explicit), so a "hi" pile satisfies an `hi` answer token and vice versa.
       const prefilled = (p.room?.coding_area?.prefilled ?? []).map((t) => t.token);
-      const available = [...piles.map((pile) => pile.token), ...prefilled];
-      for (const variant of accepted) for (const line of variant) for (const tok of line.content) {
-        expect(available).toContain(tok);
+      const available = normalizeContent([...piles.map((pile) => pile.token), ...prefilled], punct);
+      for (const variant of accepted) for (const line of variant) {
+        for (const tok of normalizeContent(line.content, punct)) expect(available).toContain(tok);
       }
     });
   }
