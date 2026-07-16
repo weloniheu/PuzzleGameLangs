@@ -16,6 +16,11 @@
           "unlock": "coding.tutorial.cleared"
         },
         {
+          "id": "py-code-mixed-000",
+          "label": "Assisted parens",
+          "unlock": "coding.base.vars.cleared"
+        },
+        {
           "id": "py-code-explicit-000",
           "label": "Parentheses",
           "unlock": "coding.tutorial.cleared"
@@ -525,6 +530,223 @@
           "marker": "❓"
         },
         "grants_unlock": "coding.base.vars.cleared",
+        "theme": "tech"
+      }
+    },
+    {
+      "id": "py-code-mixed-000",
+      "schema_version": "1.0.0",
+      "language": "python",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 2,
+      "tutorial": true,
+      "mechanics": {
+        "tier": "mixed",
+        "goalSpec": {
+          "output": "hello world",
+          "description": "The closing ) is already placed — build the rest."
+        }
+      },
+      "prompt": "Some of the punctuation is provided; you supply the rest.",
+      "payload": {
+        "scenario": "The panel meets you halfway: it drops the closing bracket in for you. You still place everything else, in order.",
+        "goal": "Make it say: hello world. The ) is already in place.",
+        "tokens": [
+          {
+            "text": "print",
+            "kind": "function",
+            "discovers": "print"
+          },
+          {
+            "text": "(",
+            "kind": "punctuation"
+          },
+          {
+            "text": "\"hello world\"",
+            "kind": "string"
+          },
+          {
+            "text": "]",
+            "kind": "decoy"
+          }
+        ],
+        "beats": {
+          "build-first": "🐍 Nothing's built yet — stand on Build and press Enter first.",
+          "wrong-order": "Close, but the order's off. It reads: print, open paren, the words, and the ) that's already there.",
+          "wrong-indent": "Slide the line left until it sits against the wall (indent 0).",
+          "wrong-word": "One piece is wrong — an open paren is ( , not ] . Use print, ( and the words.",
+          "extra-code": "Keep it to a single line: print(\"hello world\").",
+          "success": "You filled in around the provided ) and it runs: hello world. ✅",
+          "first_run_no_build": "🐍 You ran before BUILDING. Stand on Build and press Enter first, then Run."
+        },
+        "terminal": {
+          "build": "$ python -m py_compile main.py",
+          "run": "$ python main.py"
+        },
+        "dialogue": {
+          "speakers": {
+            "snake": {
+              "name": "Sss",
+              "side": "left",
+              "portrait": "/assets/closeMouthSnake.png",
+              "portrait2": "/assets/talkingSnake.png"
+            },
+            "hint": {
+              "name": "Helper",
+              "side": "right",
+              "portrait": "🛰️",
+              "portrait2": "🛰️"
+            }
+          },
+          "on_enter": [
+            {
+              "id": "mixed-enter-1",
+              "speaker": "snake",
+              "text": "Ssss — see the faded ) already down? That one's on the house. You place the rest.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Build print ( \"hello world\" to the LEFT of the provided ).",
+              "tag": "intro"
+            }
+          ],
+          "guided_tutorial": [
+            {
+              "id": "mixed-tut",
+              "speaker": "narrator",
+              "text": "Some punctuation is already placed for you (the faded tiles). Fill in everything else, in order, around it.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false,
+              "teaches": "mixed"
+            }
+          ]
+        }
+      },
+      "solution": {
+        "output": "hello world",
+        "lines": [
+          {
+            "content": [
+              "print",
+              "(",
+              "\"hello world\"",
+              ")"
+            ],
+            "indent": 0
+          }
+        ]
+      },
+      "hints": [
+        "The ) is already there — build to its left.",
+        "Order: print ( \"hello world\" )",
+        "An open paren is ( , not the decoy ]."
+      ],
+      "metadata": {
+        "concept": "some punctuation is provided, some is yours",
+        "tags": [
+          "python",
+          "punctuation",
+          "mixed"
+        ],
+        "generator": "human",
+        "reviewed": true
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#....###....#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "piles": [
+          {
+            "token": "print",
+            "pos": {
+              "x": 9,
+              "y": 6
+            }
+          },
+          {
+            "token": "(",
+            "pos": {
+              "x": 10,
+              "y": 6
+            }
+          },
+          {
+            "token": "\"hello world\"",
+            "pos": {
+              "x": 9,
+              "y": 4
+            }
+          },
+          {
+            "token": "]",
+            "pos": {
+              "x": 11,
+              "y": 6
+            }
+          }
+        ],
+        "features": [
+          "terminal",
+          "coding_area",
+          "inventory"
+        ],
+        "coding_area": {
+          "x": 1,
+          "y": 1,
+          "width": 7,
+          "height": 7,
+          "prefilled": [
+            {
+              "token": ")",
+              "x": 4,
+              "y": 1
+            }
+          ]
+        },
+        "inventory_slots": 5,
+        "controls": [
+          {
+            "action": "build",
+            "label": "Build",
+            "pos": {
+              "x": 2,
+              "y": 7
+            }
+          },
+          {
+            "action": "run",
+            "label": "Run",
+            "pos": {
+              "x": 5,
+              "y": 7
+            }
+          }
+        ],
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 2
+          },
+          "marker": "❓"
+        },
+        "grants_unlock": "coding.mixed.cleared",
         "theme": "tech"
       }
     },

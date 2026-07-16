@@ -13,16 +13,23 @@ describe("python.code.v1 — every puzzle passes load validation", () => {
     });
   }
 
-  it("ladder: base tutorial → base variables → explicit parentheses, with the right tiers", () => {
+  it("ladder: base tutorial → variables → mixed → explicit, with the right tiers", () => {
     const byId = (id: string) => (pack.puzzles as unknown as Puzzle[]).find((p) => p.id === id)!;
     const prog = pack.progression?.find((x) => x.puzzle_type === "code_build");
     expect(prog?.levels.map((l) => l.id)).toEqual([
-      "py-code-tutorial-000", "py-code-base-001", "py-code-explicit-000",
+      "py-code-tutorial-000", "py-code-base-001", "py-code-mixed-000", "py-code-explicit-000",
     ]);
     expect(byId("py-code-tutorial-000").mechanics?.tier).toBe("base");
     expect((byId("py-code-tutorial-000").solution as { output: string }).output).toBe("hello world");
     expect(byId("py-code-base-001").mechanics?.tier).toBe("base");
+    expect(byId("py-code-mixed-000").mechanics?.tier).toBe("mixed");
     expect(byId("py-code-explicit-000").mechanics?.tier).toBe("explicit");
+  });
+
+  it("the mixed level scaffolds punctuation via coding_area.prefilled", () => {
+    const mixed = (pack.puzzles as unknown as Puzzle[]).find((p) => p.id === "py-code-mixed-000")!;
+    const prefilled = mixed.room?.coding_area?.prefilled ?? [];
+    expect(prefilled.map((t) => t.token)).toContain(")");
   });
 
   it("the base variables level is a genuine multi-line program", () => {

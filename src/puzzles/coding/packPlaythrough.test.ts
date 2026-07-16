@@ -31,10 +31,12 @@ describe("python.code.v1 — every level is solvable from its own floor tokens",
       }
     });
 
-    it(`${p.id}: every token an accepted variant needs is on the floor`, () => {
-      const floor = piles.map((pile) => pile.token);
+    it(`${p.id}: every token an accepted variant needs is available (floor pile or scaffolded)`, () => {
+      // A token can be FETCHED (a floor pile) or PROVIDED (prefilled/scaffolded in the area).
+      const prefilled = (p.room?.coding_area?.prefilled ?? []).map((t) => t.token);
+      const available = [...piles.map((pile) => pile.token), ...prefilled];
       for (const variant of accepted) for (const line of variant) for (const tok of line.content) {
-        expect(floor).toContain(tok);
+        expect(available).toContain(tok);
       }
     });
   }

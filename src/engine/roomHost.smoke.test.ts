@@ -560,4 +560,51 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     expect(text(c, ".room-terminal-body")).toContain("5");
     manager.teardown();
   });
+
+  it("mixed 'Assisted parens': the scaffolded ) is prefilled and locked; you build the rest", () => {
+    const { container: c, manager } = world;
+    skipCodingTutorial();
+    markTaught("mixed");
+    manager.enter("py-code-mixed-000");
+    press(c, "Enter"); // dismiss on_enter (guided tutorial skipped)
+
+    // The closing paren is already on the board (scaffolded) — one placed tile at mount.
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(1);
+    expect(c.querySelector(".tile-placed")!.classList.contains("tile-prefilled")).toBe(true);
+
+    // It's LOCKED: standing on it (4,1) and pressing pickup does nothing.
+    press(c, "ArrowLeft", 2);  // (6,7) → (4,7)
+    press(c, "ArrowUp", 6);    // (4,1) the prefilled )
+    press(c, "i");
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(1); // still there — not pickable
+
+    // Collect print, (, "hello world".
+    press(c, "ArrowDown", 6);  // (4,7)
+    press(c, "ArrowRight", 5); // (9,7)
+    press(c, "ArrowUp");       // (9,6) print
+    press(c, "i");
+    press(c, "ArrowRight");    // (10,6) (
+    press(c, "i");
+    press(c, "ArrowUp", 2);    // (10,4)
+    press(c, "ArrowLeft");     // (9,4) "hello world"
+    press(c, "i");
+
+    // Place print ( "hello world" at (1,1)(2,1)(3,1); the locked ) already sits at (4,1).
+    press(c, "ArrowUp", 3);    // (9,1)
+    press(c, "ArrowLeft", 8);  // (1,1)
+    press(c, "p");
+    press(c, "ArrowRight"); press(c, "p"); // (2,1)
+    press(c, "ArrowRight"); press(c, "p"); // (3,1)
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(4); // 3 placed + 1 scaffolded
+
+    // Build + Run → success (the scaffolded ) completes the line).
+    press(c, "ArrowDown", 6);  // (3,1) → (3,7)
+    press(c, "ArrowLeft");     // (2,7) Build
+    press(c, "Enter");
+    press(c, "ArrowRight", 3); // (5,7) Run
+    press(c, "Enter");
+    expect(c.querySelector(".room-terminal-body")!.classList.contains("term-success")).toBe(true);
+    expect(text(c, ".room-terminal-body")).toContain("hello world");
+    manager.teardown();
+  });
 });
