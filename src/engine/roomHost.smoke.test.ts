@@ -110,50 +110,55 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "Enter");
     expect(text(c, ".room-destmenu-title")).toBe("Coding");
     expect([...c.querySelectorAll(".room-destmenu-option")].map((b) => b.textContent))
-      .toEqual(["Tutorial"]); // level 1 is gated behind the tutorial
+      .toEqual(["Tutorial"]); // only the tutorial is authored (concept levels land later)
     press(c, "Enter"); // select it → the actual door transition (satisfies enter_door)
 
     // --- CODING TUTORIAL: terminal + piles + menu portal; snake on_enter plays ---
     expect(c.querySelector(".room-terminal")).toBeTruthy();
-    expect(c.querySelectorAll(".tile-pile")).toHaveLength(2);
+    expect(c.querySelectorAll(".tile-pile")).toHaveLength(3); // print, hello, world
     expect(text(c, ".room-dialogue")).toContain("Welcome to the practice pod");
     press(c, "Enter", 2); // through the on_enter beats → tutorial step 1
     expect(text(c, ".room-narrator")).toContain("code puzzle");
     press(c, "Enter");    // → waits for pickup
 
-    // Pick up print / hi (FIFO), from spawn (6,7).
+    // Pick up print / hello / world (FIFO), from spawn (6,7).
     press(c, "ArrowUp");           // (6,6)
     press(c, "ArrowRight", 3);     // (9,6) print pile
     press(c, "i");
     expect(text(c, ".room-inventory")).toContain("print");
     expect(text(c, ".room-narrator")).toContain("press P"); // tutorial advanced to "place"
-    press(c, "ArrowRight");        // (10,6) hi
+    press(c, "ArrowRight");        // (10,6) hello
+    press(c, "i");
+    press(c, "ArrowRight");        // (11,6) world
     press(c, "i");
 
-    // Place the line at indent 0: (1,1) (2,1).
-    press(c, "ArrowUp", 5);        // (10,1)
-    press(c, "ArrowLeft", 9);      // (1,1) — the coding area's left edge
+    // Place the line at indent 0: (1,1) (2,1) (3,1).
+    press(c, "ArrowUp", 5);        // (11,1)
+    press(c, "ArrowLeft", 10);     // (1,1) — the coding area's left edge
     press(c, "p");
     expect(c.querySelectorAll(".tile-placed")).toHaveLength(1);
     expect(text(c, ".room-narrator")).toContain("Build"); // tutorial advanced to "build"
-    press(c, "ArrowRight");
+    press(c, "ArrowRight");        // (2,1)
     press(c, "p");
-    expect(c.querySelectorAll(".tile-placed")).toHaveLength(2);
+    press(c, "ArrowRight");        // (3,1)
+    press(c, "p");
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(3);
 
     // PROBE the debug readout (position-dependent, module-owned).
     press(c, "`");
-    expect(text(c, ".room-debug")).toContain("[print, hi]");
+    expect(text(c, ".room-debug")).toContain("[print, hello, world]");
     expect(text(c, ".room-debug")).toContain("indent=0");
     press(c, "`");
 
     // Build, then Run → success beat + terminal output + earned unlock.
-    press(c, "ArrowDown", 6);      // (2,7) Build
+    press(c, "ArrowDown", 6);      // (3,1) → (3,7)
+    press(c, "ArrowLeft");         // (2,7) Build
     press(c, "Enter");
     expect(text(c, ".room-terminal-body")).toContain("compiled");
     expect(text(c, ".room-narrator")).toContain("Run"); // tutorial advanced to "run"
     press(c, "ArrowRight", 3);     // (5,7) Run
     press(c, "Enter");
-    expect(text(c, ".room-terminal-body")).toContain("hi");
+    expect(text(c, ".room-terminal-body")).toContain("hello world");
     expect(c.querySelector(".room-terminal-body")!.classList.contains("term-success")).toBe(true);
     expect(text(c, ".room-dialogue").length).toBeGreaterThan(0); // snake success beat
     press(c, "Enter"); // dismiss it
@@ -164,11 +169,11 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "Escape");
     expect((c.querySelector(".room-settings-panel") as HTMLElement).hidden).toBe(true);
 
-    // Menu portal at spawn → chooser lists Hub + Tutorial + the JUST-UNLOCKED level 1.
-    press(c, "ArrowRight");        // (6,7) spawn / menu portal
+    // Menu portal at spawn → chooser lists Hub + Tutorial (no further level authored yet).
+    press(c, "ArrowRight");        // (5,7) → (6,7) spawn / menu portal
     press(c, "Enter");
     const options = [...c.querySelectorAll(".room-destmenu-option")].map((b) => b.textContent);
-    expect(options).toHaveLength(3);
+    expect(options).toHaveLength(2);
     expect(options[0]).toContain("Hub");
     press(c, "Enter");             // select Hub → teleport away
 

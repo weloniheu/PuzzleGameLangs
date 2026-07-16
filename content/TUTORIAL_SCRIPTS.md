@@ -40,13 +40,17 @@ in that puzzle's own tutorial, even when it overlaps another puzzle's controls.
    controls or replay this tutorial." — Enter
 4. "Now try interacting. Walk up to the Coding door and press Enter." — `waitFor: enter_door`
 
-## Code puzzle (`python.code.v1.json` first level, room world, key `py-code-hello-001`)
+## Code puzzle (`python.code.v1.json` tutorial, room world, key `py-code-tutorial-000`)
+
+The mechanics tutorial; ends on `print("hello world")`. Beats 2–5 carry a
+`teaches` concept tag (pickup / place / build / run), so a harder mechanical
+tier re-teaches only the ones a player hasn't already seen (see codex.hasTaught).
 
 1. "This is a code puzzle. Let's learn how it works." — Enter
-2. "Walk up to a word on the floor and press I to pick it up." — `waitFor: pickup`
-3. "Walk to an empty tile and press P to place it down." — `waitFor: place`
-4. "Stand on Build and press Enter to compile your line." — `waitFor: build`
-5. "Stand on Run and press Enter to see what your line does." — `waitFor: run`
+2. "Walk up to a word on the floor and press I to pick it up." — `waitFor: pickup` · `teaches: pickup`
+3. "Walk to an empty tile and press P to place it down." — `waitFor: place` · `teaches: place`
+4. "Stand on Build and press Enter to compile your line." — `waitFor: build` · `teaches: build`
+5. "Stand on Run and press Enter to see what your line does." — `waitFor: run` · `teaches: run`
 
 ## Match (card game, key `match` — on `haw-match-001` AND `eng-match-pos-001`)
 
