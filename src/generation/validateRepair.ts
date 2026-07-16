@@ -1,7 +1,7 @@
 import type {
   Puzzle, MatchPayload, MatchSolution, PuzzleType, ValidatorType,
   SentencePayload, ReorderSolution, CombinePayload, CombineSolution,
-  CodeBuildPayload, CodeBuildSolution, LogicRulesPayload,
+  CodeBuildPayload, CodeBuildSolution, LogicRulesPayload, GrammarBuildPayload, VocabMatchPayload,
 } from "../schema/types";
 import { hasRenderer } from "../engine/renderers";
 import { hasValidator } from "../engine/validators";
@@ -9,7 +9,7 @@ import { moduleFor } from "../puzzles";
 
 const PUZZLE_TYPES: PuzzleType[] = [
   "match", "fill_blank", "reorder", "sentence_build", "combine", "code_build",
-  "logic_rules", "predict_output", "fix_the_bug",
+  "logic_rules", "grammar_build", "vocab_match", "predict_output", "fix_the_bug",
 ];
 const VALIDATOR_TYPES: ValidatorType[] = [
   "exact_match", "normalized_match", "set_match", "sequence_match",
@@ -102,6 +102,50 @@ export function validatePuzzle(p: unknown): { ok: boolean; errors: string[] } {
     if (typeof pay?.pack_url !== "string" || !pay.pack_url) errors.push(`logic_rules payload needs a pack_url`);
     if (typeof pay?.board_id !== "string" || !pay.board_id) errors.push(`logic_rules payload needs a board_id`);
     if (!o.room) errors.push(`logic_rules puzzles are room-only: "room" is required`);
+  }
+
+  // grammar_build: room-only push game; the frame, word bank (with positions), and
+  // structures must line up.
+  if (o.puzzle_type === "grammar_build") {
+    const pay = o.payload as GrammarBuildPayload | undefined;
+    if (!pay?.structure?.length) errors.push(`grammar_build payload needs a non-empty structure`);
+    if (!pay?.words?.length) errors.push(`grammar_build payload needs words`);
+    if (!pay?.structures?.length) errors.push(`grammar_build payload needs at least one acceptable structure`);
+    if (!pay?.frame || typeof pay.frame.x !== "number" || typeof pay.frame.y !== "number") {
+      errors.push(`grammar_build payload needs a frame position`);
+    }
+    if (pay?.structure && pay?.structures) {
+      for (const s of pay.structures) {
+        if (s.length !== pay.structure.length) errors.push(`a structure's length must equal the frame's slot count`);
+      }
+    }
+    // Every word tile needs a board position (it's pushed, not carried).
+    for (const w of pay?.words ?? []) {
+      if (!w.pos || typeof w.pos.x !== "number" || typeof w.pos.y !== "number") {
+        errors.push(`grammar word "${w.text}" needs a board position`);
+      }
+    }
+    if (!o.room) errors.push(`grammar_build puzzles are room-only: "room" is required`);
+  }
+
+  // vocab_match: room-only; every pairing must reference two DISTINCT known tiles.
+  if (o.puzzle_type === "vocab_match") {
+    const pay = o.payload as VocabMatchPayload | undefined;
+    if (!pay?.tiles || pay.tiles.length < 2) errors.push(`vocab_match payload needs at least two tiles`);
+    if (!pay?.pairs?.length) errors.push(`vocab_match payload needs at least one pair`);
+    if (pay?.tiles) {
+      const ids = new Set<string>();
+      for (const t of pay.tiles) {
+        if (ids.has(t.id)) errors.push(`duplicate vocab tile id "${t.id}"`);
+        ids.add(t.id);
+      }
+      for (const [a, b] of pay.pairs ?? []) {
+        if (a === b) errors.push(`a vocab pair cannot pair "${a}" with itself`);
+        if (!ids.has(a)) errors.push(`pair references unknown tile id "${a}"`);
+        if (!ids.has(b)) errors.push(`pair references unknown tile id "${b}"`);
+      }
+    }
+    if (!o.room) errors.push(`vocab_match puzzles are room-only: "room" is required`);
   }
 
   // code_build: there must be tokens to assemble and a target output.

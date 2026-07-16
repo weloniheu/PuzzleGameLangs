@@ -11,7 +11,7 @@
 import type { Puzzle, LevelEntry, PuzzleType } from "../schema/types";
 import { mountRoom, type RoomHandle } from "./roomHost";
 import { addUnlock, getUnlocks } from "./core/codex";
-import { destinationMenu, HUB_ID } from "./core/progression";
+import { destinationMenu, HUB_ID, type DestinationOption } from "./core/progression";
 import { portalFlashColor } from "./core/portalColors";
 
 export interface RoomManager {
@@ -58,6 +58,20 @@ export function createRoomManager(
     const levels = levelsForType(puzzle.puzzle_type);
     const isLevel = levels.some((lv) => lv.id === puzzle.id);
 
+    // Stamp a chooser option with its resolved teleport flash color
+    // (hub→red; else the DESTINATION room's override or its type color).
+    const withFlash = (opt: DestinationOption): DestinationOption => {
+      if (opt.kind === "hub") return { ...opt, flashColor: portalFlashColor({ hub: true }) };
+      const dest = resolve(opt.id);
+      return {
+        ...opt,
+        flashColor: portalFlashColor({
+          puzzleType: dest?.puzzle_type,
+          override: dest?.room?.flash_color,
+        }),
+      };
+    };
+
     current = mountRoom(container, puzzle, {
       // A transition (door OR menu-portal selection) is just "enter the target".
       onDoor: (target) => enter(target),
@@ -76,22 +90,22 @@ export function createRoomManager(
               override: resolve(target)?.room?.flash_color,
             }),
       // The menu portal's chooser, recomputed fresh on every open so a just-earned
-      // unlock shows up immediately. Only levels have a menu portal. Each option carries its
-      // resolved flash color (hub→red; else the DESTINATION room's override or type color).
+      // unlock shows up immediately. Only levels have a menu portal.
       menuDestinations: isLevel
-        ? () =>
-            destinationMenu(levels, new Set(getUnlocks()), HUB_ID, "Hub").map((opt) => {
-              if (opt.kind === "hub") return { ...opt, flashColor: portalFlashColor({ hub: true }) };
-              const dest = resolve(opt.id);
-              return {
-                ...opt,
-                flashColor: portalFlashColor({
-                  puzzleType: dest?.puzzle_type,
-                  override: dest?.room?.flash_color,
-                }),
-              };
-            })
+        ? () => destinationMenu(levels, new Set(getUnlocks()), HUB_ID, "Hub").map(withFlash)
         : undefined,
+      // A door (hub portal) opens ITS OWN chooser: the target's puzzle type → that
+      // type's unlocked levels. No Hub entry — the player is already standing there.
+      // An empty list (the target isn't in a level list) falls back to the direct hop.
+      doorDestinations: (target) => {
+        const dest = resolve(target);
+        if (!dest) return [];
+        const typeLevels = levelsForType(dest.puzzle_type);
+        if (!typeLevels.some((lv) => lv.id === dest.id)) return [];
+        return destinationMenu(typeLevels, new Set(getUnlocks()), HUB_ID, "Hub")
+          .filter((opt) => opt.kind === "level")
+          .map(withFlash);
+      },
     });
   }
 

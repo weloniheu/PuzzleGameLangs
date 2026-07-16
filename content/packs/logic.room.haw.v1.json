@@ -1,0 +1,248 @@
+{
+  "pack_id": "logic.room.haw.v1",
+  "schema_version": "1.0.0",
+  "language": "haw",
+  "puzzles": [
+    {
+      "id": "logic-haw-000",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 1,
+      "prompt": "Nā rule ma ka ʻōlelo Hawaiʻi — predicate first.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.haw.v1.json",
+        "board_id": "haw-00-e-hele",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "haw-intro",
+              "speaker": "narrator",
+              "text": "Here the rules speak ʻōlelo Hawaiʻi — and they read differently: the describing word comes FIRST. ʻO ʻOE KA LIMU — the slime is you.",
+              "trigger": "on_enter",
+              "autoAdvance": false
+            }
+          ]
+        }
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": false,
+        "concept": "rule manipulation, ʻōlelo Hawaiʻi",
+        "tags": [
+          "logic",
+          "baba",
+          "room",
+          "hawaiian",
+          "needs-kumu-review"
+        ]
+      },
+      "room": {
+        "width": 11,
+        "height": 7,
+        "tiles": [
+          "###########",
+          "#.........#",
+          "#.........#",
+          "#.........#",
+          "#.........#",
+          "#.........#",
+          "###########"
+        ],
+        "spawn": {
+          "x": 3,
+          "y": 3
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "haw0.cleared",
+        "theme": "grove"
+      }
+    },
+    {
+      "id": "logic-haw-001",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 2,
+      "prompt": "PAHU KA PŌHAKU — but a careless push jams it.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.haw.v1.json",
+        "board_id": "haw-01-ke-ala"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": false,
+        "concept": "rule manipulation, ʻōlelo Hawaiʻi",
+        "tags": [
+          "logic",
+          "baba",
+          "room",
+          "hawaiian",
+          "needs-kumu-review"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 3,
+          "y": 4
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "haw1.cleared",
+        "theme": "grove"
+      }
+    },
+    {
+      "id": "logic-haw-002",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 3,
+      "prompt": "PAʻA KA PĀ — unless the words come apart.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.haw.v1.json",
+        "board_id": "haw-02-wawahi"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": false,
+        "concept": "rule manipulation, ʻōlelo Hawaiʻi",
+        "tags": [
+          "logic",
+          "baba",
+          "room",
+          "hawaiian",
+          "needs-kumu-review"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 3,
+          "y": 5
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "haw2.cleared",
+        "theme": "grove"
+      }
+    },
+    {
+      "id": "logic-haw-003",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 4,
+      "prompt": "___ KA HAE — finish the rule that wins.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.haw.v1.json",
+        "board_id": "haw-03-lanakila"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": false,
+        "concept": "rule manipulation, ʻōlelo Hawaiʻi",
+        "tags": [
+          "logic",
+          "baba",
+          "room",
+          "hawaiian",
+          "needs-kumu-review"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 3,
+          "y": 7
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "haw3.cleared",
+        "theme": "grove"
+      }
+    }
+  ],
+  "progression": [
+    {
+      "puzzle_type": "logic_rules",
+      "levels": [
+        {
+          "id": "logic-haw-000",
+          "label": "Loiloi ʻEkahi",
+          "unlock": "logic1.cleared"
+        },
+        {
+          "id": "logic-haw-001",
+          "label": "Loiloi ʻElua",
+          "unlock": "haw0.cleared"
+        },
+        {
+          "id": "logic-haw-002",
+          "label": "Loiloi ʻEkolu",
+          "unlock": "haw1.cleared"
+        },
+        {
+          "id": "logic-haw-003",
+          "label": "Loiloi ʻEhā",
+          "unlock": "haw2.cleared"
+        }
+      ]
+    }
+  ]
+}

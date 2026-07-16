@@ -10,6 +10,10 @@ import { createRoomManager, type RoomManager } from "./engine/roomManager";
 const HUB_PACK = "/content/packs/hub.test.v1.json";
 const CODE_PACK = "/content/packs/python.code.v1.json";
 const LOGIC_ROOM_PACK = "/content/packs/logic.room.en.v1.json";
+const LOGIC_ROOM_HAW_PACK = "/content/packs/logic.room.haw.v1.json"; // ʻōlelo Hawaiʻi track
+const GRAMMAR_ROOM_PACK = "/content/packs/grammar.room.en.v1.json";
+const VOCAB_ROOM_PACK = "/content/packs/vocab.room.haw.v1.json";
+const VOCAB_ROOM_EN_PACK = "/content/packs/vocab.room.en.v1.json"; // English synonym tier
 
 // TEMPORARY dev-only switcher: with the dropdown gone, press 1–4 to load a pack's
 // first puzzle for testing (1 = code/fullscreen, 2–4 = the card games). Scaffolding
@@ -100,12 +104,16 @@ const levelsByType = new Map<PuzzleType, LevelEntry[]>(); // ordered level lists
 
 async function bootHub() {
   if (!roomRegistry.size) {
-    const [hub, code, logic] = await Promise.all([
+    const [hub, code, logic, logicHaw, grammar, vocab, vocabEn] = await Promise.all([
       loadPack(HUB_PACK), loadPack(CODE_PACK), loadPack(LOGIC_ROOM_PACK),
+      loadPack(LOGIC_ROOM_HAW_PACK), loadPack(GRAMMAR_ROOM_PACK), loadPack(VOCAB_ROOM_PACK),
+      loadPack(VOCAB_ROOM_EN_PACK),
     ]);
-    for (const p of [...hub.puzzles, ...code.puzzles, ...logic.puzzles]) roomRegistry.set(p.id, p);
+    for (const p of [...hub.puzzles, ...code.puzzles, ...logic.puzzles, ...logicHaw.puzzles, ...grammar.puzzles, ...vocab.puzzles, ...vocabEn.puzzles]) {
+      roomRegistry.set(p.id, p);
+    }
     // Merge each pack's progression into one type → ordered-levels map (drives the menu portal).
-    for (const pack of [hub, code, logic]) {
+    for (const pack of [hub, code, logic, logicHaw, grammar, vocab, vocabEn]) {
       for (const prog of pack.progression ?? []) {
         levelsByType.set(prog.puzzle_type, [...(levelsByType.get(prog.puzzle_type) ?? []), ...prog.levels]);
       }
@@ -132,4 +140,46 @@ window.addEventListener("keydown", (e) => {
   loadAndShow(DEV_PACKS[n - 1]);
 });
 
-bootHub();
+// --- title screen (STYLE 3a "Dawn grove"): morning sky, the mascot, ▶ Start ---
+// Pure chrome over the boot: Enter (or the Start button) tears it down and enters
+// the hub. Static markup only; the slime reuses the shared .slime-* body parts.
+function showTitleScreen(onStart: () => void) {
+  const screen = document.createElement("div");
+  screen.className = "title-screen";
+  screen.innerHTML = `
+    <div class="title-sun"></div>
+    <div class="title-portal title-portal-a"></div>
+    <div class="title-portal title-portal-b"></div>
+    <div class="title-mote title-mote-a"></div>
+    <div class="title-mote title-mote-b"></div>
+    <div class="title-word">SLIME</div>
+    <div class="title-sub">a puzzle grove</div>
+    <div class="title-slime">
+      <div class="title-slime-shadow"></div>
+      <div class="slime" data-facing="down"><div class="slime-body">
+        <div class="slime-pool"></div><div class="slime-shine"></div>
+        <div class="slime-spec-a"></div><div class="slime-spec-b"></div>
+        <div class="slime-eye slime-eye-l"></div><div class="slime-eye slime-eye-r"></div>
+      </div></div>
+    </div>
+    <button type="button" class="title-start">▶ Start</button>
+    <div class="title-hint">PRESS ENTER</div>
+  `;
+  // The mascot slime is positioned by the .title-slime box, not the room engine.
+  const mascot = screen.querySelector(".slime") as HTMLElement;
+  mascot.style.position = "absolute";
+  mascot.style.inset = "0";
+  document.body.appendChild(screen);
+  app.hidden = true;
+
+  const start = () => {
+    window.removeEventListener("keydown", onKey);
+    screen.remove();
+    onStart();
+  };
+  const onKey = (e: KeyboardEvent) => { if (e.key === "Enter") start(); };
+  window.addEventListener("keydown", onKey);
+  (screen.querySelector(".title-start") as HTMLButtonElement).onclick = start;
+}
+
+showTitleScreen(bootHub);

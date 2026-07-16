@@ -242,8 +242,13 @@ function isYou(e: Entity, rs: RuleSet): boolean {
  * Walks the line ahead: a STOP cell (or the boundary while still needing to push)
  * blocks the whole move; pushable cells join the train; the first cell with only
  * overlap-objects (or empty) ends the train and the move commits.
+ *
+ * EXPORTED as the shared Sokoban push core: what is pushable/stopping comes from the
+ * RuleSet, so another module can drive the same push/collision behavior by handing in
+ * a RuleSet it built itself (see src/puzzles/vocab/ — player=you, tile=push,
+ * locked=stop). The logic game's own use is unchanged.
  */
-function tryMove(board: Board, mover: Entity, dir: Direction, rs: RuleSet): boolean {
+export function tryMove(board: Board, mover: Entity, dir: Direction, rs: RuleSet): boolean {
   const train: Entity[] = [mover];
   let cx = mover.x;
   let cy = mover.y;

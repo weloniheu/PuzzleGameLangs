@@ -4,6 +4,87 @@
   "language": "en",
   "puzzles": [
     {
+      "id": "logic-rules-000",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 1,
+      "tutorial": true,
+      "prompt": "Learn the ropes: the words on the floor are the rules.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-00-tutorial",
+        "dialogue": {
+          "speakers": {},
+          "guided_tutorial": [
+            {
+              "id": "ltut-1",
+              "speaker": "narrator",
+              "text": "Welcome to the Logic room. The word tiles on the floor are RULES — read them.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            },
+            {
+              "id": "ltut-2",
+              "speaker": "narrator",
+              "text": "SLIME IS YOU means the slime is you. Press an arrow key to move.",
+              "trigger": "guided_tutorial",
+              "waitFor": "move"
+            },
+            {
+              "id": "ltut-3",
+              "speaker": "narrator",
+              "text": "FLAG IS WIN means touching the flag wins. Later, rules can be CHANGED — word tiles push like blocks.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            },
+            {
+              "id": "ltut-4",
+              "speaker": "narrator",
+              "text": "Made a mess? U undoes a move · R resets the room. Now go touch the flag!",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            }
+          ]
+        }
+      },
+      "solution": {
+        "note": "walk right onto the flag (win condition lives in the logic pack's board)"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "tutorial — rules are words",
+        "tags": [
+          "logic",
+          "baba",
+          "room",
+          "tutorial"
+        ]
+      },
+      "room": {
+        "width": 11,
+        "height": 7,
+        "tiles": [
+          "###########",
+          "#.........#",
+          "#.........#",
+          "#.........#",
+          "#.........#",
+          "#.........#",
+          "###########"
+        ],
+        "spawn": {
+          "x": 3,
+          "y": 3
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic.tutorial.cleared",
+        "theme": "grove"
+      }
+    },
+    {
       "id": "logic-rules-001",
       "schema_version": "1.0.0",
       "language": "en",
@@ -46,8 +127,9 @@
           "x": 3,
           "y": 4
         },
-        "flash_color": "#d8b13a",
-        "grants_unlock": "logic1.cleared"
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic1.cleared",
+        "theme": "grove"
       }
     },
     {
@@ -93,8 +175,9 @@
           "x": 3,
           "y": 4
         },
-        "flash_color": "#d8b13a",
-        "grants_unlock": "logic2.cleared"
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic2.cleared",
+        "theme": "grove"
       }
     },
     {
@@ -142,8 +225,9 @@
           "x": 3,
           "y": 5
         },
-        "flash_color": "#d8b13a",
-        "grants_unlock": "logic3.cleared"
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic3.cleared",
+        "theme": "grove"
       }
     },
     {
@@ -189,10 +273,11 @@
         ],
         "spawn": {
           "x": 3,
-          "y": 6
+          "y": 7
         },
-        "flash_color": "#d8b13a",
-        "grants_unlock": "logic4.cleared"
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic4.cleared",
+        "theme": "grove"
       }
     },
     {
@@ -240,8 +325,159 @@
           "x": 3,
           "y": 7
         },
-        "flash_color": "#d8b13a",
-        "grants_unlock": "logic5.cleared"
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic5.cleared",
+        "theme": "grove"
+      }
+    },
+    {
+      "id": "logic-rules-006",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 6,
+      "prompt": "Two phases: unmake a rule, then finish another beyond the breach.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-06-through"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 3,
+          "y": 5
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic6.cleared",
+        "theme": "grove"
+      }
+    },
+    {
+      "id": "logic-rules-007",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 7,
+      "prompt": "The flag is sealed. Deduce which rule actually wins.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-07-which-rule"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 2,
+          "y": 3
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic7.cleared",
+        "theme": "grove"
+      }
+    },
+    {
+      "id": "logic-rules-008",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 8,
+      "prompt": "Two locks, one path. Break, cross, build, win.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-08-two-locks"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 2,
+          "y": 6
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic8.cleared",
+        "theme": "grove"
       }
     }
   ],
@@ -250,8 +486,13 @@
       "puzzle_type": "logic_rules",
       "levels": [
         {
+          "id": "logic-rules-000",
+          "label": "Tutorial"
+        },
+        {
           "id": "logic-rules-001",
-          "label": "Logic I"
+          "label": "Logic I",
+          "unlock": "logic.tutorial.cleared"
         },
         {
           "id": "logic-rules-002",
@@ -272,6 +513,21 @@
           "id": "logic-rules-005",
           "label": "Logic V",
           "unlock": "logic4.cleared"
+        },
+        {
+          "id": "logic-rules-006",
+          "label": "Logic VI",
+          "unlock": "logic5.cleared"
+        },
+        {
+          "id": "logic-rules-007",
+          "label": "Logic VII",
+          "unlock": "logic6.cleared"
+        },
+        {
+          "id": "logic-rules-008",
+          "label": "Logic VIII",
+          "unlock": "logic7.cleared"
         }
       ]
     }

@@ -1,0 +1,890 @@
+{
+  "pack_id": "vocab.room.haw.v1",
+  "schema_version": "1.0.0",
+  "language": "haw",
+  "puzzles": [
+    {
+      "id": "vocab-match-000",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "vocab_match",
+      "validator_type": "exact_match",
+      "difficulty": 1,
+      "tutorial": true,
+      "prompt": "Learn the ropes: push two words that mean the same thing together.",
+      "payload": {
+        "tiles": [
+          {
+            "id": "aloha",
+            "text": "aloha",
+            "pos": {
+              "x": 2,
+              "y": 3
+            },
+            "help": "aloha = hello"
+          },
+          {
+            "id": "hello",
+            "text": "hello",
+            "pos": {
+              "x": 6,
+              "y": 3
+            },
+            "help": "hello = aloha"
+          }
+        ],
+        "pairs": [
+          [
+            "aloha",
+            "hello"
+          ]
+        ],
+        "feedback": {
+          "solved": "✦ Maikaʻi! The pair is matched — walk back to the portal ✦",
+          "help_none": "Stand beside a tile and press ? to see its meaning.",
+          "mismatch": "ʻAʻole — those two don't belong together. Each wrong pairing you test costs a star chance (✗)."
+        },
+        "dialogue": {
+          "speakers": {},
+          "guided_tutorial": [
+            {
+              "id": "vtut-1",
+              "speaker": "narrator",
+              "text": "Welcome to the Language room. These two tiles mean the SAME thing — one Hawaiian, one English.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            },
+            {
+              "id": "vtut-2",
+              "speaker": "narrator",
+              "text": "Walk into a tile to PUSH it. Try it now.",
+              "trigger": "guided_tutorial",
+              "waitFor": "push"
+            },
+            {
+              "id": "vtut-3",
+              "speaker": "narrator",
+              "text": "Push matching tiles side-by-side and they lock together. Match every pair to finish.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            },
+            {
+              "id": "vtut-4",
+              "speaker": "narrator",
+              "text": "Forgot a word? Stand beside its tile and press ? · U undoes a push · R resets the room.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            }
+          ]
+        },
+        "par": 8
+      },
+      "solution": {
+        "note": "aloha↔hello"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "tutorial — push to match",
+        "tags": [
+          "vocab",
+          "hawaiian",
+          "room",
+          "tutorial"
+        ]
+      },
+      "room": {
+        "width": 11,
+        "height": 9,
+        "tiles": [
+          "###########",
+          "#.........#",
+          "#.........#",
+          "#.........#",
+          "#.........#",
+          "#.........#",
+          "#.........#",
+          "#.........#",
+          "###########"
+        ],
+        "spawn": {
+          "x": 5,
+          "y": 6
+        },
+        "features": [],
+        "flash_color": "#ba3d3d",
+        "grants_unlock": "vocab.tutorial.cleared",
+        "theme": "tropical"
+      }
+    },
+    {
+      "id": "vocab-match-001",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "vocab_match",
+      "validator_type": "exact_match",
+      "difficulty": 1,
+      "prompt": "Push each Hawaiian word into its English meaning.",
+      "payload": {
+        "tiles": [
+          {
+            "id": "pohaku",
+            "text": "pōhaku",
+            "pos": {
+              "x": 2,
+              "y": 2
+            },
+            "help": "pōhaku = rock"
+          },
+          {
+            "id": "rock",
+            "text": "rock",
+            "pos": {
+              "x": 6,
+              "y": 2
+            },
+            "help": "rock = pōhaku"
+          },
+          {
+            "id": "wai",
+            "text": "wai",
+            "pos": {
+              "x": 2,
+              "y": 4
+            },
+            "help": "wai = water (fresh water)"
+          },
+          {
+            "id": "water",
+            "text": "water",
+            "pos": {
+              "x": 6,
+              "y": 4
+            },
+            "help": "water = wai"
+          }
+        ],
+        "pairs": [
+          [
+            "pohaku",
+            "rock"
+          ],
+          [
+            "wai",
+            "water"
+          ]
+        ],
+        "feedback": {
+          "solved": "✦ Maikaʻi! Every pair is matched — walk back to the portal ✦",
+          "help_none": "Stand beside a tile and press ? to see its meaning.",
+          "mismatch": "ʻAʻole — those two don't belong together. Each wrong pairing you test costs a star chance (✗)."
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "vocab-enter",
+              "speaker": "narrator",
+              "text": "Push each Hawaiian word into its English meaning. Stand beside a tile and press ? for help · U undoes a push.",
+              "trigger": "on_enter",
+              "autoAdvance": false
+            }
+          ]
+        },
+        "par": 17
+      },
+      "solution": {
+        "note": "pōhaku↔rock, wai↔water"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "Hawaiian nouns: nature",
+        "tags": [
+          "vocab",
+          "hawaiian",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 11,
+        "height": 9,
+        "tiles": [
+          "###########",
+          "#.........#",
+          "#.........#",
+          "#.........#",
+          "#.........#",
+          "#.........#",
+          "#.........#",
+          "#.........#",
+          "###########"
+        ],
+        "spawn": {
+          "x": 5,
+          "y": 6
+        },
+        "features": [],
+        "flash_color": "#ba3d3d",
+        "grants_unlock": "vocab1.cleared",
+        "theme": "tropical"
+      }
+    },
+    {
+      "id": "vocab-match-002",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "vocab_match",
+      "validator_type": "exact_match",
+      "difficulty": 2,
+      "prompt": "Three pairs this time — animals and home.",
+      "payload": {
+        "tiles": [
+          {
+            "id": "ilio",
+            "text": "ʻīlio",
+            "pos": {
+              "x": 2,
+              "y": 1
+            },
+            "help": "ʻīlio = dog"
+          },
+          {
+            "id": "dog",
+            "text": "dog",
+            "pos": {
+              "x": 8,
+              "y": 1
+            },
+            "help": "dog = ʻīlio"
+          },
+          {
+            "id": "popoki",
+            "text": "pōpoki",
+            "pos": {
+              "x": 2,
+              "y": 5
+            },
+            "help": "pōpoki = cat"
+          },
+          {
+            "id": "cat",
+            "text": "cat",
+            "pos": {
+              "x": 8,
+              "y": 5
+            },
+            "help": "cat = pōpoki"
+          },
+          {
+            "id": "hale",
+            "text": "hale",
+            "pos": {
+              "x": 4,
+              "y": 3
+            },
+            "help": "hale = house"
+          },
+          {
+            "id": "house",
+            "text": "house",
+            "pos": {
+              "x": 7,
+              "y": 3
+            },
+            "help": "house = hale"
+          }
+        ],
+        "pairs": [
+          [
+            "ilio",
+            "dog"
+          ],
+          [
+            "popoki",
+            "cat"
+          ],
+          [
+            "hale",
+            "house"
+          ]
+        ],
+        "feedback": {
+          "solved": "✦ Maikaʻi! Every pair is matched — walk back to the portal ✦",
+          "help_none": "Stand beside a tile and press ? to see its meaning.",
+          "mismatch": "ʻAʻole — those two don't belong together. Each wrong pairing you test costs a star chance (✗)."
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "vocab-enter",
+              "speaker": "narrator",
+              "text": "More pairs, more pushing. Remember: ? reveals a meaning, U undoes.",
+              "trigger": "on_enter",
+              "autoAdvance": false
+            }
+          ]
+        },
+        "par": 33
+      },
+      "solution": {
+        "note": "ʻīlio↔dog, pōpoki↔cat, hale↔house"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "Hawaiian nouns: animals, home",
+        "tags": [
+          "vocab",
+          "hawaiian",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 7,
+          "y": 7
+        },
+        "features": [],
+        "flash_color": "#ba3d3d",
+        "grants_unlock": "vocab2.cleared",
+        "theme": "tropical"
+      }
+    },
+    {
+      "id": "vocab-match-003",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "vocab_match",
+      "validator_type": "exact_match",
+      "difficulty": 3,
+      "prompt": "Sky words — four pairs.",
+      "payload": {
+        "tiles": [
+          {
+            "id": "la",
+            "text": "lā",
+            "pos": {
+              "x": 2,
+              "y": 2
+            },
+            "help": "lā = sun (also: day)"
+          },
+          {
+            "id": "sun",
+            "text": "sun",
+            "pos": {
+              "x": 8,
+              "y": 2
+            },
+            "help": "sun = lā"
+          },
+          {
+            "id": "mahina",
+            "text": "mahina",
+            "pos": {
+              "x": 2,
+              "y": 6
+            },
+            "help": "mahina = moon"
+          },
+          {
+            "id": "moon",
+            "text": "moon",
+            "pos": {
+              "x": 8,
+              "y": 6
+            },
+            "help": "moon = mahina"
+          },
+          {
+            "id": "hoku",
+            "text": "hōkū",
+            "pos": {
+              "x": 5,
+              "y": 1
+            },
+            "help": "hōkū = star"
+          },
+          {
+            "id": "star",
+            "text": "star",
+            "pos": {
+              "x": 5,
+              "y": 7
+            },
+            "help": "star = hōkū"
+          },
+          {
+            "id": "ua",
+            "text": "ua",
+            "pos": {
+              "x": 1,
+              "y": 4
+            },
+            "help": "ua = rain"
+          },
+          {
+            "id": "rain",
+            "text": "rain",
+            "pos": {
+              "x": 9,
+              "y": 4
+            },
+            "help": "rain = ua"
+          },
+          {
+            "id": "makani",
+            "text": "makani",
+            "help": "wind — nothing on this board matches it",
+            "pos": {
+              "x": 7,
+              "y": 1
+            }
+          }
+        ],
+        "pairs": [
+          [
+            "la",
+            "sun"
+          ],
+          [
+            "mahina",
+            "moon"
+          ],
+          [
+            "hoku",
+            "star"
+          ],
+          [
+            "ua",
+            "rain"
+          ]
+        ],
+        "feedback": {
+          "solved": "✦ Maikaʻi! Every pair is matched — walk back to the portal ✦",
+          "help_none": "Stand beside a tile and press ? to see its meaning.",
+          "mismatch": "ʻAʻole — those two don't belong together. Each wrong pairing you test costs a star chance (✗)."
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "vocab-enter",
+              "speaker": "narrator",
+              "text": "The sky family: sun, moon, star, rain. Four pairs to bring together.",
+              "trigger": "on_enter",
+              "autoAdvance": false
+            }
+          ]
+        },
+        "par": 51
+      },
+      "solution": {
+        "note": "lā↔sun, mahina↔moon, hōkū↔star, ua↔rain"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "Hawaiian nouns: sky",
+        "tags": [
+          "vocab",
+          "hawaiian",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 6,
+          "y": 9
+        },
+        "features": [],
+        "flash_color": "#ba3d3d",
+        "grants_unlock": "vocab3.cleared",
+        "theme": "tropical"
+      }
+    },
+    {
+      "id": "vocab-match-004",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "vocab_match",
+      "validator_type": "set_match",
+      "difficulty": 5,
+      "prompt": "Signs mark where words belong. Check a word against its sign.",
+      "payload": {
+        "tiles": [
+          {
+            "id": "ua",
+            "text": "ua",
+            "pos": {
+              "x": 2,
+              "y": 1
+            },
+            "help": "rain"
+          },
+          {
+            "id": "rain",
+            "text": "rain",
+            "pos": {
+              "x": 8,
+              "y": 1
+            },
+            "help": "ua"
+          },
+          {
+            "id": "hoku",
+            "text": "hōkū",
+            "pos": {
+              "x": 2,
+              "y": 5
+            },
+            "help": "star"
+          },
+          {
+            "id": "star",
+            "text": "star",
+            "pos": {
+              "x": 8,
+              "y": 5
+            },
+            "help": "hōkū"
+          }
+        ],
+        "pairs": [
+          [
+            "ua",
+            "rain"
+          ],
+          [
+            "hoku",
+            "star"
+          ]
+        ],
+        "props": [
+          {
+            "id": "sign-ua",
+            "glyph": "🌧️",
+            "label": "ua",
+            "accepts": "ua",
+            "honest": true,
+            "pos": {
+              "x": 4,
+              "y": 0
+            }
+          },
+          {
+            "id": "sign-hoku",
+            "glyph": "⭐",
+            "label": "hōkū",
+            "accepts": "hoku",
+            "honest": true,
+            "pos": {
+              "x": 6,
+              "y": 0
+            }
+          }
+        ],
+        "par": 28,
+        "feedback": {
+          "solved": "✦ Maikaʻi! The signs spoke true. Walk back to the portal ✦",
+          "help_none": "Stand beside a word tile and press ? to see what it means.",
+          "mismatch": "ʻAʻole — those two don't belong together (✗).",
+          "false_accuse": "That sign was honest! A false accusation counts against you (✗)."
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "signs-intro",
+              "speaker": "narrator",
+              "text": "Hōʻailona — signs! Push a word beside its sign to check it: the sign glows when the word belongs. You can also press Enter beside a sign to put IT on trial.",
+              "trigger": "on_enter",
+              "autoAdvance": false
+            }
+          ]
+        }
+      },
+      "solution": {
+        "note": "the pairings are the solution"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": false,
+        "concept": "sign-anchored vocabulary",
+        "tags": [
+          "vocab",
+          "room",
+          "hawaiian",
+          "needs-kumu-review"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#.....#.....#",
+          "#.....#.....#",
+          "#.....#.....#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
+        "theme": "tropical",
+        "flash_color": "#ba3d3d",
+        "grants_unlock": "vocab4.cleared"
+      }
+    },
+    {
+      "id": "vocab-match-005",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "vocab_match",
+      "validator_type": "set_match",
+      "difficulty": 6,
+      "prompt": "Some signs LIE. Trust the word, never the picture.",
+      "payload": {
+        "tiles": [
+          {
+            "id": "la",
+            "text": "lā",
+            "pos": {
+              "x": 2,
+              "y": 2
+            },
+            "help": "sun, day"
+          },
+          {
+            "id": "sun",
+            "text": "sun",
+            "pos": {
+              "x": 8,
+              "y": 2
+            },
+            "help": "lā"
+          },
+          {
+            "id": "wai",
+            "text": "wai",
+            "pos": {
+              "x": 2,
+              "y": 4
+            },
+            "help": "fresh water"
+          },
+          {
+            "id": "water",
+            "text": "water",
+            "pos": {
+              "x": 8,
+              "y": 4
+            },
+            "help": "wai"
+          },
+          {
+            "id": "pohaku",
+            "text": "pōhaku",
+            "pos": {
+              "x": 2,
+              "y": 6
+            },
+            "help": "rock, stone"
+          },
+          {
+            "id": "rock",
+            "text": "rock",
+            "pos": {
+              "x": 8,
+              "y": 6
+            },
+            "help": "pōhaku"
+          }
+        ],
+        "pairs": [
+          [
+            "la",
+            "sun"
+          ],
+          [
+            "wai",
+            "water"
+          ],
+          [
+            "pohaku",
+            "rock"
+          ]
+        ],
+        "props": [
+          {
+            "id": "sign-sun",
+            "glyph": "☀️",
+            "label": "wai",
+            "accepts": "wai",
+            "honest": false,
+            "pos": {
+              "x": 2,
+              "y": 0
+            },
+            "wrong": "It LOOKS like lā — but the sign says wai. Wai is WATER, not the sun (✗).",
+            "exposed": "Hoʻopunipuni! The sign says wai — water. That sunny picture was lying. (+1 reveal)"
+          },
+          {
+            "id": "sign-water",
+            "glyph": "💧",
+            "label": "lā",
+            "accepts": "la",
+            "honest": false,
+            "pos": {
+              "x": 0,
+              "y": 4
+            },
+            "wrong": "The picture shows water — but the sign says lā. Lā is the SUN (✗).",
+            "exposed": "Caught! It says lā — the sun. Don't trust the picture. (+1 reveal)"
+          },
+          {
+            "id": "sign-rock",
+            "glyph": "🪨",
+            "label": "pōhaku",
+            "accepts": "pohaku",
+            "honest": true,
+            "pos": {
+              "x": 5,
+              "y": 5
+            }
+          }
+        ],
+        "par": 39,
+        "reveal_charges": 2,
+        "feedback": {
+          "solved": "✦ You trusted the words, not the pictures. Maikaʻi loa! ✦",
+          "help_none": "Stand beside a word tile and press ? to see what it means.",
+          "mismatch": "ʻAʻole — those two don't belong together (✗).",
+          "false_accuse": "That sign was honest — pōhaku IS the rock. The slander counts against you (✗).",
+          "reveal_spent": "No reveal charges left. Expose a lying sign to earn one back."
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "liars-intro",
+              "speaker": "narrator",
+              "text": "Some signs in here LIE: the picture says one thing, the written word another. The WORD is always the truth. Press Enter beside a sign to accuse it — catch a liar and earn a reveal; slander an honest sign and pay for it.",
+              "trigger": "on_enter",
+              "autoAdvance": false
+            }
+          ]
+        }
+      },
+      "solution": {
+        "note": "the pairings are the solution"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": false,
+        "concept": "false-sign discrimination",
+        "tags": [
+          "vocab",
+          "room",
+          "hawaiian",
+          "needs-kumu-review"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 6,
+          "y": 9
+        },
+        "theme": "tropical",
+        "flash_color": "#ba3d3d",
+        "grants_unlock": "vocab5.cleared"
+      }
+    }
+  ],
+  "progression": [
+    {
+      "puzzle_type": "vocab_match",
+      "levels": [
+        {
+          "id": "vocab-match-000",
+          "label": "Tutorial"
+        },
+        {
+          "id": "vocab-match-001",
+          "label": "Vocab I",
+          "unlock": "vocab.tutorial.cleared"
+        },
+        {
+          "id": "vocab-match-002",
+          "label": "Vocab II",
+          "unlock": "vocab1.cleared"
+        },
+        {
+          "id": "vocab-match-003",
+          "label": "Vocab III",
+          "unlock": "vocab2.cleared"
+        },
+        {
+          "id": "vocab-match-004",
+          "label": "Hōʻailona",
+          "unlock": "vocab3.cleared"
+        },
+        {
+          "id": "vocab-match-005",
+          "label": "Hoʻopunipuni",
+          "unlock": "vocab4.cleared"
+        }
+      ]
+    }
+  ]
+}

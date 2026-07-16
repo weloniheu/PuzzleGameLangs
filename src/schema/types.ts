@@ -19,6 +19,8 @@ export type PuzzleType =
   | "combine"        // word-logic: combine objects to reach a described outcome
   | "code_build"     // assemble code blocks from a discovered-command palette
   | "logic_rules"    // Baba-style rule manipulation (room-only; see src/puzzles/logic/)
+  | "grammar_build"  // fill role-slots in a sentence frame (room-only; see src/puzzles/grammar/)
+  | "vocab_match"    // Sokoban push-to-match vocabulary (room-only; see src/puzzles/vocab/)
   | "predict_output"
   | "fix_the_bug";
 
@@ -160,6 +162,100 @@ export interface LogicRulesSolution {
   note?: string;
 }
 
+// --- grammar_build (push word-tiles into a sentence frame; ROOM-ONLY) ---
+// Matches the logic/vocab format: the slime PUSHES word-tiles across the grid into
+// a row of role-slots; the sentence is checked automatically each move. The frame's
+// roles/labels/order, the tagged word bank (with board positions), the acceptable
+// role ORDERS, and feedback text are all pack data — a new language is a new pack,
+// zero engine change. See src/puzzles/grammar/.
+export interface GrammarSlotDef {
+  role: string;  // machine role, e.g. "subject" | "verb" — pack-defined, engine-opaque
+  label: string; // learner prompt drawn on the slot, e.g. "who?"
+}
+export interface GrammarWordDef {
+  text: string;                  // printed on the tile
+  role: string;                  // the role this word can legally fill ("decoy" fits nowhere)
+  pos: { x: number; y: number }; // board cell (relative to the room's floor origin)
+}
+export interface GrammarBuildPayload {
+  /** The sentence frame: labeled slots in display order (drawn left→right). */
+  structure: GrammarSlotDef[];
+  /** The word bank: pushable tiles scattered on the board. */
+  words: GrammarWordDef[];
+  /** Acceptable ROLE ORDERS for the filled frame (≥1; flexible-order languages
+   *  declare several). Usually just [structure.map(s => s.role)]. */
+  structures: string[][];
+  /** The FIRST slot's board cell; slots run left→right from here. */
+  frame: { x: number; y: number };
+  /** Feedback text (CONTENT): "solved" (win banner). The engine hardcodes none. */
+  feedback?: Record<string, string>;
+  /** Optional room dialogue — same shared shape every room puzzle may declare. */
+  dialogue?: DialogueConfig;
+}
+export interface GrammarBuildSolution {
+  /** A canonical correct sentence, for authors/review only (the checker derives
+   *  correctness from roles + structures, so alternates also pass). */
+  sentence?: string;
+}
+
+// --- vocab_match (Sokoban push-to-match; ROOM-ONLY) ---
+// The PAIRING SEMANTICS are pack data: a word↔meaning pack and a synonym↔synonym
+// pack are the same engine with different `pairs`. Tile ids are opaque; the engine
+// never knows which kind of pack it's playing. Tile positions are BOARD cells
+// (relative to the room's floor origin); the player starts at the room spawn.
+export interface VocabTileDef {
+  id: string;                    // opaque pairing id (ASCII slug)
+  text: string;                  // what's printed on the tile
+  pos: { x: number; y: number }; // board cell
+  /** Text the HELP key reveals for this tile (the meaning/translation). CONTENT. */
+  help?: string;
+}
+/** A floor SIGN: a prop with a LOOK (glyph) and a written LABEL in the learning
+ *  language. The WORD is always the truth; the picture may lie (a "hoʻopunipuni"
+ *  trap). CONTENT decides which lie — the engine only compares tile ids. */
+export interface VocabPropDef {
+  id: string;
+  /** What it LOOKS like — an emoji/glyph drawn on the floor. */
+  glyph: string;
+  /** What the sign SAYS (learning language) — rendered on a plaque. */
+  label: string;
+  /** The tile whose word truly belongs at this sign (per the LABEL). Presenting it
+   *  confirms (free meaning reveal); presenting anything else is a counted guess. */
+  accepts: string;
+  /** Whether look and label agree. Drives the ACCUSE verdict; liar props should only
+   *  use words the player has already learned (review levels, never first exposure). */
+  honest: boolean;
+  pos: { x: number; y: number };
+  /** Corrective line when a WRONG tile is presented here (state the truth plainly). */
+  wrong?: string;
+  /** Corrective line when this liar is successfully ACCUSED (Enter beside it). */
+  exposed?: string;
+}
+
+export interface VocabMatchPayload {
+  tiles: VocabTileDef[];
+  /** Unordered tile-id pairs that LOCK when pushed together. Tiles in NO pair are
+   *  decoys — pure bait; the level wins without them. */
+  pairs: [string, string][];
+  /** Floor signs (see VocabPropDef). Solid obstacles; catching a liar grants +1
+   *  reveal charge, accusing an honest sign costs a guess. */
+  props?: VocabPropDef[];
+  /** Move budget for the ★★★ rating (undo refunds moves). Omitted → no rating. */
+  par?: number;
+  /** How many DISTINCT tiles the HELP key may reveal this level. Omitted → unlimited
+   *  (tutorials). Spent charges never refund — deduction pressure is the point. */
+  reveal_charges?: number;
+  /** Feedback text: "solved" (win banner) | "help_none" (help with nothing nearby)
+   *  | "mismatch" (a wrong combination was tried) | "reveal_spent" (no charges left). */
+  feedback?: Record<string, string>;
+  /** Optional room dialogue — same shared shape every room puzzle may declare. */
+  dialogue?: DialogueConfig;
+}
+export interface VocabMatchSolution {
+  /** The pairings ARE the solution; this is for authors/review only. */
+  note?: string;
+}
+
 // --- dialogue (two portrait-only speakers sharing one presentation) ---
 export type DialogueTrigger =
   | "on_enter" | "build-first" | "wrong-order" | "wrong-indent" | "wrong-word" | "success" | "hint"
@@ -257,6 +353,12 @@ export interface CodingArea {
  *  carry tokens (hub, code levels) declare it; board rooms (logic) don't. */
 export type RoomFeature = "terminal" | "coding_area" | "inventory";
 
+/** Visual skins a room may declare (STYLE axis). CLOSED set — the engine ships one
+ *  scoped CSS block per token; content picks. The language→look mapping is a CONTENT
+ *  decision made per pack (a Hawaiian pack declares "tropical"); the engine never
+ *  derives a skin from a language. A new skin = a new token + CSS, no logic. */
+export type RoomTheme = "grove" | "tropical" | "library" | "tech";
+
 export interface RoomLayout {
   width: number;  // columns
   height: number; // rows
@@ -264,6 +366,8 @@ export interface RoomLayout {
   tiles: string[];
   /** Optional char→meaning overrides; "spawn" marks the start cell. */
   legend?: Record<string, RoomTile | "spawn">;
+  /** Optional visual skin token (see RoomTheme). Omitted → the default warm-sand look. */
+  theme?: RoomTheme;
   /** Explicit spawn cell; if omitted, derived from an 'S' tile, else first floor. */
   spawn?: { x: number; y: number };
   /** Word piles placed on floor cells; the player faces one and presses pickup. */
@@ -290,8 +394,9 @@ export interface RoomLayout {
   flash_color?: string;
 }
 
-export type RoomActionKind = "build" | "run";
-/** A labeled object the player stands on and activates with Enter (Build / Run). */
+export type RoomActionKind = "build" | "run" | "submit";
+/** A labeled object the player stands on and activates with Enter (Build / Run /
+ *  Submit). Which module handles which action kind is the module's business. */
 export interface RoomControl {
   action: RoomActionKind;
   label: string;
@@ -316,6 +421,9 @@ export interface RoomDoor {
   unlock?: string;
   /** Optional beat text shown (via the snake portrait) when the door is blocked. */
   beat?: string;
+  /** Optional portal-art image URL shown spinning inside the open portal disc
+   *  (e.g. "/assets/codeportal.png"). CONTENT — the engine only renders it. */
+  icon?: string;
 }
 
 // (predict_output / fix_the_bug payloads live in the contract but are deferred —
@@ -337,6 +445,8 @@ export type Payload =
   | CombinePayload
   | CodeBuildPayload
   | LogicRulesPayload
+  | GrammarBuildPayload
+  | VocabMatchPayload
   | CodePayload;
 export type Solution =
   | MatchSolution
@@ -345,6 +455,8 @@ export type Solution =
   | CombineSolution
   | CodeBuildSolution
   | LogicRulesSolution
+  | GrammarBuildSolution
+  | VocabMatchSolution
   | CodeSolution;
 
 // --- The puzzle itself ---
@@ -393,10 +505,26 @@ export interface ProgressionEntry {
   levels: LevelEntry[];
 }
 
+/** DOCUMENTATION ONLY — the engine NEVER reads this (see content/packs/README.md).
+ *  Records a language pack's basic form so authors can find a structurally similar
+ *  pack to COPY from (e.g. another predicate-first language starts from the Hawaiian
+ *  pack). A typology label is a starting point, never a grammar guarantee: shared
+ *  word order does not mean shared articles, agreement, or particles — every copied
+ *  construction still needs a speaker's review. */
+export interface PackTypology {
+  /** Basic constituent order, e.g. "SVO", "VSO (predicate-first)". */
+  word_order?: string;
+  /** The construction template this pack's structures follow, e.g. "predicate-first-equational". */
+  pattern_family?: string;
+  notes?: string;
+}
+
 export interface Pack {
   pack_id: string;
   schema_version: string;
   language: string;
+  /** Documentation-only authoring aid; never engine-read. See PackTypology. */
+  typology?: PackTypology;
   puzzles: Puzzle[];
   /** Ordered level lists per puzzle type (drives the menu portal's destination chooser). */
   progression?: ProgressionEntry[];

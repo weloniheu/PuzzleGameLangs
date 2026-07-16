@@ -50,6 +50,9 @@ export interface RoomCallbacks {
    *  returns the destination chooser (Hub + unlocked levels), recomputed fresh on each open.
    *  Omitted for the hub (no menu portal). */
   menuDestinations?: () => DestinationOption[];
+  /** A door's own chooser (e.g. a hub portal → its type's unlocked levels). Returning
+   *  a non-empty list makes the OPEN door open a chooser instead of teleporting. */
+  doorDestinations?: (target: string) => DestinationOption[];
   /** Resolve the teleport flash color for a target id (the manager has the registry).
    *  Used by hub PORTALS so their transition flashes in the destination's color. */
   flashColorFor?: (target: string) => string;
@@ -115,10 +118,23 @@ export function mountRoom(
   const invSlots = resolveInventorySlots(layout.inventory_slots, puzzle.puzzle_type);
 
   container.innerHTML = "";
+  // Per-game room class keyed by puzzle_type — the engine's one allowed dispatch axis.
+  const themeClass = `room-type-${puzzle.puzzle_type}`;
+  container.classList.add(themeClass);
+  // Visual skin (STYLE axis): the pack may declare `theme` — a token from the CLOSED
+  // skin set (see RoomTheme). The language→look mapping is content's decision; the
+  // engine only dispatches on the token. Undeclared → the default warm-sand look.
+  const skinClass = layout.theme ? `room-theme-${layout.theme}` : null;
+  if (skinClass) container.classList.add(skinClass);
 
-  // --- top bar: holds the gear (created by the settings panel, appended below). ---
+  // --- top bar (3d): a wooden HUD bar — title in the centre, gear on the right
+  //     (the gear is created by the settings panel, appended below). ---
   const topbar = document.createElement("div");
   topbar.className = "room-topbar";
+  const hudTitle = document.createElement("div");
+  hudTitle.className = "room-hud-title";
+  hudTitle.textContent = puzzle.metadata?.concept ?? "";
+  topbar.appendChild(hudTitle);
   container.appendChild(topbar);
 
   // --- stage (centers the viewport in the available space) → viewport → world ---
@@ -213,6 +229,7 @@ export function mountRoom(
     removePlayer: () => slime.remove(), // remove the slime before the map changes
     focusRoom,
     menuDestinations: callbacks.menuDestinations,
+    doorDestinations: callbacks.doorDestinations,
     flashColorFor: callbacks.flashColorFor,
     onTransition: (target) => callbacks.onDoor?.(target), // manager tears THIS room down + mounts target
   });
@@ -242,7 +259,13 @@ export function mountRoom(
     movePlayer: (cell) => { pos = { ...cell }; draw(); },
     dialogue,
     inventory: inv,
-    onSolved: () => callbacks.onSolved?.(puzzle),
+    onSolved: () => {
+      callbacks.onSolved?.(puzzle);
+      // AUTO-MENU ON SOLVE (toggleable): the moment a level is completed, open its
+      // destination chooser so the player can move on without walking back to the
+      // portal. Only level rooms have a chooser. Generic — no puzzle-type branching.
+      if (roomSettings.autoMenuOnSolve && callbacks.menuDestinations) portals.openDestinationMenu();
+    },
     teardown,
   };
   const module = moduleFor(puzzle.puzzle_type);
@@ -370,15 +393,58 @@ export function mountRoom(
   // Gameplay actions (bindings-driven; see systems/inputDispatch for the routing)
   // -------------------------------------------------------------------------
 
+  /** Facing drives the eye rule (3j): down = 2 dots, left/right = 1 offset, up = 0. */
+  function faceDirection(dir: Direction) {
+    slime.dataset.facing =
+      dir.dx < 0 ? "left" : dir.dx > 0 ? "right" : dir.dy < 0 ? "up" : "down";
+  }
+
+  /** Squish lengthwise for the slide, relax to the normal pose on arrival (3j). */
+  let moveSquishTimer = 0;
+  function squishForStep() {
+    slime.classList.add("moving");
+    clearTimeout(moveSquishTimer);
+    moveSquishTimer = window.setTimeout(() => slime.classList.remove("moving"), 140);
+  }
+
+  /** A little dust puff kicked up at the departed cell (3i). Self-removing. */
+  function puffDust(cell: Cell) {
+    for (const dx of [-0.18, 0.18]) {
+      const d = document.createElement("div");
+      d.className = "room-dust";
+      d.style.left = `${(cell.x + 0.5 + dx) * tile}px`;
+      d.style.top = `${(cell.y + 1) * tile - 7}px`;
+      world.appendChild(d);
+      window.setTimeout(() => d.remove(), 600);
+    }
+  }
+
+  /** A collect sparkle over a cell (3i) — fired on a successful pickup. Self-removing. */
+  function sparkleAt(cell: Cell) {
+    const s = document.createElement("div");
+    s.className = "room-sparkle";
+    s.textContent = "✦";
+    s.style.left = `${(cell.x + 0.5) * tile}px`;
+    s.style.top = `${(cell.y + 0.4) * tile}px`;
+    s.style.fontSize = `${Math.round(tile * 0.5)}px`;
+    world.appendChild(s);
+    window.setTimeout(() => s.remove(), 700);
+  }
+
   function moveOrCursor(dir: Direction) {
     if (inv?.focused()) {
       inv.moveCursor(dir.dx < 0 || dir.dy < 0 ? -1 : 1);
     } else {
       const before = pos;
+      faceDirection(dir); // eyes track travel direction even on a wall bump
       pos = step(room, pos, dir);
       draw();
       // GUIDED TUTORIAL: a step waiting on "move" needs an ACTUAL move — bumping a wall doesn't count.
-      if (pos.x !== before.x || pos.y !== before.y) dialogue.notify("move");
+      if (pos.x !== before.x || pos.y !== before.y) {
+        squishForStep();
+        puffDust(before);
+        dialogue.notify("move");
+      }
     }
   }
 
@@ -386,6 +452,7 @@ export function mountRoom(
    *  shifts to inventory focus with a drop/cancel prompt (same slot cursor). */
   function tryPickup(inventory: NonNullable<typeof inv>, token: string) {
     if (!inventory.pickupToken(token, null)) return; // full → the drop prompt opened instead
+    sparkleAt(pos); // collect sparkle (3i)
     dialogue.notify("pickup"); // GUIDED TUTORIAL first (see module build), then first-time beats
     dialogue.fireFirstTime("first_pickup");
     if (inventory.isFull()) dialogue.fireFirstTime("first_inventory_full");
@@ -455,9 +522,14 @@ export function mountRoom(
   relayout();
   inv?.draw();
   focusRoom();
+  // Portal travel, arrival half (3h): the slime pops out of the spawn portal with a
+  // small bounce. The class only swaps the body animation; position math is untouched.
+  slime.classList.add("arriving");
+  const arriveTimer = window.setTimeout(() => slime.classList.remove("arriving"), 600);
   // First-ever visit to this room: on_enter (story, if any) + the guided tutorial, played
   // as ONE unskippable sequence, then marked seen (see codex.ts). Every later visit just
-  // gets the normal on_enter greeting, exactly as before.
+  // gets the normal on_enter greeting. Entering a room NEVER auto-opens the menu — the
+  // auto-menu is a solve-time reward (see ctx.onSolved), so the first room plays normally.
   if (guidedTutorialBeats.length && !hasCompletedTutorial(puzzle.id)) {
     dialogue.play([...onEnterBeats, ...guidedTutorialBeats], {
       onComplete: () => completeTutorial(puzzle.id),
@@ -476,7 +548,13 @@ export function mountRoom(
     dialogue.clearTimers();               // autoTimer + talkTimer (interval)
     input.clearPending();                 // pending key-sequence timer
     if (resizeTimer) { clearTimeout(resizeTimer); resizeTimer = 0; }
+    clearTimeout(moveSquishTimer);        // pending move-squish relax
+    clearTimeout(arriveTimer);            // pending arrival-pop cleanup
     settings.cancelCapture();             // drop any pending rebind-capture timer
+  });
+  teardown.add(() => {
+    container.classList.remove(themeClass); // the container outlives the room
+    if (skinClass) container.classList.remove(skinClass);
   });
   teardown.add(() => mounted?.teardown()); // module non-DOM cleanup
   // Dropping all room DOM also detaches every element-scoped listener (settings + panel

@@ -7,8 +7,13 @@
       "puzzle_type": "code_build",
       "levels": [
         {
+          "id": "py-code-tutorial-000",
+          "label": "Tutorial"
+        },
+        {
           "id": "py-code-hello-001",
-          "label": "1 · Greeting"
+          "label": "1 · Greeting",
+          "unlock": "coding.tutorial.cleared"
         },
         {
           "id": "py-code-name-002",
@@ -20,13 +25,241 @@
   ],
   "puzzles": [
     {
-      "id": "py-code-hello-001",
+      "id": "py-code-tutorial-000",
       "schema_version": "1.0.0",
       "language": "python",
       "puzzle_type": "code_build",
       "validator_type": "code_match",
       "difficulty": 1,
       "tutorial": true,
+      "prompt": "Learn the ropes: pick up words, place them, then Build and Run.",
+      "payload": {
+        "scenario": "A quiet practice pod. Nothing out there yet — just you, a snake, and a blinking panel waiting for its very first word.",
+        "goal": "Warm up the panel. Make your program say: hi",
+        "tokens": [
+          {
+            "text": "print",
+            "kind": "function",
+            "discovers": "print"
+          },
+          {
+            "text": "(",
+            "kind": "punctuation"
+          },
+          {
+            "text": ")",
+            "kind": "punctuation"
+          },
+          {
+            "text": "\"hi\"",
+            "kind": "string"
+          }
+        ],
+        "beats": {
+          "build-first": "🐍 The snake isn't ready — you haven't BUILT the line yet. Stand on Build and press Enter first.",
+          "wrong-order": "The words tumble out jumbled. Try them in a different order: the command first, then the word.",
+          "wrong-indent": "The line drifts off its margin. Slide it left until it sits against the wall (indent 0).",
+          "wrong-word": "The panel doesn't recognize one of those words. Pick different words and try again.",
+          "extra-code": "There's more than one line of code in the panel. Clear everything except a single print hi against the left wall.",
+          "success": "The panel hums to life: hi. You're ready! ✅",
+          "first_run_no_build": "🐍 Whoa — you ran before BUILDING. Stand on Build and press Enter to compile your line first, then come back to Run."
+        },
+        "terminal": {
+          "build": "$ python -m py_compile main.py",
+          "run": "$ python main.py"
+        },
+        "dialogue": {
+          "speakers": {
+            "snake": {
+              "name": "Sss",
+              "side": "left",
+              "portrait": "/assets/closeMouthSnake.png",
+              "portrait2": "/assets/talkingSnake.png"
+            },
+            "hint": {
+              "name": "Helper",
+              "side": "right",
+              "portrait": "🛰️",
+              "portrait2": "🛰️"
+            }
+          },
+          "on_enter": [
+            {
+              "id": "tut-enter-1",
+              "speaker": "snake",
+              "text": "Sssss! Welcome to the practice pod.",
+              "trigger": "on_enter",
+              "autoAdvance": true
+            },
+            {
+              "id": "tut-enter-2",
+              "speaker": "snake",
+              "text": "Before you meet anyone out there, let's learn how to write a line of code.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Pick up print and \"hi\" from the floor.",
+              "tag": "intro"
+            },
+            {
+              "text": "Place print first, then the word, starting against the left wall.",
+              "tag": "after:wrong-order"
+            },
+            {
+              "text": "Try building: print(\"hi\")",
+              "tag": "after:wrong-word"
+            }
+          ],
+          "guided_tutorial": [
+            {
+              "id": "ctut-1",
+              "speaker": "narrator",
+              "text": "This is a code puzzle. Let's learn how it works.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            },
+            {
+              "id": "ctut-2",
+              "speaker": "narrator",
+              "text": "Walk up to a word on the floor and press I to pick it up.",
+              "trigger": "guided_tutorial",
+              "waitFor": "pickup"
+            },
+            {
+              "id": "ctut-3",
+              "speaker": "narrator",
+              "text": "Walk to an empty tile and press P to place it down.",
+              "trigger": "guided_tutorial",
+              "waitFor": "place"
+            },
+            {
+              "id": "ctut-4",
+              "speaker": "narrator",
+              "text": "Stand on Build and press Enter to compile your line.",
+              "trigger": "guided_tutorial",
+              "waitFor": "build"
+            },
+            {
+              "id": "ctut-5",
+              "speaker": "narrator",
+              "text": "Stand on Run and press Enter to see what your line does.",
+              "trigger": "guided_tutorial",
+              "waitFor": "run"
+            }
+          ]
+        }
+      },
+      "solution": {
+        "output": "hi",
+        "lines": [
+          {
+            "content": [
+              "print",
+              "hi"
+            ],
+            "indent": 0
+          }
+        ]
+      },
+      "hints": [
+        "Pick up print and \"hi\".",
+        "Place print first, then \"hi\", against the left wall.",
+        "Try building: print(\"hi\")"
+      ],
+      "metadata": {
+        "concept": "the controls — pick up, place, build, run",
+        "tags": [
+          "tutorial",
+          "python",
+          "output"
+        ],
+        "generator": "human",
+        "reviewed": true
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#....###....#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "piles": [
+          {
+            "token": "print",
+            "pos": {
+              "x": 9,
+              "y": 6
+            }
+          },
+          {
+            "token": "hi",
+            "pos": {
+              "x": 10,
+              "y": 6
+            }
+          }
+        ],
+        "features": [
+          "terminal",
+          "coding_area",
+          "inventory"
+        ],
+        "coding_area": {
+          "x": 1,
+          "y": 1,
+          "width": 7,
+          "height": 7
+        },
+        "inventory_slots": 5,
+        "controls": [
+          {
+            "action": "build",
+            "label": "Build",
+            "pos": {
+              "x": 2,
+              "y": 7
+            }
+          },
+          {
+            "action": "run",
+            "label": "Run",
+            "pos": {
+              "x": 5,
+              "y": 7
+            }
+          }
+        ],
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 4
+          },
+          "marker": "❓"
+        },
+        "grants_unlock": "coding.tutorial.cleared",
+        "theme": "tech"
+      }
+    },
+    {
+      "id": "py-code-hello-001",
+      "schema_version": "1.0.0",
+      "language": "python",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 1,
       "prompt": "Assemble one line of code to respond. Walk onto blocks and press Enter to build your line, then stand on ▶ Run.",
       "payload": {
         "scenario": "You look around and find yourself looking at a blue planet. You can barely see them — they wave at you and wait for you to respond.",
@@ -84,8 +317,8 @@
             "snake": {
               "name": "Sss",
               "side": "left",
-              "portrait": "🐍",
-              "portrait2": "🐍"
+              "portrait": "/assets/closeMouthSnake.png",
+              "portrait2": "/assets/talkingSnake.png"
             },
             "hint": {
               "name": "Helper",
@@ -134,43 +367,6 @@
             {
               "text": "Lay print then the word against the left wall (indent 0): print(\"hello\").",
               "tag": "after:wrong-order"
-            }
-          ],
-          "guided_tutorial": [
-            {
-              "id": "ctut-1",
-              "speaker": "narrator",
-              "text": "This is a code puzzle. Let's learn how it works.",
-              "trigger": "guided_tutorial",
-              "autoAdvance": false
-            },
-            {
-              "id": "ctut-2",
-              "speaker": "narrator",
-              "text": "Walk up to a word on the floor and press I to pick it up.",
-              "trigger": "guided_tutorial",
-              "waitFor": "pickup"
-            },
-            {
-              "id": "ctut-3",
-              "speaker": "narrator",
-              "text": "Walk to an empty tile and press P to place it down.",
-              "trigger": "guided_tutorial",
-              "waitFor": "place"
-            },
-            {
-              "id": "ctut-4",
-              "speaker": "narrator",
-              "text": "Stand on Build and press Enter to compile your line.",
-              "trigger": "guided_tutorial",
-              "waitFor": "build"
-            },
-            {
-              "id": "ctut-5",
-              "speaker": "narrator",
-              "text": "Stand on Run and press Enter to see what your line does.",
-              "trigger": "guided_tutorial",
-              "waitFor": "run"
             }
           ]
         }
@@ -291,7 +487,8 @@
           },
           "marker": "❓"
         },
-        "grants_unlock": "puzzle1.cleared"
+        "grants_unlock": "puzzle1.cleared",
+        "theme": "tech"
       }
     },
     {
@@ -372,7 +569,7 @@
           "#############",
           "#...........#",
           "#...........#",
-          "#....###....#",
+          "#...........#",
           "#...........#",
           "#...........#",
           "#...........#",
@@ -432,7 +629,8 @@
             }
           }
         ],
-        "grants_unlock": "puzzle2.cleared"
+        "grants_unlock": "puzzle2.cleared",
+        "theme": "tech"
       }
     },
     {

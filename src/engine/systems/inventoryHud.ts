@@ -124,6 +124,10 @@ export function createInventoryHud(container: HTMLElement, slots: number): Inven
       const selected = state.focused && s === state.sel;
       slot.className = `room-inventory-slot${filled ? "" : " empty"}${selected ? " selected" : ""}`;
       slot.textContent = filled ? state.items[s] : "";
+      const num = document.createElement("span"); // fixed slot number (1a hotbar)
+      num.className = "room-inventory-num";
+      num.textContent = String(s + 1);
+      slot.appendChild(num);
       strip.appendChild(slot);
     }
   }

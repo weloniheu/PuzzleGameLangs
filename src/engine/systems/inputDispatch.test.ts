@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { decide, type DispatchContext } from "./inputDispatch";
-import { defaultBindings } from "../core/keybindings";
+import { defaultBindings, rebind } from "../core/keybindings";
 
 const roomCtx: DispatchContext = { dialogueBlocks: false, dialogueCanSkip: true, destMenuOpen: false };
 const dlgCtx: DispatchContext = { ...roomCtx, dialogueBlocks: true };
@@ -37,12 +37,30 @@ describe("decide — destination menu focus state", () => {
     expect(decide(destCtx, " ", [], standard)).toEqual({ kind: "dest-select" });
   });
 
-  it("arrows AND wksj move the cursor (up/left = −1, down/right = +1)", () => {
-    for (const k of ["ArrowUp", "ArrowLeft", "w", "k"]) {
+  it("the CHOSEN movement keys move the cursor (up/left = −1, down/right = +1)", () => {
+    // standard: arrows AND wasd are both live
+    for (const k of ["ArrowUp", "ArrowLeft", "w", "a"]) {
       expect(decide(destCtx, k, [], standard)).toEqual({ kind: "dest-move", delta: -1 });
     }
-    for (const k of ["ArrowDown", "ArrowRight", "s", "j"]) {
+    for (const k of ["ArrowDown", "ArrowRight", "s", "d"]) {
       expect(decide(destCtx, k, [], standard)).toEqual({ kind: "dest-move", delta: 1 });
+    }
+    // vim: hjkl navigate the menu too
+    for (const k of ["k", "h"]) {
+      expect(decide(destCtx, k, [], vim)).toEqual({ kind: "dest-move", delta: -1 });
+    }
+    for (const k of ["j", "l"]) {
+      expect(decide(destCtx, k, [], vim)).toEqual({ kind: "dest-move", delta: 1 });
+    }
+  });
+
+  it("a REBOUND movement key navigates the menu; its replaced default no longer does", () => {
+    // Rebind standard's wasd-up slot from "w" to "e".
+    const res = rebind(standard, "up", 1, ["e"]);
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(decide(destCtx, "e", [], res.bindings)).toEqual({ kind: "dest-move", delta: -1 });
+      expect(decide(destCtx, "w", [], res.bindings)).toEqual({ kind: "swallow" });
     }
   });
 
