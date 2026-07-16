@@ -31,6 +31,10 @@ export const roomSettings = {
   termFontPx: 14,
   scheme: "standard" as SchemeId,
   bindings: { standard: defaultBindings("standard"), vim: defaultBindings("vim") } as Record<SchemeId, Bindings>,
+  /** When ON, SOLVING a level immediately opens its destination chooser (skip
+   *  walking back to the portal). Off by default; toggle in Display. Entry never
+   *  auto-opens the menu — this is a solve-time convenience only. */
+  autoMenuOnSolve: false,
 };
 
 // --- rebind CAPTURE machine: buffer + commit timing (PURE of DOM; testable) ----------
@@ -268,6 +272,19 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
       sizeRow.appendChild(b);
     }
     settingsCard.append(settingsLabel("Room size"), sizeRow);
+
+    // Auto-open the level chooser the moment a puzzle is solved (opt-in).
+    const autoRow = document.createElement("div");
+    autoRow.className = "room-settings-schemes";
+    for (const [val, text] of [[true, "On"], [false, "Off"]] as [boolean, string][]) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = `room-scheme-btn${roomSettings.autoMenuOnSolve === val ? " active" : ""}`;
+      b.textContent = text;
+      b.onclick = () => { roomSettings.autoMenuOnSolve = val; render(); };
+      autoRow.appendChild(b);
+    }
+    settingsCard.append(settingsLabel("Open menu on solve"), autoRow);
 
     // Terminal text size — only when this room HAS a terminal (else there's nothing to size).
     if (!deps.hasTerminal) return;

@@ -12,9 +12,9 @@ describe("portalFlashColor — destination-derived, red reserved for hub", () =>
 
   it("maps puzzle types to their category colors", () => {
     expect(portalFlashColor({ puzzleType: "code_build" })).toBe("#3b6ea5");      // code → blue
-    expect(portalFlashColor({ puzzleType: "match" })).toBe("#3a9a55");           // language → green
-    expect(portalFlashColor({ puzzleType: "combine" })).toBe("#d8b13a");         // logic → yellow
-    expect(portalFlashColor({ puzzleType: "sentence_build" })).toBe("#8a5cc4");  // grammar → purple
+    expect(portalFlashColor({ puzzleType: "match" })).toBe("#ba3d3d");           // language → red
+    expect(portalFlashColor({ puzzleType: "combine" })).toBe("#5fbe6f");         // logic → green
+    expect(portalFlashColor({ puzzleType: "sentence_build" })).toBe("#b99c44");  // grammar → golden brown
   });
 
   it("a custom override wins over the type-derived default (non-hub)", () => {

@@ -1,0 +1,486 @@
+{
+  "pack_id": "logic.rules.haw.v1",
+  "schema_version": "1.0.0",
+  "language": "hawaiian",
+  "typology": {
+    "word_order": "VSO (predicate-first)",
+    "pattern_family": "predicate-first-equational",
+    "notes": "[predicate] KA [subject], e.g. PAʻA KA PĀ. Copy THIS pack for other predicate-first languages — then have every construction verified by a speaker; shared order ≠ shared grammar."
+  },
+  "_review_note": "Predicate-first equational pattern: [predicate] KA [subject], e.g. ʻO ʻOE KA LIMU / PAʻA KA PĀ. Nouns chosen to take 'ka' (none start k/e/a/o) so the ke/ka rule is out of scope for v1. Noun-predicates (he + noun) and PAHU-as-'pushable' phrasing need kumu review before shipping; transform rules are deliberately not used here.",
+  "pattern": {
+    "slots": [
+      {
+        "accepts": [
+          "property"
+        ],
+        "capture": "predicate"
+      },
+      {
+        "accepts": [
+          "connector"
+        ]
+      },
+      {
+        "accepts": [
+          "noun"
+        ],
+        "capture": "subject"
+      }
+    ],
+    "directions": [
+      "horizontal",
+      "vertical"
+    ]
+  },
+  "vocab": [
+    {
+      "text": "LIMU",
+      "role": "noun",
+      "noun": "slime"
+    },
+    {
+      "text": "PŌHAKU",
+      "role": "noun",
+      "noun": "rock"
+    },
+    {
+      "text": "HAE",
+      "role": "noun",
+      "noun": "flag"
+    },
+    {
+      "text": "PĀ",
+      "role": "noun",
+      "noun": "wall"
+    },
+    {
+      "text": "KA",
+      "role": "connector"
+    },
+    {
+      "text": "ʻO ʻOE",
+      "role": "property",
+      "property": "you"
+    },
+    {
+      "text": "PAʻA",
+      "role": "property",
+      "property": "stop"
+    },
+    {
+      "text": "PAHU",
+      "role": "property",
+      "property": "push"
+    },
+    {
+      "text": "LANAKILA",
+      "role": "property",
+      "property": "win"
+    }
+  ],
+  "puzzles": [
+    {
+      "id": "haw-00-e-hele",
+      "title": "E Hele",
+      "difficulty": 1,
+      "width": 9,
+      "height": 5,
+      "par": 4,
+      "hint": "ʻO ʻOE KA LIMU — the slime is you. LANAKILA KA HAE — the flag wins. Walk to it.",
+      "objects": [
+        {
+          "noun": "slime",
+          "x": 2,
+          "y": 2
+        },
+        {
+          "noun": "flag",
+          "x": 6,
+          "y": 2
+        }
+      ],
+      "words": [
+        {
+          "text": "ʻO ʻOE",
+          "x": 1,
+          "y": 0
+        },
+        {
+          "text": "KA",
+          "x": 2,
+          "y": 0
+        },
+        {
+          "text": "LIMU",
+          "x": 3,
+          "y": 0
+        },
+        {
+          "text": "LANAKILA",
+          "x": 5,
+          "y": 0
+        },
+        {
+          "text": "KA",
+          "x": 6,
+          "y": 0
+        },
+        {
+          "text": "HAE",
+          "x": 7,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "id": "haw-01-ke-ala",
+      "title": "Ke Ala",
+      "difficulty": 2,
+      "width": 11,
+      "height": 7,
+      "par": 11,
+      "hint": "PAHU KA PŌHAKU — the rock can be pushed. Straight at the flag, it jams. Find the pocket.",
+      "objects": [
+        {
+          "noun": "slime",
+          "x": 2,
+          "y": 3
+        },
+        {
+          "noun": "rock",
+          "x": 6,
+          "y": 3
+        },
+        {
+          "noun": "flag",
+          "x": 9,
+          "y": 3
+        },
+        {
+          "noun": "wall",
+          "x": 4,
+          "y": 2
+        },
+        {
+          "noun": "wall",
+          "x": 5,
+          "y": 2
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 2
+        },
+        {
+          "noun": "wall",
+          "x": 8,
+          "y": 2
+        },
+        {
+          "noun": "wall",
+          "x": 9,
+          "y": 2
+        },
+        {
+          "noun": "wall",
+          "x": 4,
+          "y": 4
+        },
+        {
+          "noun": "wall",
+          "x": 5,
+          "y": 4
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 4
+        },
+        {
+          "noun": "wall",
+          "x": 8,
+          "y": 4
+        },
+        {
+          "noun": "wall",
+          "x": 9,
+          "y": 4
+        },
+        {
+          "noun": "wall",
+          "x": 10,
+          "y": 3
+        }
+      ],
+      "words": [
+        {
+          "text": "ʻO ʻOE",
+          "x": 1,
+          "y": 0
+        },
+        {
+          "text": "KA",
+          "x": 2,
+          "y": 0
+        },
+        {
+          "text": "LIMU",
+          "x": 3,
+          "y": 0
+        },
+        {
+          "text": "PAʻA",
+          "x": 5,
+          "y": 0
+        },
+        {
+          "text": "KA",
+          "x": 6,
+          "y": 0
+        },
+        {
+          "text": "PĀ",
+          "x": 7,
+          "y": 0
+        },
+        {
+          "text": "PAHU",
+          "x": 1,
+          "y": 6
+        },
+        {
+          "text": "KA",
+          "x": 2,
+          "y": 6
+        },
+        {
+          "text": "PŌHAKU",
+          "x": 3,
+          "y": 6
+        },
+        {
+          "text": "LANAKILA",
+          "x": 5,
+          "y": 6
+        },
+        {
+          "text": "KA",
+          "x": 6,
+          "y": 6
+        },
+        {
+          "text": "HAE",
+          "x": 7,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "haw-02-wawahi",
+      "title": "Wāwahi",
+      "difficulty": 3,
+      "width": 11,
+      "height": 9,
+      "par": 11,
+      "hint": "PAʻA KA PĀ makes the wall solid. Rules are made of words — push one out of its line.",
+      "objects": [
+        {
+          "noun": "slime",
+          "x": 2,
+          "y": 4
+        },
+        {
+          "noun": "flag",
+          "x": 9,
+          "y": 4
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 0
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 1
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 2
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 3
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 4
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 5
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 6
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 7
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 8
+        }
+      ],
+      "words": [
+        {
+          "text": "ʻO ʻOE",
+          "x": 1,
+          "y": 8
+        },
+        {
+          "text": "KA",
+          "x": 2,
+          "y": 8
+        },
+        {
+          "text": "LIMU",
+          "x": 3,
+          "y": 8
+        },
+        {
+          "text": "LANAKILA",
+          "x": 7,
+          "y": 0
+        },
+        {
+          "text": "KA",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "text": "HAE",
+          "x": 9,
+          "y": 0
+        },
+        {
+          "text": "PAʻA",
+          "x": 3,
+          "y": 2
+        },
+        {
+          "text": "KA",
+          "x": 4,
+          "y": 2
+        },
+        {
+          "text": "PĀ",
+          "x": 5,
+          "y": 2
+        }
+      ]
+    },
+    {
+      "id": "haw-03-lanakila",
+      "title": "Lanakila",
+      "difficulty": 4,
+      "width": 11,
+      "height": 9,
+      "par": 19,
+      "hint": "___ KA HAE — the rule about the flag is missing its first word. Which word begins a winning rule?",
+      "objects": [
+        {
+          "noun": "slime",
+          "x": 2,
+          "y": 6
+        },
+        {
+          "noun": "flag",
+          "x": 8,
+          "y": 5
+        },
+        {
+          "noun": "wall",
+          "x": 5,
+          "y": 3
+        },
+        {
+          "noun": "wall",
+          "x": 5,
+          "y": 4
+        },
+        {
+          "noun": "wall",
+          "x": 5,
+          "y": 5
+        },
+        {
+          "noun": "wall",
+          "x": 5,
+          "y": 6
+        }
+      ],
+      "words": [
+        {
+          "text": "ʻO ʻOE",
+          "x": 1,
+          "y": 8
+        },
+        {
+          "text": "KA",
+          "x": 2,
+          "y": 8
+        },
+        {
+          "text": "LIMU",
+          "x": 3,
+          "y": 8
+        },
+        {
+          "text": "PAʻA",
+          "x": 5,
+          "y": 8
+        },
+        {
+          "text": "KA",
+          "x": 6,
+          "y": 8
+        },
+        {
+          "text": "PĀ",
+          "x": 7,
+          "y": 8
+        },
+        {
+          "text": "KA",
+          "x": 7,
+          "y": 0
+        },
+        {
+          "text": "HAE",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "text": "LANAKILA",
+          "x": 3,
+          "y": 5
+        },
+        {
+          "text": "PŌHAKU",
+          "x": 8,
+          "y": 3
+        }
+      ]
+    }
+  ]
+}

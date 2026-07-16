@@ -14,7 +14,7 @@
 
 import type { LogicRulesPayload, Puzzle } from "../../schema/types";
 import type { EngineContext, MountedPuzzle, RoomPuzzleModule } from "../../engine/puzzleModule";
-import type { Room } from "../../engine/core/room";
+import { floorOrigin } from "../../engine/core/room";
 import type { LogicPack, LogicPuzzle } from "./schema";
 import { loadLogicPack } from "./packLoader";
 import { cloneEntities, OBJECT_GLYPH } from "./logicRenderer";
@@ -79,17 +79,32 @@ const ROOM_STYLE = `
   border-radius: 999px; padding: 8px 18px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45); }
 .logic-room-banner[hidden] { display: none; }
+.logic-room-banner .logic-stars { color: #ffcf4a; letter-spacing: 2px; }
+
+/* Live move/par readout — the ECONOMY axis made visible. Undo refunds moves, so
+   experimenting is free; the budget only prices the SOLVE. */
+.logic-moves-chip { position: fixed; top: 72px; right: 18px; z-index: 40;
+  pointer-events: none; font-weight: 700; font-size: 13px; color: #f2e6cf;
+  background: rgba(24, 19, 11, 0.82); border: 1px solid rgba(242, 230, 207, 0.3);
+  border-radius: 999px; padding: 5px 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); }
+.logic-moves-chip .over-par { color: #e0a58a; }
 `;
 
-/** Where the board sits in the room: the top-left FLOOR cell (the wall ring is
- *  content; a ringed room puts the board at (1,1)). Derived, never hardcoded. */
-function floorOrigin(room: Room): { ox: number; oy: number } {
-  for (let y = 0; y < room.height; y++) {
-    for (let x = 0; x < room.width; x++) {
-      if (room.grid[y][x] === "floor") return { ox: x, oy: y };
-    }
-  }
-  return { ox: 0, oy: 0 };
+/** Star rating for a solve: within par ★★★, within 1.6×par ★★, any solve ★. */
+export function starsFor(moves: number, par: number): number {
+  if (moves <= par) return 3;
+  if (moves <= Math.ceil(par * 1.6)) return 2;
+  return 1;
+}
+
+/** Persist the best star rating per board (localStorage; storage may be unavailable). */
+function saveBestStars(boardId: string, stars: number) {
+  try {
+    const key = `logic.stars.${boardId}`;
+    const prev = Number(localStorage.getItem(key) ?? 0);
+    if (stars > prev) localStorage.setItem(key, String(stars));
+  } catch { /* private mode etc. — the rating is a reward, not progress */ }
 }
 
 export const logicModule: RoomPuzzleModule = {
@@ -98,7 +113,8 @@ export const logicModule: RoomPuzzleModule = {
   mount(ctx: EngineContext, puzzle: Puzzle): MountedPuzzle {
     // CONTENT: which LOGIC pack + which of its boards this room plays.
     const payload = puzzle.payload as LogicRulesPayload;
-    const { ox, oy } = floorOrigin(ctx.room);
+    // Where the board sits in the room: the top-left floor cell (see core/room).
+    const { x: ox, y: oy } = floorOrigin(ctx.room);
 
     const styleEl = document.createElement("style");
     styleEl.id = "logic-room-style";
@@ -117,12 +133,33 @@ export const logicModule: RoomPuzzleModule = {
     banner.hidden = true;
     ctx.container.appendChild(banner);
 
+    const movesChip = document.createElement("div");
+    movesChip.className = "logic-moves-chip";
+    movesChip.hidden = true;
+    ctx.container.appendChild(movesChip);
+
     let pack: LogicPack | null = null;
     let boardDef: LogicPuzzle | null = null;
     let board: Board | null = null;
-    const history: Entity[][] = [];
+    const history: Array<{ entities: Entity[]; moves: number }> = [];
+    let moves = 0;
     let won = false;
     let disposed = false;
+
+    function updateChip() {
+      if (!boardDef) return;
+      movesChip.hidden = false;
+      if (boardDef.par) {
+        const over = moves > boardDef.par;
+        movesChip.innerHTML = "";
+        const count = document.createElement("span");
+        if (over) count.className = "over-par";
+        count.textContent = `Moves ${moves}`;
+        movesChip.append(count, ` · Par ${boardDef.par}`);
+      } else {
+        movesChip.textContent = `Moves ${moves}`;
+      }
+    }
 
     /** The board entity the engine SLIME embodies: the first object that the active
      *  rules make YOU. One player — the slime IS that entity; its glyph is not drawn.
@@ -150,7 +187,9 @@ export const logicModule: RoomPuzzleModule = {
           const chip = document.createElement("div");
           chip.className = `logic-word ${e.word.role}${live.has(`${e.x},${e.y}`) ? " live" : ""}`;
           chip.textContent = e.word.text;
-          chip.style.fontSize = `${Math.round(tile * 0.26)}px`;
+          // Long words (LANAKILA, PŌHAKU, …) shrink to stay inside their cell —
+          // language is data, so tile text length is unbounded.
+          chip.style.fontSize = `${Math.round(tile * Math.min(0.26, 1.5 / e.word.text.length))}px`;
           box.appendChild(chip);
         } else {
           const glyph = OBJECT_GLYPH[e.noun ?? ""];
@@ -173,30 +212,57 @@ export const logicModule: RoomPuzzleModule = {
 
     function finish() {
       won = true;
-      banner.textContent = "✦ Solved! Walk back to the portal ✦";
+      // Rate the solve when the board carries a par (ECONOMY axis): stars price the
+      // move count, never completion — any solve clears the level and its unlock.
+      if (boardDef?.par) {
+        const stars = starsFor(moves, boardDef.par);
+        saveBestStars(boardDef.id, stars);
+        banner.innerHTML = "";
+        const starsEl = document.createElement("span");
+        starsEl.className = "logic-stars";
+        starsEl.textContent = "★".repeat(stars) + "☆".repeat(3 - stars);
+        banner.append(`✦ Solved in ${moves} moves `, starsEl, " — walk back to the portal ✦");
+      } else {
+        banner.textContent = "✦ Solved! Walk back to the portal ✦";
+      }
       banner.hidden = false;
       ctx.onSolved(); // earns this room's unlock — the next level appears in the exit menu
     }
 
     function move(dir: { dx: number; dy: number }) {
       if (!board || won) return;
-      history.push(cloneEntities(board.entities));
+      const before = new Map(board.entities.map((e) => [e.id, `${e.x},${e.y}`]));
+      const youId = youEntity(board)?.id ?? null;
+      history.push({ entities: cloneEntities(board.entities), moves });
       const res = step(board, dir);
+      if (res.moved) moves++; // a fully-blocked bump costs nothing
+      // GUIDED TUTORIAL: report what ACTUALLY happened — bumping a wall counts as neither.
+      const you = board.entities.find((e) => e.id === youId);
+      if (you && before.get(you.id) !== `${you.x},${you.y}`) ctx.dialogue.notify("move");
+      if (board.entities.some((e) => e.id !== youId && before.get(e.id) !== `${e.x},${e.y}`)) {
+        ctx.dialogue.notify("push");
+      }
       drawBoard();
+      updateChip();
       if (res.status === "won") finish();
     }
     function undo() {
       if (!board || won || !history.length) return;
-      board.entities = history.pop()!;
+      const h = history.pop()!;
+      board.entities = h.entities;
+      moves = h.moves; // undo REFUNDS the move — experimenting is free, the solve is priced
       drawBoard();
+      updateChip();
     }
     function reset() {
       if (!pack || !boardDef) return;
       board = createBoard(boardDef, pack.vocab, pack.pattern);
       history.length = 0;
+      moves = 0;
       won = false;
       banner.hidden = true;
       drawBoard();
+      updateChip();
     }
 
     // The pack loads async (fetch + structural validation — see packLoader). Input
@@ -210,6 +276,7 @@ export const logicModule: RoomPuzzleModule = {
         boardDef = def;
         board = createBoard(def, p.vocab, p.pattern);
         drawBoard();
+        updateChip();
       })
       .catch((e) => {
         if (disposed) return;

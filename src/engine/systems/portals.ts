@@ -53,6 +53,10 @@ export interface PortalsDeps {
   focusRoom(): void;
   /** The destination chooser's options, recomputed FRESH on each open. */
   menuDestinations?: () => DestinationOption[];
+  /** A door's own chooser options (e.g. a hub portal's level list for its puzzle
+   *  type). Non-empty → interacting with the OPEN door opens a chooser instead of
+   *  transitioning directly; empty/omitted → the old direct transition. */
+  doorDestinations?: (target: string) => DestinationOption[];
   /** Resolve a teleport flash color from a target id (the manager has the registry). */
   flashColorFor?: (target: string) => string;
   /** Commit a transition — the manager tears this room down and mounts the target. */
@@ -99,13 +103,44 @@ export function createPortals(deps: PortalsDeps): Portals {
   let destMenuOpen = false;
   let destSel = 0;
   let destOptions: DestinationOption[] = [];
+  let destTitle = "Where to?";
+  // Who opened the chooser: the level MENU PORTAL, or a hub DOOR (a door-sourced
+  // selection is the actual door transition, so it fires the enter_door signal).
+  let destSource: "portal" | "door" = "portal";
 
   // Click the backdrop (outside the card) to cancel the destination menu.
   destMenuEl.addEventListener("pointerdown", (e) => { if (e.target === destMenuEl) closeDestinationMenu(); });
 
-  /** (Re)build the hub PORTALS (same swirly look as the menu portal, plus a label). The
-   *  EFFECTIVE state (resolved against earned unlocks) drives the look: open = active
-   *  swirl, locked/coming_soon = a dimmed pad with a lock / construction glyph. */
+  /** Fill `el` with the whirlpool-portal look (2a): halo glow, two expanding rings,
+   *  and a slowly spinning art disc (the portal PNG, or a CSS swirl when no art).
+   *  The game's color arrives as --portal-accent; everything else derives from it. */
+  function buildPortalVisual(el: HTMLElement, accent: string, icon?: string) {
+    el.style.setProperty("--portal-accent", accent);
+    const glow = document.createElement("div");
+    glow.className = "tile-portal-glow";
+    const ring1 = document.createElement("div");
+    ring1.className = "tile-portal-ring";
+    const ring2 = document.createElement("div");
+    ring2.className = "tile-portal-ring delayed";
+    const disc = document.createElement("div");
+    disc.className = "tile-portal-disc";
+    if (icon) {
+      const img = document.createElement("img");
+      img.className = "tile-portal-img";
+      img.src = icon;
+      img.alt = "";
+      disc.appendChild(img);
+    } else {
+      const swirl = document.createElement("div");
+      swirl.className = "tile-portal-swirl";
+      disc.appendChild(swirl);
+    }
+    el.append(glow, ring1, ring2, disc);
+  }
+
+  /** (Re)build the hub PORTALS (whirlpool discs with each game's art + color, plus a
+   *  label pill). The EFFECTIVE state (resolved against earned unlocks) drives the look:
+   *  open = active glowing disc, locked/coming_soon = a dimmed stone pad with a glyph. */
   function buildDoors() {
     const tile = deps.tile();
     doorLayer.innerHTML = "";
@@ -116,28 +151,37 @@ export function createPortals(deps: PortalsDeps): Portals {
       el.style.width = `${tile}px`;
       el.style.height = `${tile}px`;
       el.style.transform = `translate(${d.pos.x * tile}px, ${d.pos.y * tile}px)`;
-      const glyph = document.createElement("span");
-      glyph.className = "tile-portal-glyph";
-      glyph.textContent = state === "open" ? "🌀" : state === "locked" ? "🔒" : "🚧";
-      glyph.style.fontSize = `${Math.round(tile * 0.42)}px`;
+      if (state === "open") {
+        // The portal glows in its DESTINATION's color (same resolver the flash uses).
+        const accent = deps.flashColorFor?.(d.target)
+          ?? portalFlashColor({ puzzleType: deps.puzzleType });
+        buildPortalVisual(el, accent, d.icon);
+      } else {
+        const glyph = document.createElement("span");
+        glyph.className = "tile-portal-glyph";
+        glyph.textContent = state === "locked" ? "🔒" : "🚧";
+        glyph.style.fontSize = `${Math.round(tile * 0.42)}px`;
+        el.appendChild(glyph);
+      }
       const label = document.createElement("span");
       label.className = "tile-portal-label";
       label.textContent = d.label;
       label.style.fontSize = `${Math.round(tile * 0.2)}px`;
-      el.append(glyph, label);
+      el.appendChild(label);
       doorLayer.appendChild(el);
     }
   }
 
-  /** Size + position the persistent menu portal at spawn (level rooms only). */
+  /** Size + position the persistent menu portal at spawn (level rooms only) — the same
+   *  whirlpool look, colored by THIS room's puzzle type, CSS swirl (no per-level art). */
   function buildMenuPortal() {
     if (!menuPortalEl || !menuPortalCell) return;
     const tile = deps.tile();
+    menuPortalEl.innerHTML = "";
     menuPortalEl.style.width = `${tile}px`;
     menuPortalEl.style.height = `${tile}px`;
     menuPortalEl.style.transform = `translate(${menuPortalCell.x * tile}px, ${menuPortalCell.y * tile}px)`;
-    menuPortalEl.style.fontSize = `${Math.round(tile * 0.5)}px`;
-    menuPortalEl.textContent = "🌀";
+    buildPortalVisual(menuPortalEl, portalFlashColor({ puzzleType: deps.puzzleType }));
   }
 
   const doorAt = (x: number, y: number) => doors.find((d) => d.pos.x === x && d.pos.y === y) ?? null;
@@ -157,6 +201,14 @@ export function createPortals(deps: PortalsDeps): Portals {
   function activateDoor(d: RoomDoor) {
     const reaction = doorReaction(d, unlocks);
     if (reaction.kind === "transition") {
+      // A door with its OWN destinations (e.g. a hub portal → its puzzle type's
+      // unlocked levels) opens a chooser instead of teleporting straight away.
+      // enter_door then fires on the SELECTION (the actual transition), not here.
+      const options = deps.doorDestinations?.(reaction.target) ?? [];
+      if (options.length) {
+        openChooser(options, d.label, "door");
+        return;
+      }
       // GUIDED TUTORIAL: an OPEN-door transition satisfies "enter_door" (stricter than
       // "interact" — a blocked door or the hint giver doesn't count). Fired BEFORE the
       // flash/teardown so the step advances (and completion persists) while this room lives.
@@ -174,15 +226,21 @@ export function createPortals(deps: PortalsDeps): Portals {
     if (d.beat) deps.dialogue.play([{ id: `door-${reaction.reason}`, speaker: "narrator", text: d.beat, trigger: "door" }]);
   }
 
-  // --- destination menu (the menu portal's chooser) -------------------------
-  function openDestinationMenu() {
-    if (!deps.menuDestinations) return;
-    destOptions = deps.menuDestinations(); // fresh: a just-earned unlock shows up now
-    if (!destOptions.length) return;
+  // --- destination menu (the menu portal's / a door's chooser) --------------
+  function openChooser(options: DestinationOption[], title: string, source: "portal" | "door") {
+    destOptions = options;
+    destTitle = title;
+    destSource = source;
     destSel = 0;
     destMenuOpen = true;
     renderDestMenu();
     destMenuEl.hidden = false;
+  }
+  function openDestinationMenu() {
+    if (!deps.menuDestinations) return;
+    const options = deps.menuDestinations(); // fresh: a just-earned unlock shows up now
+    if (!options.length) return;
+    openChooser(options, "Where to?", "portal");
   }
   function closeDestinationMenu() {
     destMenuOpen = false;
@@ -193,15 +251,16 @@ export function createPortals(deps: PortalsDeps): Portals {
     destMenuCard.innerHTML = "";
     const title = document.createElement("p");
     title.className = "room-destmenu-title";
-    title.textContent = "Where to?";
+    title.textContent = destTitle;
     destMenuCard.appendChild(title);
     destOptions.forEach((opt, i) => {
       const b = document.createElement("button");
       b.type = "button";
       b.className = `room-destmenu-option${i === destSel ? " selected" : ""}`;
       b.textContent = opt.kind === "hub" ? `⌂ ${opt.label}` : opt.label;
-      b.onclick = () => { destSel = i; selectDestination(); };       // mouse: pick directly
-      b.onmouseenter = () => { destSel = i; renderDestMenu(); };     // mouse hover tracks the cursor
+      // Mouse is SECONDARY: a click picks directly, but hovering never moves the
+      // keyboard cursor (arrows own the selection; hover feedback is CSS-only).
+      b.onclick = () => { destSel = i; selectDestination(); };
       destMenuCard.appendChild(b);
     });
     const hint = document.createElement("p");
@@ -220,6 +279,9 @@ export function createPortals(deps: PortalsDeps): Portals {
     const opt = destOptions[destSel];
     if (!opt) return;
     closeDestinationMenu();
+    // A door-sourced choice IS the door transition: satisfy "enter_door" now,
+    // BEFORE the flash/teardown (see activateDoor's direct path).
+    if (destSource === "door") deps.dialogue.notify("enter_door");
     const color = opt.flashColor ?? portalFlashColor({ hub: opt.kind === "hub", puzzleType: deps.puzzleType });
     awaySequence(
       (onDone) => playFlash(deps.pos(), color, onDone),

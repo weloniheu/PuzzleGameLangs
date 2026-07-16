@@ -1,0 +1,592 @@
+{
+  "pack_id": "grammar.room.en.v1",
+  "schema_version": "1.0.0",
+  "language": "en",
+  "typology": {
+    "word_order": "SVO",
+    "pattern_family": "svo-frame",
+    "notes": "subject–verb(–object–adverb) frame; roles and accepted orders are per-puzzle data."
+  },
+  "puzzles": [
+    {
+      "id": "grammar-build-000",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "grammar_build",
+      "validator_type": "exact_match",
+      "difficulty": 1,
+      "tutorial": true,
+      "prompt": "Learn the ropes: push the words into the sentence frame.",
+      "payload": {
+        "structure": [
+          {
+            "role": "subject",
+            "label": "who?"
+          },
+          {
+            "role": "verb",
+            "label": "does what?"
+          }
+        ],
+        "words": [
+          {
+            "text": "the slime",
+            "role": "subject",
+            "pos": {
+              "x": 4,
+              "y": 4
+            }
+          },
+          {
+            "text": "hops",
+            "role": "verb",
+            "pos": {
+              "x": 5,
+              "y": 4
+            }
+          }
+        ],
+        "structures": [
+          [
+            "subject",
+            "verb"
+          ]
+        ],
+        "frame": {
+          "x": 4,
+          "y": 1
+        },
+        "feedback": {
+          "solved": "✦ That's a sentence! Walk back to the portal ✦"
+        },
+        "dialogue": {
+          "speakers": {},
+          "guided_tutorial": [
+            {
+              "id": "gtut-1",
+              "speaker": "narrator",
+              "text": "Welcome to the Grammar room. The dashed boxes are a sentence frame — each box wants a kind of word.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            },
+            {
+              "id": "gtut-2",
+              "speaker": "narrator",
+              "text": "Walk into a word to PUSH it. Try it now.",
+              "trigger": "guided_tutorial",
+              "waitFor": "push"
+            },
+            {
+              "id": "gtut-3",
+              "speaker": "narrator",
+              "text": "Push the who-word into the first box and the doing-word into the second. The sentence checks itself.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            },
+            {
+              "id": "gtut-4",
+              "speaker": "narrator",
+              "text": "Pushed something into a corner? U undoes a push · R resets the room.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            }
+          ]
+        }
+      },
+      "solution": {
+        "sentence": "the slime hops"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "tutorial — push words into the frame",
+        "tags": [
+          "grammar",
+          "room",
+          "tutorial"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 6,
+          "y": 6
+        },
+        "features": [],
+        "flash_color": "#b99c44",
+        "grants_unlock": "grammar.tutorial.cleared",
+        "theme": "library"
+      }
+    },
+    {
+      "id": "grammar-build-001",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "grammar_build",
+      "validator_type": "exact_match",
+      "difficulty": 1,
+      "prompt": "Push the words into the sentence frame.",
+      "payload": {
+        "structure": [
+          {
+            "role": "subject",
+            "label": "who?"
+          },
+          {
+            "role": "verb",
+            "label": "does what?"
+          }
+        ],
+        "words": [
+          {
+            "text": "the dog",
+            "role": "subject",
+            "pos": {
+              "x": 4,
+              "y": 4
+            }
+          },
+          {
+            "text": "runs",
+            "role": "verb",
+            "pos": {
+              "x": 5,
+              "y": 4
+            }
+          },
+          {
+            "text": "the cat",
+            "role": "subject",
+            "pos": {
+              "x": 1,
+              "y": 5
+            }
+          },
+          {
+            "text": "sleeps",
+            "role": "verb",
+            "pos": {
+              "x": 9,
+              "y": 5
+            }
+          }
+        ],
+        "structures": [
+          [
+            "subject",
+            "verb"
+          ]
+        ],
+        "frame": {
+          "x": 4,
+          "y": 1
+        },
+        "feedback": {
+          "solved": "✦ That's a sentence! Walk back to the portal ✦"
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "gram-enter",
+              "speaker": "narrator",
+              "text": "Push the words into the frame to build a sentence: a who, then a doing-word. Arrows/WASD push · U undo · R reset.",
+              "trigger": "on_enter",
+              "autoAdvance": false
+            }
+          ]
+        }
+      },
+      "solution": {
+        "sentence": "the dog runs"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "Grammar I",
+        "tags": [
+          "grammar",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 6,
+          "y": 6
+        },
+        "features": [],
+        "flash_color": "#b99c44",
+        "grants_unlock": "grammar1.cleared",
+        "theme": "library"
+      }
+    },
+    {
+      "id": "grammar-build-002",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "grammar_build",
+      "validator_type": "exact_match",
+      "difficulty": 2,
+      "prompt": "Push the words into the sentence frame.",
+      "payload": {
+        "structure": [
+          {
+            "role": "subject",
+            "label": "who?"
+          },
+          {
+            "role": "verb",
+            "label": "does what?"
+          },
+          {
+            "role": "object",
+            "label": "what?"
+          }
+        ],
+        "words": [
+          {
+            "text": "the dog",
+            "role": "subject",
+            "pos": {
+              "x": 3,
+              "y": 4
+            }
+          },
+          {
+            "text": "chases",
+            "role": "verb",
+            "pos": {
+              "x": 4,
+              "y": 4
+            }
+          },
+          {
+            "text": "the ball",
+            "role": "object",
+            "pos": {
+              "x": 5,
+              "y": 4
+            }
+          },
+          {
+            "text": "the cat",
+            "role": "subject",
+            "pos": {
+              "x": 1,
+              "y": 5
+            }
+          },
+          {
+            "text": "catches",
+            "role": "verb",
+            "pos": {
+              "x": 8,
+              "y": 5
+            }
+          },
+          {
+            "text": "a stick",
+            "role": "object",
+            "pos": {
+              "x": 9,
+              "y": 5
+            }
+          },
+          {
+            "text": "banana!",
+            "role": "decoy",
+            "pos": {
+              "x": 2,
+              "y": 6
+            }
+          }
+        ],
+        "structures": [
+          [
+            "subject",
+            "verb",
+            "object"
+          ]
+        ],
+        "frame": {
+          "x": 3,
+          "y": 1
+        },
+        "feedback": {
+          "solved": "✦ That's a sentence! Walk back to the portal ✦"
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "gram-enter",
+              "speaker": "narrator",
+              "text": "Three slots: who, does what, to what. One word fits nowhere — leave it be.",
+              "trigger": "on_enter",
+              "autoAdvance": false
+            }
+          ]
+        }
+      },
+      "solution": {
+        "sentence": "the dog chases the ball"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "Grammar II",
+        "tags": [
+          "grammar",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 7,
+          "y": 7
+        },
+        "features": [],
+        "flash_color": "#b99c44",
+        "grants_unlock": "grammar2.cleared",
+        "theme": "library"
+      }
+    },
+    {
+      "id": "grammar-build-003",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "grammar_build",
+      "validator_type": "exact_match",
+      "difficulty": 3,
+      "prompt": "Push the words into the sentence frame.",
+      "payload": {
+        "structure": [
+          {
+            "role": "subject",
+            "label": "who?"
+          },
+          {
+            "role": "verb",
+            "label": "does what?"
+          },
+          {
+            "role": "object",
+            "label": "what?"
+          },
+          {
+            "role": "adverb",
+            "label": "how?"
+          }
+        ],
+        "words": [
+          {
+            "text": "the cat",
+            "role": "subject",
+            "pos": {
+              "x": 3,
+              "y": 4
+            }
+          },
+          {
+            "text": "catches",
+            "role": "verb",
+            "pos": {
+              "x": 4,
+              "y": 4
+            }
+          },
+          {
+            "text": "a stick",
+            "role": "object",
+            "pos": {
+              "x": 5,
+              "y": 4
+            }
+          },
+          {
+            "text": "quickly",
+            "role": "adverb",
+            "pos": {
+              "x": 6,
+              "y": 4
+            }
+          },
+          {
+            "text": "the dog",
+            "role": "subject",
+            "pos": {
+              "x": 0,
+              "y": 5
+            }
+          },
+          {
+            "text": "chases",
+            "role": "verb",
+            "pos": {
+              "x": 10,
+              "y": 5
+            }
+          },
+          {
+            "text": "the ball",
+            "role": "object",
+            "pos": {
+              "x": 0,
+              "y": 4
+            }
+          },
+          {
+            "text": "today",
+            "role": "adverb",
+            "pos": {
+              "x": 10,
+              "y": 4
+            }
+          },
+          {
+            "text": "banana!",
+            "role": "decoy",
+            "pos": {
+              "x": 0,
+              "y": 6
+            }
+          },
+          {
+            "text": "blue",
+            "role": "decoy",
+            "pos": {
+              "x": 10,
+              "y": 6
+            }
+          }
+        ],
+        "structures": [
+          [
+            "subject",
+            "verb",
+            "object",
+            "adverb"
+          ]
+        ],
+        "frame": {
+          "x": 3,
+          "y": 1
+        },
+        "feedback": {
+          "solved": "✦ That's a sentence! Walk back to the portal ✦"
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "gram-enter",
+              "speaker": "narrator",
+              "text": "A longer frame: end it with how or when. Two words are decoys.",
+              "trigger": "on_enter",
+              "autoAdvance": false
+            }
+          ]
+        }
+      },
+      "solution": {
+        "sentence": "the cat catches a stick quickly"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "Grammar III",
+        "tags": [
+          "grammar",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
+        "features": [],
+        "flash_color": "#b99c44",
+        "grants_unlock": "grammar3.cleared",
+        "theme": "library"
+      }
+    }
+  ],
+  "progression": [
+    {
+      "puzzle_type": "grammar_build",
+      "levels": [
+        {
+          "id": "grammar-build-000",
+          "label": "Tutorial"
+        },
+        {
+          "id": "grammar-build-001",
+          "label": "Grammar I",
+          "unlock": "grammar.tutorial.cleared"
+        },
+        {
+          "id": "grammar-build-002",
+          "label": "Grammar II",
+          "unlock": "grammar1.cleared"
+        },
+        {
+          "id": "grammar-build-003",
+          "label": "Grammar III",
+          "unlock": "grammar2.cleared"
+        }
+      ]
+    }
+  ]
+}

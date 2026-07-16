@@ -1,0 +1,423 @@
+{
+  "pack_id": "vocab.room.en.v1",
+  "schema_version": "1.0.0",
+  "language": "en",
+  "puzzles": [
+    {
+      "id": "vocab-en-000",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "vocab_match",
+      "validator_type": "set_match",
+      "difficulty": 5,
+      "prompt": "Match each word with its SYNONYM.",
+      "payload": {
+        "tiles": [
+          {
+            "id": "arid",
+            "text": "arid",
+            "pos": {
+              "x": 2,
+              "y": 1
+            },
+            "help": "very dry — like a desert"
+          },
+          {
+            "id": "dry",
+            "text": "dry",
+            "pos": {
+              "x": 8,
+              "y": 1
+            },
+            "help": "without water"
+          },
+          {
+            "id": "brisk",
+            "text": "brisk",
+            "pos": {
+              "x": 2,
+              "y": 5
+            },
+            "help": "quick and energetic"
+          },
+          {
+            "id": "quick",
+            "text": "quick",
+            "pos": {
+              "x": 8,
+              "y": 5
+            },
+            "help": "fast"
+          },
+          {
+            "id": "tepid",
+            "text": "tepid",
+            "pos": {
+              "x": 6,
+              "y": 3
+            },
+            "help": "lukewarm — it matches nothing here"
+          }
+        ],
+        "pairs": [
+          [
+            "arid",
+            "dry"
+          ],
+          [
+            "brisk",
+            "quick"
+          ]
+        ],
+        "par": 32,
+        "feedback": {
+          "solved": "✦ Word wise! Walk back to the portal ✦",
+          "help_none": "Stand beside a word tile and press ? to see what it means.",
+          "mismatch": "Not a pair. Every wrong combination you test is counted (✗) — read before you shove."
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "lex-intro",
+              "speaker": "narrator",
+              "text": "These tiles are all English — push each word to its SYNONYM. Testing a wrong pair is counted (✗), so think before you shove. One tile here matches nothing at all.",
+              "trigger": "on_enter",
+              "autoAdvance": false
+            }
+          ]
+        }
+      },
+      "solution": {
+        "note": "the pairings are the solution"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "english synonyms",
+        "tags": [
+          "vocab",
+          "synonyms",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
+        "theme": "library",
+        "flash_color": "#ba3d3d",
+        "grants_unlock": "lex1.cleared"
+      }
+    },
+    {
+      "id": "vocab-en-001",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "vocab_match",
+      "validator_type": "set_match",
+      "difficulty": 6,
+      "prompt": "Three synonym pairs — and two words that match nothing.",
+      "payload": {
+        "tiles": [
+          {
+            "id": "candid",
+            "text": "candid",
+            "pos": {
+              "x": 2,
+              "y": 1
+            },
+            "help": "honest and direct"
+          },
+          {
+            "id": "honest",
+            "text": "honest",
+            "pos": {
+              "x": 8,
+              "y": 1
+            },
+            "help": "truthful"
+          },
+          {
+            "id": "frugal",
+            "text": "frugal",
+            "pos": {
+              "x": 2,
+              "y": 3
+            },
+            "help": "careful with money"
+          },
+          {
+            "id": "thrifty",
+            "text": "thrifty",
+            "pos": {
+              "x": 8,
+              "y": 3
+            },
+            "help": "not wasteful with money"
+          },
+          {
+            "id": "obsolete",
+            "text": "obsolete",
+            "pos": {
+              "x": 2,
+              "y": 5
+            },
+            "help": "no longer used"
+          },
+          {
+            "id": "outdated",
+            "text": "outdated",
+            "pos": {
+              "x": 8,
+              "y": 5
+            },
+            "help": "out of date"
+          },
+          {
+            "id": "furtive",
+            "text": "furtive",
+            "pos": {
+              "x": 5,
+              "y": 2
+            },
+            "help": "sneaky, secretive — no partner here"
+          },
+          {
+            "id": "lavish",
+            "text": "lavish",
+            "pos": {
+              "x": 5,
+              "y": 4
+            },
+            "help": "extravagant — no partner here"
+          }
+        ],
+        "pairs": [
+          [
+            "candid",
+            "honest"
+          ],
+          [
+            "frugal",
+            "thrifty"
+          ],
+          [
+            "obsolete",
+            "outdated"
+          ]
+        ],
+        "par": 38,
+        "reveal_charges": 3,
+        "feedback": {
+          "solved": "✦ Sharp vocabulary! Walk back to the portal ✦",
+          "help_none": "Stand beside a word tile and press ? to see what it means.",
+          "mismatch": "Not a pair. Every wrong combination you test is counted (✗) — read before you shove.",
+          "reveal_spent": "No reveal charges left — you'll have to reason it out from the words themselves."
+        }
+      },
+      "solution": {
+        "note": "the pairings are the solution"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "english synonyms",
+        "tags": [
+          "vocab",
+          "synonyms",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
+        "theme": "library",
+        "flash_color": "#ba3d3d",
+        "grants_unlock": "lex2.cleared"
+      }
+    },
+    {
+      "id": "vocab-en-002",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "vocab_match",
+      "validator_type": "set_match",
+      "difficulty": 7,
+      "prompt": "Beware: the closest word may be the OPPOSITE.",
+      "payload": {
+        "tiles": [
+          {
+            "id": "scarce",
+            "text": "scarce",
+            "pos": {
+              "x": 2,
+              "y": 2
+            },
+            "help": "hard to find — not enough of it"
+          },
+          {
+            "id": "plentiful",
+            "text": "plentiful",
+            "pos": {
+              "x": 5,
+              "y": 2
+            },
+            "help": "more than enough — the OPPOSITE of scarce"
+          },
+          {
+            "id": "rare",
+            "text": "rare",
+            "pos": {
+              "x": 9,
+              "y": 7
+            },
+            "help": "seldom seen"
+          },
+          {
+            "id": "vivid",
+            "text": "vivid",
+            "pos": {
+              "x": 1,
+              "y": 6
+            },
+            "help": "strikingly bright and alive"
+          },
+          {
+            "id": "dull",
+            "text": "dull",
+            "pos": {
+              "x": 5,
+              "y": 6
+            },
+            "help": "dim, boring — the OPPOSITE of vivid"
+          },
+          {
+            "id": "brilliant",
+            "text": "brilliant",
+            "pos": {
+              "x": 9,
+              "y": 1
+            },
+            "help": "dazzling, shining"
+          },
+          {
+            "id": "mundane",
+            "text": "mundane",
+            "pos": {
+              "x": 7,
+              "y": 4
+            },
+            "help": "ordinary, everyday — matches nothing here"
+          }
+        ],
+        "pairs": [
+          [
+            "scarce",
+            "rare"
+          ],
+          [
+            "vivid",
+            "brilliant"
+          ]
+        ],
+        "par": 46,
+        "reveal_charges": 2,
+        "feedback": {
+          "solved": "✦ You saw through the traps! Walk back to the portal ✦",
+          "help_none": "Stand beside a word tile and press ? to see what it means.",
+          "mismatch": "Opposites attract careless matchers — that pair is wrong (✗).",
+          "reveal_spent": "No reveal charges left — you'll have to reason it out from the words themselves."
+        }
+      },
+      "solution": {
+        "note": "the pairings are the solution"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "english synonyms",
+        "tags": [
+          "vocab",
+          "synonyms",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 6,
+          "y": 9
+        },
+        "theme": "library",
+        "flash_color": "#ba3d3d",
+        "grants_unlock": "lex3.cleared"
+      }
+    }
+  ],
+  "progression": [
+    {
+      "puzzle_type": "vocab_match",
+      "levels": [
+        {
+          "id": "vocab-en-000",
+          "label": "Lexicon I",
+          "unlock": "vocab3.cleared"
+        },
+        {
+          "id": "vocab-en-001",
+          "label": "Lexicon II",
+          "unlock": "lex1.cleared"
+        },
+        {
+          "id": "vocab-en-002",
+          "label": "Lexicon III",
+          "unlock": "lex2.cleared"
+        }
+      ]
+    }
+  ]
+}

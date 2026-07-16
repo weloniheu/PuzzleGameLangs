@@ -18,9 +18,9 @@ export const FALLBACK_FLASH = "#6aa0e8";
  *  code→blue, language→green, logic→yellow, grammar→purple. */
 const TYPE_FLASH: Partial<Record<PuzzleType, string>> = {
   code_build: "#3b6ea5",      // code → blue
-  match: "#3a9a55",           // language → green
-  combine: "#d8b13a",         // logic → yellow
-  sentence_build: "#8a5cc4",  // grammar → purple
+  match: "#ba3d3d",           // language → red
+  combine: "#5fbe6f",         // logic → green
+  sentence_build: "#b99c44",  // grammar → golden brown
 };
 
 /**

@@ -18,6 +18,22 @@ export function validateLogicPack(pack: LogicPack): string[] {
   if (!captures.includes("predicate")) errors.push("pattern has no `predicate` slot");
   if (!pack.pattern.directions?.length) errors.push("pattern declares no reading directions");
 
+  // --- typology LINT: the label is documentation, but it must not CONTRADICT the
+  //     declared pattern (the one thing the label actually claims). Predicate-first
+  //     (V…) orders must capture the predicate before the subject; S… orders the
+  //     reverse. Nothing here ever selects behavior from the label. ---
+  const claim = `${pack.typology?.pattern_family ?? ""} ${pack.typology?.word_order ?? ""}`.trim();
+  if (claim) {
+    const firstCapture = pack.pattern.slots.find((s) => s.capture)?.capture;
+    const predicateFirst = /predicate-first/i.test(claim) || /^v/i.test(pack.typology?.word_order ?? "");
+    const subjectFirst = /^s/i.test(pack.typology?.word_order ?? "");
+    if (predicateFirst && firstCapture !== "predicate") {
+      errors.push(`typology claims predicate-first ("${claim}") but the pattern captures "${firstCapture}" first`);
+    } else if (subjectFirst && firstCapture !== "subject") {
+      errors.push(`typology claims subject-first ("${claim}") but the pattern captures "${firstCapture}" first`);
+    }
+  }
+
   // --- vocab: build the text→entry index, flag dupes ---
   const vocab = new Map<string, (typeof pack.vocab)[number]>();
   for (const v of pack.vocab) {
@@ -37,6 +53,9 @@ export function validateLogicPack(pack: LogicPack): string[] {
       if (o.x < 0 || o.y < 0 || o.x >= p.width || o.y >= p.height) {
         errors.push(`${p.id}: object "${o.noun}" is out of bounds at (${o.x},${o.y})`);
       }
+    }
+    if (p.par !== undefined && (!Number.isInteger(p.par) || p.par < 1)) {
+      errors.push(`${p.id}: par must be a positive integer`);
     }
   }
   return errors;

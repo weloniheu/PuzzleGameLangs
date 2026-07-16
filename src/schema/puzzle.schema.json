@@ -32,6 +32,8 @@
         "combine",
         "code_build",
         "logic_rules",
+        "grammar_build",
+        "vocab_match",
         "predict_output",
         "fix_the_bug"
       ]
@@ -63,6 +65,11 @@
         "width": { "type": "integer", "minimum": 1 },
         "height": { "type": "integer", "minimum": 1 },
         "tiles": { "type": "array", "items": { "type": "string" } },
+        "theme": {
+          "type": "string",
+          "enum": ["grove", "tropical", "library", "tech"],
+          "description": "Visual skin token (CLOSED set). Content maps language/level → skin; the engine never derives a look from a language."
+        },
         "legend": { "type": "object", "additionalProperties": { "type": "string" } },
         "spawn": {
           "type": "object",
@@ -231,6 +238,102 @@
             "properties": {
               "pack_url": { "type": "string", "minLength": 1 },
               "board_id": { "type": "string", "minLength": 1 },
+              "dialogue": { "type": "object" }
+            }
+          },
+          "solution": { "type": "object" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "puzzle_type": { "const": "grammar_build" } } },
+      "then": {
+        "required": ["room"],
+        "properties": {
+          "payload": {
+            "type": "object",
+            "required": ["structure", "words", "structures", "frame"],
+            "properties": {
+              "structure": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": ["role", "label"],
+                  "properties": {
+                    "role": { "type": "string", "minLength": 1 },
+                    "label": { "type": "string" }
+                  }
+                }
+              },
+              "words": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": ["text", "role", "pos"],
+                  "properties": {
+                    "text": { "type": "string", "minLength": 1 },
+                    "role": { "type": "string", "minLength": 1 },
+                    "pos": {
+                      "type": "object",
+                      "required": ["x", "y"],
+                      "properties": { "x": { "type": "integer" }, "y": { "type": "integer" } }
+                    }
+                  }
+                }
+              },
+              "structures": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "array", "items": { "type": "string" } }
+              },
+              "frame": {
+                "type": "object",
+                "required": ["x", "y"],
+                "properties": { "x": { "type": "integer" }, "y": { "type": "integer" } }
+              },
+              "feedback": { "type": "object" },
+              "dialogue": { "type": "object" }
+            }
+          },
+          "solution": { "type": "object" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "puzzle_type": { "const": "vocab_match" } } },
+      "then": {
+        "required": ["room"],
+        "properties": {
+          "payload": {
+            "type": "object",
+            "required": ["tiles", "pairs"],
+            "properties": {
+              "tiles": {
+                "type": "array",
+                "minItems": 2,
+                "items": {
+                  "type": "object",
+                  "required": ["id", "text", "pos"],
+                  "properties": {
+                    "id": { "type": "string", "minLength": 1 },
+                    "text": { "type": "string", "minLength": 1 },
+                    "pos": {
+                      "type": "object",
+                      "required": ["x", "y"],
+                      "properties": { "x": { "type": "integer" }, "y": { "type": "integer" } }
+                    },
+                    "help": { "type": "string" }
+                  }
+                }
+              },
+              "pairs": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string" } }
+              },
+              "feedback": { "type": "object" },
               "dialogue": { "type": "object" }
             }
           },

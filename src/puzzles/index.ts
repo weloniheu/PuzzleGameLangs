@@ -9,10 +9,14 @@ import type { PuzzleType } from "../schema/types";
 import type { RoomPuzzleModule } from "../engine/puzzleModule";
 import { codingModule } from "./coding";
 import { logicModule } from "./logic";
+import { grammarModule } from "./grammar";
+import { vocabModule } from "./vocab";
 
 const MODULES: Partial<Record<PuzzleType, RoomPuzzleModule>> = {
   [codingModule.puzzleType]: codingModule,
   [logicModule.puzzleType]: logicModule,
+  [grammarModule.puzzleType]: grammarModule,
+  [vocabModule.puzzleType]: vocabModule,
 };
 
 /** The module registered for a puzzle type, or null (a room with no module still

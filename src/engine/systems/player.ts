@@ -8,10 +8,23 @@
 
 import type { Cell } from "../core/room";
 
-/** The slime element (recolorable via CSS). roomRenderer appends it into the world. */
+/** The slime element (recolorable via CSS). roomRenderer appends it into the world.
+ *  Flat cel-shaded body (STYLE 3j): a hard-edged shading pool, a solid teardrop
+ *  highlight + two specular dots, and facing-driven dot eyes. The OUTER .slime box
+ *  keeps the size/translate contract below; all styling lives on the children, and
+ *  `data-facing` (down/left/right/up) selects which eye dots show. */
 export function createSlime(): HTMLDivElement {
   const slime = document.createElement("div");
   slime.className = "slime";
+  slime.dataset.facing = "down";
+  const body = document.createElement("div");
+  body.className = "slime-body";
+  for (const part of ["slime-pool", "slime-shine", "slime-spec-a", "slime-spec-b", "slime-eye slime-eye-l", "slime-eye slime-eye-r"]) {
+    const el = document.createElement("div");
+    el.className = part;
+    body.appendChild(el);
+  }
+  slime.appendChild(body);
   return slime;
 }
 

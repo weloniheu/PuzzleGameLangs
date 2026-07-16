@@ -88,41 +88,43 @@
         "doors": [
           {
             "pos": {
-              "x": 2,
+              "x": 1,
               "y": 2
             },
-            "target": "py-code-hello-001",
+            "target": "py-code-tutorial-000",
             "label": "Coding",
-            "state": "open"
+            "state": "open",
+            "icon": "/assets/codeportal.png"
           },
           {
             "pos": {
-              "x": 5,
-              "y": 2
+              "x": 4,
+              "y": 1
             },
-            "target": "logic-rules-001",
+            "target": "logic-rules-000",
             "label": "Logic",
-            "state": "open"
+            "state": "open",
+            "icon": "/assets/logicportal.png"
           },
           {
             "pos": {
               "x": 8,
-              "y": 2
+              "y": 1
             },
-            "target": "",
+            "target": "grammar-build-000",
             "label": "Grammar",
-            "state": "coming_soon",
-            "beat": "🚧 Grammar portal — coming soon."
+            "state": "open",
+            "icon": "/assets/grammarprotal.png"
           },
           {
             "pos": {
               "x": 11,
               "y": 2
             },
-            "target": "",
+            "target": "vocab-match-000",
             "label": "Language",
-            "state": "coming_soon",
-            "beat": "🚧 Language portal — coming soon."
+            "state": "open",
+            "icon": "/assets/languageportal.png"
           }
         ],
         "features": [

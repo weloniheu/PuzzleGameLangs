@@ -84,12 +84,29 @@ export interface LogicPuzzle {
   words: WordPlacement[];
   /** Optional single-line nudge (Baba puzzles rarely need more). */
   hint?: string;
+  /** Move budget for the ★★★ rating (authored near-optimal solution length).
+   *  Solve ≤ par → ★★★, ≤ 1.6×par → ★★, any solve → ★. Omitted → no rating shown. */
+  par?: number;
+}
+
+/** DOCUMENTATION ONLY — the engine never reads it; the pack LINT only checks that the
+ *  label doesn't contradict the declared pattern (see packLoader). Records the basic
+ *  form so authors of structurally similar languages know which pack to COPY. A label
+ *  is a starting point, never a grammar guarantee. */
+export interface LogicPackTypology {
+  /** Basic order, e.g. "SVO", "VSO (predicate-first)". */
+  word_order?: string;
+  /** The rule-construction family, e.g. "copular-svo", "predicate-first-equational". */
+  pattern_family?: string;
+  notes?: string;
 }
 
 export interface LogicPack {
   pack_id: string;
   schema_version: string;
   language: string;      // OPEN label; the engine never branches on it.
+  /** Documentation-only authoring aid (lint-checked for self-consistency only). */
+  typology?: LogicPackTypology;
   pattern: RulePattern;
   vocab: VocabEntry[];
   puzzles: LogicPuzzle[];

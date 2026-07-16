@@ -95,6 +95,17 @@ export function pileAt(room: Room, x: number, y: number): RoomPile | null {
   return room.piles.find((p) => p.pos.x === x && p.pos.y === y) ?? null;
 }
 
+/** The top-left FLOOR cell — where a board module's grid begins (a wall-ringed room
+ *  puts it at (1,1)). Derived from the parsed grid, never hardcoded. */
+export function floorOrigin(room: Room): Cell {
+  for (let y = 0; y < room.height; y++) {
+    for (let x = 0; x < room.width; x++) {
+      if (room.grid[y][x] === "floor") return { x, y };
+    }
+  }
+  return { x: 0, y: 0 };
+}
+
 /** Whether a cell is inside the coding area (where tokens may be placed). */
 export function inCodingArea(room: Room, x: number, y: number): boolean {
   const a = room.codingArea;

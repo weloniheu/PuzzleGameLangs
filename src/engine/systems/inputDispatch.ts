@@ -36,7 +36,9 @@ export type Decision =
  * Decide what one keydown does, given the current focus context and the pending
  * sequence buffer. Mirrors the original handler exactly:
  *   • dialogue showing → advance on Enter/Space, skip on Esc (if skippable), swallow the rest
- *   • destination menu open → arrows/wksj move, Enter/Space selects, Esc escapes, swallow the rest
+ *   • destination menu open → the ACTIVE scheme's movement bindings move the cursor
+ *     (arrows/WASD, hjkl, or whatever the player rebound), Enter/Space selects,
+ *     Esc escapes, swallow the rest
  *   • Escape → the esc ladder
  *   • otherwise resolve buffer+key against bindings; a broken sequence RESTARTS from this key
  */
@@ -49,8 +51,13 @@ export function decide(ctx: DispatchContext, rawKey: string, pending: Key[], bin
   if (ctx.destMenuOpen) {
     if (rawKey === "Escape") return { kind: "dest-escape" };
     if (rawKey === "Enter" || rawKey === " " || rawKey === "Spacebar") return { kind: "dest-select" };
-    if (rawKey === "ArrowUp" || rawKey === "ArrowLeft" || rawKey === "w" || rawKey === "k") return { kind: "dest-move", delta: -1 };
-    if (rawKey === "ArrowDown" || rawKey === "ArrowRight" || rawKey === "s" || rawKey === "j") return { kind: "dest-move", delta: 1 };
+    // Menu navigation follows the player's CHOSEN movement keys: resolve this key
+    // against the active bindings and map the movement action onto the cursor.
+    const r = resolve(bindings, [normalizeKey(rawKey)]);
+    if (r.kind === "fire") {
+      if (r.action === "up" || r.action === "left") return { kind: "dest-move", delta: -1 };
+      if (r.action === "down" || r.action === "right") return { kind: "dest-move", delta: 1 };
+    }
     return { kind: "swallow" };
   }
   if (rawKey === "Escape") return { kind: "escape" }; // reserved: esc ladder

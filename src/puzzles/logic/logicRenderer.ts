@@ -65,6 +65,7 @@ const STYLE = `
   background: #c98a3a; color: #241a0f; }
 .logic-game .logic-word { font-size: 12px; font-weight: 800; letter-spacing: .3px;
   padding: 3px 5px; border-radius: 5px; text-transform: uppercase;
+  max-width: calc(var(--cell) - 4px); overflow-wrap: break-word; text-align: center;
   box-shadow: 0 2px 0 rgba(0,0,0,.3); }
 .logic-game .logic-word.noun { background: #e8b04b; color: #2a1d09; }
 .logic-game .logic-word.property { background: #6fae7a; color: #10240f; }

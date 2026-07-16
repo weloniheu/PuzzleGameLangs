@@ -223,6 +223,23 @@ export function createDialogue(deps: DialogueDeps): Dialogue {
     narratorEl.hidden = true;
   }
 
+  /** Render one portrait frame: an image URL becomes an <img> (the snake art frames);
+   *  anything else stays a text/emoji glyph. Content decides — the engine just renders. */
+  function setPortraitFrame(el: HTMLElement, frame: string) {
+    if (/\.(png|jpe?g|gif|webp|svg)$/i.test(frame)) {
+      let img = el.firstElementChild as HTMLImageElement | null;
+      if (!img || img.tagName !== "IMG") {
+        el.textContent = "";
+        img = document.createElement("img");
+        img.alt = "";
+        el.appendChild(img);
+      }
+      img.src = frame;
+    } else {
+      el.textContent = frame;
+    }
+  }
+
   function showPortraitBeat(beat: DialogueBeat, sp: DialogueSpeaker) {
     const el = dialogueEl!, portrait = dlgPortrait!, name = dlgName!, text = dlgText!, cue = dlgCue!;
     el.hidden = false;
@@ -231,7 +248,7 @@ export function createDialogue(deps: DialogueDeps): Dialogue {
     const frame2 = sp.portrait2;
     el.classList.toggle("from-right", side === "right");
     el.classList.toggle("from-left", side !== "right");
-    portrait.textContent = frame1;
+    setPortraitFrame(portrait, frame1);
     portrait.classList.add("talking");
     name.textContent = sp.name ?? beat.speaker;
     text.textContent = beat.text;
@@ -240,12 +257,23 @@ export function createDialogue(deps: DialogueDeps): Dialogue {
     positionPortrait();
     requestAnimationFrame(() => el.classList.add("shown")); // slide in
 
-    // Optional talking-mouth flicker between two frames (one frame is fine).
+    // Talking-mouth flicker between the two frames (frame1 = mouth closed / resting,
+    // frame2 = mouth open / talking). It flaps for about as long as the line takes to
+    // "say" (the narrator dwell), then rests on the CLOSED frame — mouth open only
+    // while talking. One frame is fine: no flicker.
     if (frame2 && frame2 !== frame1) {
       let alt = false;
+      let ticks = 0;
+      const maxTicks = Math.ceil(narratorDwell(beat.text, AUTO_PAUSE) / 220);
       talkTimer = window.setInterval(() => {
         alt = !alt;
-        portrait.textContent = alt ? frame2 : frame1;
+        if (++ticks >= maxTicks) {
+          clearInterval(talkTimer);
+          talkTimer = 0;
+          alt = false;
+          portrait.classList.remove("talking");
+        }
+        setPortraitFrame(portrait, alt ? frame2 : frame1);
       }, 220);
     }
 
