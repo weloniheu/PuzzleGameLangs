@@ -37,6 +37,58 @@ export type ValidatorType =
 
 export type Difficulty = 1 | 2 | 3 | 4 | 5;
 
+// --- Difficulty axes 2 & 3 (CLOSED sets — new engine dispatch axes, siblings of
+//     `difficulty`). The engine reads these like it reads `puzzle_type`; it still never
+//     reads `language` / `level` / `pack_id`, so CLAUDE.md Rule 1 holds. Content picks
+//     from these; a level is a (concept × tier × mode × modifiers) cell. ---
+
+/** Axis 2 — MECHANICAL depth (harder interaction, same concept). CLOSED. */
+export type MechanicTier =
+  | "guided"        // all tokens visible/near; punctuation pre-placed or omitted from the grammar
+  | "punctuation"   // punctuation is collectible AND required in the answer
+  | "randomized"    // token spawn positions shuffled per run (seeded)
+  | "env_clues"     // hints embedded in room decor (SCHEMA HOOK ONLY for now — no rendering)
+  | "concept_modes"; // debug / predict interaction modes (see CodeMode)
+
+/** Axis 2, tier 5 — the coding interaction MODE. CLOSED. Dispatched inside the coding module. */
+export type CodeMode = "assemble" | "debug" | "predict";
+
+/** A decor-embedded hint (env_clues tier). SCHEMA HOOK ONLY — rendering lands in a later
+ *  design task; the engine stores the shape but draws nothing yet. */
+export interface EnvClue {
+  decorId: string; // which decor object carries the clue
+  hint: string;    // the hint text embedded there
+}
+
+/** Per-level mechanical config. `tier` is the source of truth; the boolean switches default
+ *  FROM the tier (punctuation ⇒ punctuationRequired, randomized ⇒ randomizeTokens) and may be
+ *  set explicitly to compose off-tier variants. Omitting the whole block ⇒ guided + assemble. */
+export interface MechanicsConfig {
+  tier: MechanicTier;
+  /** Interaction mode. Omitted ⇒ "assemble". */
+  mode?: CodeMode;
+  /** Order-checker REQUIRES punctuation tokens (stops normalizing them away). */
+  punctuationRequired?: boolean;
+  /** Shuffle pile spawn positions at mount (seeded). */
+  randomizeTokens?: boolean;
+  /** Fixed seed for reproducible arrangements (authoring / repro). Omitted ⇒ random at mount. */
+  seed?: number;
+  /** Decor-embedded hints (SCHEMA HOOK ONLY — see EnvClue). */
+  envClues?: EnvClue[];
+}
+
+/** Axis 3 — stackable environmental MODIFIERS, orthogonal to concept and tier. CLOSED
+ *  registry (validated at load); defaults to [] for every level. */
+export type Modifier = "lowlight"; // grows as candidates are approved
+
+/** Closed set of teaching CONCEPTS a guided-tutorial beat can be tagged with (see
+ *  DialogueBeat.teaches). A beat replays only until its concept has been taught, so a
+ *  player who jumps to a harder tier is re-taught only the mechanics they haven't seen. */
+export type ConceptKey =
+  | "pickup" | "place" | "build" | "run"
+  | "punctuation" | "randomized" | "indent"
+  | "env_clues" | "debug" | "predict";
+
 // --- Type-specific payload / solution shapes (discriminated by puzzle_type) ---
 
 export interface MatchPayload {
@@ -288,6 +340,10 @@ export interface DialogueBeat {
   /** GUIDED TUTORIAL ONLY: if set, this beat does NOT auto-advance on a timer — it stays
    *  until the player actually performs this action, then advances. Omit for normal beats. */
   waitFor?: TutorialWaitFor;
+  /** GUIDED TUTORIAL ONLY: the CONCEPT this beat teaches. A tagged beat replays only until
+   *  that concept has been taught (persisted per key); an untagged beat keeps the legacy
+   *  per-room-id rule. Lets overlapping tier tutorials skip what a player already knows. */
+  teaches?: ConceptKey;
 }
 /** A speaker's portrait config (placeholder art is fine; portrait2 = optional talk frame). */
 export interface DialogueSpeaker {
@@ -483,6 +539,11 @@ export interface Puzzle {
   solution: Solution;
   hints: string[];
   metadata: PuzzleMetadata;
+  /** OPTIONAL Axis-2 mechanical config (tier / mode / switches). Omitted ⇒ guided + assemble,
+   *  so every existing level keeps its behavior unchanged (see MechanicsConfig). */
+  mechanics?: MechanicsConfig;
+  /** OPTIONAL Axis-3 stackable modifiers (validated against the closed registry). Omitted ⇒ []. */
+  modifiers?: Modifier[];
   /** OPTIONAL world layer. When present, the puzzle opens in a walkable room. */
   room?: RoomLayout;
   /** OPTIONAL label marking this as a tutorial room. Purely a content label — the engine

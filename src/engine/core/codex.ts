@@ -148,9 +148,29 @@ export function completeTutorial(id: string): void {
   if (!current.includes(id)) writeTutorials([...current, id]);
 }
 
-/** Clear every "seen" flag — the next visit to each room plays its guided tutorial again. */
+/** Clear every "seen" flag — the next visit to each room plays its guided tutorial again.
+ *  Also clears the per-CONCEPT taught flags below (they share this store). */
 export function resetTutorials(): void {
   writeTutorials([]);
+}
+
+// --- per-CONCEPT taught flags (overlap-aware tutorials; see DialogueBeat.teaches) ---------
+// A guided-tutorial beat tagged with `teaches` plays only until that CONCEPT has been shown.
+// Stored in the SAME list as room-id flags, namespaced with a "teach:" prefix so a concept
+// key and a room id can never collide. resetTutorials() clears both.
+
+const TAUGHT_PREFIX = "teach:";
+
+/** Has this teaching concept already been shown (in any tutorial, ever)? */
+export function hasTaught(concept: string): boolean {
+  return readTutorials().includes(`${TAUGHT_PREFIX}${concept}`);
+}
+
+/** Mark a teaching concept as shown — tagged beats for it won't replay until reset. */
+export function markTaught(concept: string): void {
+  const key = `${TAUGHT_PREFIX}${concept}`;
+  const current = readTutorials();
+  if (!current.includes(key)) writeTutorials([...current, key]);
 }
 
 /** Renders (or re-renders) the Codex panel into `el`. */

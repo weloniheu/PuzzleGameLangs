@@ -105,8 +105,8 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     //  gone with the last blocked door.)
     // Walk to the OPEN Coding door: the portal opens ITS OWN chooser (that type's
     // unlocked levels, titled by the door, no Hub entry — we're standing in it).
-    press(c, "ArrowLeft", 3); // (5,4) → (2,4)
-    press(c, "ArrowUp", 2);   // (2,4) → (2,2) Coding door
+    press(c, "ArrowLeft", 4); // (5,4) → (1,4)
+    press(c, "ArrowUp", 2);   // (1,4) → (1,2) Coding door
     press(c, "Enter");
     expect(text(c, ".room-destmenu-title")).toBe("Coding");
     expect([...c.querySelectorAll(".room-destmenu-option")].map((b) => b.textContent))
@@ -195,7 +195,8 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "Enter");      // tut-1
     press(c, "ArrowLeft");  // tut-2 (move) → (5,4)
     press(c, "Enter");      // tut-3 → tut-4 waits enter_door (input passes through)
-    press(c, "ArrowUp", 2); // (5,2) — the now-OPEN Logic door
+    press(c, "ArrowLeft");  // (5,4) → (4,4)
+    press(c, "ArrowUp", 3); // (4,4) → (4,1) — the now-OPEN Logic door
     press(c, "Enter");      // the portal's own chooser (only the Tutorial unlocked)
     press(c, "Enter");      // select it → the logic tutorial (module fetches its pack)
 
@@ -261,7 +262,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "ArrowLeft");  // tut-2 (move) → (5,4)
     press(c, "Enter");      // tut-3 → tut-4 waits enter_door
     press(c, "ArrowRight", 3); // (8,4)
-    press(c, "ArrowUp", 2);    // (8,2) — the now-OPEN Grammar door
+    press(c, "ArrowUp", 3);    // (8,4) → (8,1) — the now-OPEN Grammar door
     press(c, "Enter");         // the portal's own chooser (only the Tutorial unlocked)
     press(c, "Enter");         // select it → the grammar tutorial
 

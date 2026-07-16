@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { getUnlocks, hasUnlock, addUnlock, resetCodex, discover, getCodex } from "./codex";
+import {
+  getUnlocks, hasUnlock, addUnlock, resetCodex, discover, getCodex,
+  hasTaught, markTaught, hasCompletedTutorial, completeTutorial, resetTutorials,
+} from "./codex";
 
 // codex.ts reads/writes localStorage lazily inside its functions, so a tiny in-memory
 // stub installed before each test gives us a real round-trip in the node environment.
@@ -38,6 +41,33 @@ describe("Codex unlocks — persistence round-trip", () => {
   it("addUnlock ignores an empty key", () => {
     expect(addUnlock("")).toBe(false);
     expect(getUnlocks()).toEqual([]);
+  });
+});
+
+describe("taught concepts — overlap-aware tutorials (DialogueBeat.teaches)", () => {
+  it("starts untaught, then persists a taught concept", () => {
+    expect(hasTaught("pickup")).toBe(false);
+    markTaught("pickup");
+    expect(hasTaught("pickup")).toBe(true);
+  });
+
+  it("is idempotent and tracks concepts independently", () => {
+    markTaught("build");
+    markTaught("build");
+    expect(hasTaught("build")).toBe(true);
+    expect(hasTaught("run")).toBe(false); // a different concept is unaffected
+  });
+
+  it("a concept key never collides with an equal room-id tutorial flag", () => {
+    completeTutorial("pickup");        // a room whose id happens to be "pickup"
+    expect(hasCompletedTutorial("pickup")).toBe(true);
+    expect(hasTaught("pickup")).toBe(false); // the "teach:" namespace keeps them apart
+  });
+
+  it("resetTutorials clears taught concepts too", () => {
+    markTaught("place");
+    resetTutorials();
+    expect(hasTaught("place")).toBe(false);
   });
 });
 

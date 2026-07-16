@@ -2,6 +2,7 @@ import type {
   Puzzle, MatchPayload, MatchSolution, PuzzleType, ValidatorType,
   SentencePayload, ReorderSolution, CombinePayload, CombineSolution,
   CodeBuildPayload, CodeBuildSolution, LogicRulesPayload, GrammarBuildPayload, VocabMatchPayload,
+  MechanicTier, CodeMode, Modifier, ConceptKey, DialogueConfig,
 } from "../schema/types";
 import { hasRenderer } from "../engine/renderers";
 import { hasValidator } from "../engine/validators";
@@ -14,6 +15,13 @@ const PUZZLE_TYPES: PuzzleType[] = [
 const VALIDATOR_TYPES: ValidatorType[] = [
   "exact_match", "normalized_match", "set_match", "sequence_match",
   "combine_match", "code_match", "mc_index", "execution_match",
+];
+// Closed registries for the difficulty axes (mirrors the puzzle/validator arrays above).
+const MECHANIC_TIERS: MechanicTier[] = ["guided", "punctuation", "randomized", "env_clues", "concept_modes"];
+const CODE_MODES: CodeMode[] = ["assemble", "debug", "predict"];
+const MODIFIERS: Modifier[] = ["lowlight"];
+const CONCEPT_KEYS: ConceptKey[] = [
+  "pickup", "place", "build", "run", "punctuation", "randomized", "indent", "env_clues", "debug", "predict",
 ];
 
 /**
@@ -35,6 +43,21 @@ export function validatePuzzle(p: unknown): { ok: boolean; errors: string[] } {
   if (typeof o.difficulty !== "number" || o.difficulty < 1 || o.difficulty > 5) errors.push(`bad difficulty`);
   if (!Array.isArray(o.hints)) errors.push(`hints must be an array`);
   if (!o.metadata || typeof o.metadata.reviewed !== "boolean") errors.push(`metadata.reviewed (bool) required`);
+
+  // --- difficulty axes 2 & 3 (closed sets; optional, defaulting to guided/assemble/[]) ---
+  if (o.mechanics) {
+    if (!MECHANIC_TIERS.includes(o.mechanics.tier)) errors.push(`bad mechanics.tier "${o.mechanics.tier}"`);
+    if (o.mechanics.mode && !CODE_MODES.includes(o.mechanics.mode)) errors.push(`bad mechanics.mode "${o.mechanics.mode}"`);
+  }
+  if (o.modifiers !== undefined) {
+    if (!Array.isArray(o.modifiers)) errors.push(`modifiers must be an array`);
+    else for (const m of o.modifiers) if (!MODIFIERS.includes(m)) errors.push(`unknown modifier "${m}"`);
+  }
+  // Guided-tutorial beats may tag a CONCEPT key (see DialogueBeat.teaches) — reject typos.
+  const dlg = (o.payload as { dialogue?: DialogueConfig } | undefined)?.dialogue;
+  for (const b of dlg?.guided_tutorial ?? []) {
+    if (b.teaches && !CONCEPT_KEYS.includes(b.teaches)) errors.push(`unknown teaches concept "${b.teaches}"`);
+  }
 
   // --- the engine must actually be able to run it: a CARD renderer or a ROOM module ---
   if (o.puzzle_type && !hasRenderer(o.puzzle_type) && !moduleFor(o.puzzle_type)) {
@@ -155,6 +178,22 @@ export function validatePuzzle(p: unknown): { ok: boolean; errors: string[] } {
     if (!pay?.tokens?.length) errors.push(`code_build payload needs tokens`);
     if (!pay?.scenario) errors.push(`code_build payload needs a scenario`);
     if (typeof sol?.output !== "string") errors.push(`code_build solution needs an output string`);
+    // An ASSEMBLY room (one that declares the coding_area feature) is order-checked against
+    // solution.lines, so it must ship them. The hub — a code_build room WITHOUT a coding_area
+    // — is exempt (nothing to assemble there).
+    const isAssemblyRoom = o.room?.features?.includes("coding_area");
+    if (isAssemblyRoom && !(sol?.lines && sol.lines.length)) {
+      errors.push(`a coding_area code_build room needs solution.lines`);
+    }
+    // punctuation tier consistency: if punctuation is REQUIRED, it must actually be
+    // collectible (in the palette) AND present in the answer — else the level is mislabeled.
+    const requirePunct = o.mechanics?.punctuationRequired || o.mechanics?.tier === "punctuation";
+    if (requirePunct) {
+      const hasPunctToken = pay?.tokens?.some((t) => t.kind === "punctuation");
+      const answerHasPunct = sol?.lines?.some((l) => l.content.some((t) => /^[()[\]{}:;,]+$/.test(t.trim())));
+      if (!hasPunctToken) errors.push(`punctuation tier needs collectible punctuation tokens in the palette`);
+      if (!answerHasPunct) errors.push(`punctuation tier needs punctuation in solution.lines`);
+    }
   }
 
   return { ok: errors.length === 0, errors };

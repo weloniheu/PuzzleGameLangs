@@ -17,6 +17,7 @@ import type { DialogueBeat, DialogueConfig, DialogueSpeaker, Puzzle } from "../s
 import { parseRoom, step, pileAt, MOVE, type Cell, type Direction } from "./core/room";
 import {
   resetCodex, resetTutorials, getUnlocks, hasCompletedTutorial, completeTutorial,
+  hasTaught, markTaught,
 } from "./core/codex";
 import { createTeardown } from "./core/teardown";
 import { resolveFeatures, resolveInventorySlots } from "./core/roomFeatures";
@@ -530,9 +531,18 @@ export function mountRoom(
   // as ONE unskippable sequence, then marked seen (see codex.ts). Every later visit just
   // gets the normal on_enter greeting. Entering a room NEVER auto-opens the menu — the
   // auto-menu is a solve-time reward (see ctx.onSolved), so the first room plays normally.
-  if (guidedTutorialBeats.length && !hasCompletedTutorial(puzzle.id)) {
-    dialogue.play([...onEnterBeats, ...guidedTutorialBeats], {
-      onComplete: () => completeTutorial(puzzle.id),
+  // Overlap-aware filter: a beat tagged with `teaches` plays only until that CONCEPT has
+  // been taught (persisted per key); an untagged beat keeps the legacy per-room-id rule. So
+  // arriving at a harder tier re-teaches only the mechanics not yet seen (see codex.hasTaught).
+  const untaughtBeats = guidedTutorialBeats.filter((b) =>
+    b.teaches ? !hasTaught(b.teaches) : !hasCompletedTutorial(puzzle.id),
+  );
+  if (untaughtBeats.length) {
+    dialogue.play([...onEnterBeats, ...untaughtBeats], {
+      onComplete: () => {
+        for (const b of untaughtBeats) if (b.teaches) markTaught(b.teaches);
+        completeTutorial(puzzle.id); // legacy per-id flag still set (untagged tutorials rely on it)
+      },
       skippable: false,
     });
   } else if (onEnterBeats.length) {
