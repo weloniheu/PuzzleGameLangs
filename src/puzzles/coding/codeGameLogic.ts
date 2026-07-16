@@ -4,9 +4,10 @@
 // This EXTENDS the codeMatch philosophy (compare, never execute): we check the
 // ORDER of the placed content tokens against a stored answer. No eval, no sandbox.
 //
-// The answer is a LIST of lines so multi-line difficulties slot in later without a
-// rewrite; only line 0 is checked today. Difficulty 1 compares CONTENT token order
-// only — punctuation/quotes/parens are normalized away.
+// The answer is a LIST of lines so multi-line difficulties slot in later. The GUIDED
+// tier compares CONTENT token order only (punctuation/quotes/parens normalized away);
+// the PUNCTUATION tier keeps + requires punctuation via the `requirePunctuation` flag
+// threaded through checkLine/checkProgram/run (see normalizeContent).
 // ---------------------------------------------------------------------------
 
 /** One expected line: the content tokens in order + the indent it must sit at. */
@@ -93,17 +94,29 @@ export function evaluatedLines(placed: PlacedToken[], area: Rect | null | undefi
   });
 }
 
-// --- content normalization (difficulty 1: ignore punctuation/quotes/parens) ---
+// --- content normalization ----------------------------------------------------
+// GUIDED tier: punctuation/quotes/parens are ignored (content order only). The
+// PUNCTUATION tier flips `requirePunctuation` on, so `(` `)` `:` `,` are KEPT and
+// order-checked — the player must collect and place them. Quotes are stripped in
+// BOTH tiers (a string is a string; the quote chars are never the teaching point).
 const PUNCTUATION = /^[()[\]{}:;,]+$/;
 const isPunctuation = (t: string): boolean => PUNCTUATION.test(t);
 const stripQuotes = (t: string): string => t.replace(/^["']|["']$/g, "");
 
-/** Drop punctuation-only tokens and strip surrounding quotes, leaving content words. */
-export function normalizeContent(tokens: string[]): string[] {
+/** Normalize placed/answer tokens for comparison. Strips surrounding quotes always;
+ *  drops punctuation-only tokens UNLESS `requirePunctuation` (the punctuation tier). */
+export function normalizeContent(tokens: string[], requirePunctuation = false): string[] {
   return tokens
     .map((t) => t.trim())
-    .filter((t) => t.length > 0 && !isPunctuation(t))
+    .filter((t) => t.length > 0 && (requirePunctuation || !isPunctuation(t)))
     .map(stripQuotes);
+}
+
+/** Does this level's mechanics require punctuation in the answer? The punctuation TIER
+ *  implies it; a level may also set the flag explicitly to compose it onto another tier.
+ *  Shared by the coding module and its tests so the two never disagree. */
+export function requiresPunctuation(mechanics?: { tier?: string; punctuationRequired?: boolean }): boolean {
+  return !!(mechanics?.punctuationRequired || mechanics?.tier === "punctuation");
 }
 
 const sameOrder = (a: string[], b: string[]): boolean =>
@@ -123,9 +136,11 @@ const sameMultiset = (a: string[], b: string[]): boolean => {
  *   same words, different order           → "wrong-order"
  *   a word that isn't in the answer        → "wrong-word"
  */
-export function checkLine(placedContent: string[], actualIndent: number, line: AnswerLine): CheckResult {
-  const got = normalizeContent(placedContent);
-  const want = normalizeContent(line.content);
+export function checkLine(
+  placedContent: string[], actualIndent: number, line: AnswerLine, requirePunctuation = false,
+): CheckResult {
+  const got = normalizeContent(placedContent, requirePunctuation);
+  const want = normalizeContent(line.content, requirePunctuation);
   if (sameOrder(got, want)) {
     return actualIndent === line.indent ? { ok: true } : { ok: false, reason: "wrong-indent" };
   }
@@ -140,11 +155,11 @@ export function checkLine(placedContent: string[], actualIndent: number, line: A
  *   otherwise each line is order-checked in turn (first failure wins).
  * A missing expected line is checked as an empty line, which falls out as wrong-word.
  */
-export function checkProgram(lines: CodeLine[], answer: AnswerLine[]): CheckResult {
+export function checkProgram(lines: CodeLine[], answer: AnswerLine[], requirePunctuation = false): CheckResult {
   if (lines.length > answer.length) return { ok: false, reason: "extra-code" };
   for (let i = 0; i < answer.length; i++) {
     const got = lines[i] ?? { content: [], indent: answer[i].indent };
-    const res = checkLine(got.content, got.indent, answer[i]);
+    const res = checkLine(got.content, got.indent, answer[i], requirePunctuation);
     if (!res.ok) return res;
   }
   return { ok: true };
@@ -155,7 +170,9 @@ export function checkProgram(lines: CodeLine[], answer: AnswerLine[]): CheckResu
  * program is order-checked against the answer. Running while dirty/unbuilt yields
  * "build-first".
  */
-export function run(state: BuildState, lines: CodeLine[], answer: AnswerLine[]): CheckResult {
+export function run(
+  state: BuildState, lines: CodeLine[], answer: AnswerLine[], requirePunctuation = false,
+): CheckResult {
   if (!state.built) return { ok: false, reason: "build-first" };
-  return checkProgram(lines, answer);
+  return checkProgram(lines, answer, requirePunctuation);
 }

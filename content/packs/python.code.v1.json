@@ -9,6 +9,11 @@
         {
           "id": "py-code-tutorial-000",
           "label": "Tutorial"
+        },
+        {
+          "id": "py-code-punct-000",
+          "label": "P · Parentheses",
+          "unlock": "coding.tutorial.cleared"
         }
       ]
     }
@@ -259,6 +264,248 @@
           "marker": "❓"
         },
         "grants_unlock": "coding.tutorial.cleared",
+        "theme": "tech"
+      }
+    },
+    {
+      "id": "py-code-punct-000",
+      "schema_version": "1.0.0",
+      "language": "python",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 2,
+      "tutorial": true,
+      "mechanics": {
+        "tier": "punctuation"
+      },
+      "prompt": "Same words — but this time you place the parentheses too.",
+      "payload": {
+        "scenario": "The panel got stricter overnight. It won't accept a bare command anymore: a print needs its parentheses wrapped around the words.",
+        "goal": "This time YOU place the parentheses. Make it say: hello world",
+        "tokens": [
+          {
+            "text": "print",
+            "kind": "function",
+            "discovers": "print"
+          },
+          {
+            "text": "(",
+            "kind": "punctuation"
+          },
+          {
+            "text": ")",
+            "kind": "punctuation"
+          },
+          {
+            "text": "\"hello world\"",
+            "kind": "string"
+          }
+        ],
+        "beats": {
+          "build-first": "🐍 Nothing's built yet — stand on Build and press Enter first.",
+          "wrong-order": "The pieces are jumbled. It reads left to right: print, then an open paren, the words, then a close paren.",
+          "wrong-indent": "The line drifts off its margin. Slide it left until it sits against the wall (indent 0).",
+          "wrong-word": "Python needs parentheses around what print says. Grab ( and ) and wrap your words: print( \"hello world\" ).",
+          "extra-code": "There's more than one line in the panel. Keep a single print(\"hello world\") against the left wall.",
+          "success": "The stricter panel accepts it: hello world. Parentheses and all. ✅",
+          "first_run_no_build": "🐍 You ran before BUILDING. Stand on Build and press Enter first, then Run."
+        },
+        "terminal": {
+          "build": "$ python -m py_compile main.py",
+          "run": "$ python main.py"
+        },
+        "dialogue": {
+          "speakers": {
+            "snake": {
+              "name": "Sss",
+              "side": "left",
+              "portrait": "/assets/closeMouthSnake.png",
+              "portrait2": "/assets/talkingSnake.png"
+            },
+            "hint": {
+              "name": "Helper",
+              "side": "right",
+              "portrait": "🛰️",
+              "portrait2": "🛰️"
+            }
+          },
+          "on_enter": [
+            {
+              "id": "punct-enter-1",
+              "speaker": "snake",
+              "text": "Ssss — the panel's fussy today. It wants proper parentheses now.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "A print needs ( ) around its words. Both parens are on the floor now.",
+              "tag": "intro"
+            },
+            {
+              "text": "Order: print ( \"hello world\" )",
+              "tag": "after:wrong-order"
+            }
+          ],
+          "guided_tutorial": [
+            {
+              "id": "punct-tut-intro",
+              "speaker": "narrator",
+              "text": "New rule: print needs parentheses around its words. You'll collect the ( and ) yourself and place them in order.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false,
+              "teaches": "punctuation"
+            },
+            {
+              "id": "punct-tut-pickup",
+              "speaker": "narrator",
+              "text": "Walk up to a word on the floor and press I to pick it up.",
+              "trigger": "guided_tutorial",
+              "waitFor": "pickup",
+              "teaches": "pickup"
+            },
+            {
+              "id": "punct-tut-place",
+              "speaker": "narrator",
+              "text": "Walk to an empty tile and press P to place it down.",
+              "trigger": "guided_tutorial",
+              "waitFor": "place",
+              "teaches": "place"
+            },
+            {
+              "id": "punct-tut-build",
+              "speaker": "narrator",
+              "text": "Stand on Build and press Enter to compile your line.",
+              "trigger": "guided_tutorial",
+              "waitFor": "build",
+              "teaches": "build"
+            },
+            {
+              "id": "punct-tut-run",
+              "speaker": "narrator",
+              "text": "Stand on Run and press Enter to see what your line does.",
+              "trigger": "guided_tutorial",
+              "waitFor": "run",
+              "teaches": "run"
+            }
+          ]
+        }
+      },
+      "solution": {
+        "output": "hello world",
+        "lines": [
+          {
+            "content": [
+              "print",
+              "(",
+              "\"hello world\"",
+              ")"
+            ],
+            "indent": 0
+          }
+        ]
+      },
+      "hints": [
+        "A print needs ( ) around its words.",
+        "Both parentheses are on the floor — collect them too.",
+        "Try building: print(\"hello world\")"
+      ],
+      "metadata": {
+        "concept": "parentheses are yours to place",
+        "tags": [
+          "python",
+          "punctuation",
+          "output"
+        ],
+        "generator": "human",
+        "reviewed": true
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#....###....#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "piles": [
+          {
+            "token": "print",
+            "pos": {
+              "x": 9,
+              "y": 6
+            }
+          },
+          {
+            "token": "\"hello world\"",
+            "pos": {
+              "x": 9,
+              "y": 4
+            }
+          },
+          {
+            "token": "(",
+            "pos": {
+              "x": 10,
+              "y": 6
+            }
+          },
+          {
+            "token": ")",
+            "pos": {
+              "x": 11,
+              "y": 6
+            }
+          }
+        ],
+        "features": [
+          "terminal",
+          "coding_area",
+          "inventory"
+        ],
+        "coding_area": {
+          "x": 1,
+          "y": 1,
+          "width": 7,
+          "height": 7
+        },
+        "inventory_slots": 5,
+        "controls": [
+          {
+            "action": "build",
+            "label": "Build",
+            "pos": {
+              "x": 2,
+              "y": 7
+            }
+          },
+          {
+            "action": "run",
+            "label": "Run",
+            "pos": {
+              "x": 5,
+              "y": 7
+            }
+          }
+        ],
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 2
+          },
+          "marker": "❓"
+        },
+        "grants_unlock": "coding.punct.cleared",
         "theme": "tech"
       }
     }

@@ -4,6 +4,7 @@ import {
   checkProgram,
   run,
   normalizeContent,
+  requiresPunctuation,
   createBuildState,
   markBuilt,
   markDirty,
@@ -102,9 +103,55 @@ describe("checkProgram — the coding area must hold EXACTLY the answer's lines"
 });
 
 describe("normalizeContent", () => {
-  it("drops punctuation tokens and strips surrounding quotes", () => {
+  it("drops punctuation tokens and strips surrounding quotes (guided default)", () => {
     expect(normalizeContent(["print", "(", '"hello"', ")"])).toEqual(["print", "hello"]);
     expect(normalizeContent(["  print  ", "'x'"])).toEqual(["print", "x"]);
+  });
+
+  it("keeps punctuation but still strips quotes when requirePunctuation is on", () => {
+    expect(normalizeContent(["print", "(", '"hello"', ")"], true)).toEqual(["print", "(", "hello", ")"]);
+  });
+});
+
+// The PUNCTUATION tier: the same tokens that difficulty-1 ignores are now REQUIRED and
+// order-checked. The player has to collect and place the parens/colons/commas themselves.
+describe("punctuation tier — requirePunctuation keeps ( ) : , in the order-check", () => {
+  const ANS: AnswerLine[] = [{ content: ["print", "(", '"hello"', ")"], indent: 0 }];
+  const L = ANS[0];
+
+  it("accepts the fully punctuated line (quotes are still normalized away)", () => {
+    expect(checkLine(["print", "(", "hello", ")"], 0, L, true)).toEqual({ ok: true });
+    expect(checkLine(["print", "(", '"hello"', ")"], 0, L, true)).toEqual({ ok: true });
+  });
+
+  it("rejects a line MISSING required punctuation → wrong-word", () => {
+    expect(checkLine(["print", "hello"], 0, L, true)).toEqual({ ok: false, reason: "wrong-word" });
+  });
+
+  it("flags punctuation placed in the wrong order → wrong-order", () => {
+    expect(checkLine(["print", ")", "hello", "("], 0, L, true)).toEqual({ ok: false, reason: "wrong-order" });
+  });
+
+  it("guided mode (default) still treats that punctuation as optional", () => {
+    expect(checkLine(["print", "hello"], 0, L)).toEqual({ ok: true });
+  });
+
+  it("run threads the flag through the whole program", () => {
+    const built = markBuilt(createBuildState());
+    const good: CodeLine[] = [{ content: ["print", "(", "hello", ")"], indent: 0 }];
+    const missing: CodeLine[] = [{ content: ["print", "hello"], indent: 0 }];
+    expect(run(built, good, ANS, true)).toEqual({ ok: true });
+    expect(run(built, missing, ANS, true)).toEqual({ ok: false, reason: "wrong-word" });
+    expect(run(built, missing, ANS, false)).toEqual({ ok: true }); // guided ignores punctuation
+  });
+});
+
+describe("requiresPunctuation — derived from a level's mechanics", () => {
+  it("true for the punctuation tier or an explicit flag; false otherwise", () => {
+    expect(requiresPunctuation({ tier: "punctuation" })).toBe(true);
+    expect(requiresPunctuation({ tier: "guided", punctuationRequired: true })).toBe(true);
+    expect(requiresPunctuation({ tier: "guided" })).toBe(false);
+    expect(requiresPunctuation(undefined)).toBe(false);
   });
 });
 

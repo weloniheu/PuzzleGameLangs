@@ -63,6 +63,9 @@ export interface CodingAreaDeps {
   answer: AnswerLine[];
   /** The output echoed on success (CONTENT). */
   output: string;
+  /** Punctuation tier: the order-checker keeps + requires punctuation tokens (see
+   *  codeGameLogic.requiresPunctuation). Derived from the puzzle's mechanics. */
+  requirePunctuation: boolean;
   /** Pretend shell command flavor (CONTENT). */
   termCmds: { build: string; run: string };
   /** Echo into the terminal; a room without one echoes nowhere (no-op). */
@@ -222,7 +225,7 @@ export function createCodingArea(deps: CodingAreaDeps): CodingArea {
 
   function doRun() {
     dialogue.notify("run"); // GUIDED TUTORIAL: satisfies a step waiting on "run" (any attempt)
-    const res = runProgram(buildState, currentProgram(), answer);
+    const res = runProgram(buildState, currentProgram(), answer, deps.requirePunctuation);
     // Terminal = pretend shell transcript (flavor); the SNAKE portrait delivers the beat.
     const fb = runFeedback(res, termCmds, deps.output);
     deps.termWrite(fb.term.lines, fb.term.state);

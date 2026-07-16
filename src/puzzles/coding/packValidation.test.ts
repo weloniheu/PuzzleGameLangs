@@ -13,11 +13,13 @@ describe("python.code.v1 — every puzzle passes load validation", () => {
     });
   }
 
-  it("the migrated tutorial is the sole authored level (guided tier) and ends on hello world", () => {
+  it("guided tutorial leads the ladder (ends on hello world); the punctuation tier follows", () => {
     const prog = pack.progression?.find((x) => x.puzzle_type === "code_build");
-    expect(prog?.levels.map((l) => l.id)).toEqual(["py-code-tutorial-000"]);
+    expect(prog?.levels.map((l) => l.id)).toEqual(["py-code-tutorial-000", "py-code-punct-000"]);
     const tut = (pack.puzzles as unknown as Puzzle[]).find((p) => p.id === "py-code-tutorial-000")!;
     expect(tut.mechanics?.tier).toBe("guided");
     expect((tut.solution as { output: string }).output).toBe("hello world");
+    const punct = (pack.puzzles as unknown as Puzzle[]).find((p) => p.id === "py-code-punct-000")!;
+    expect(punct.mechanics?.tier).toBe("punctuation");
   });
 });

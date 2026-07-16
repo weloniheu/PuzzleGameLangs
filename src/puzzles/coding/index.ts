@@ -10,7 +10,7 @@ import type { CodeBuildPayload, CodeBuildSolution, DialogueBeat, Puzzle } from "
 import type { EngineContext, MountedPuzzle, RoomPuzzleModule } from "../../engine/puzzleModule";
 import { createTerminal, type Terminal } from "./terminal";
 import { createCodingArea } from "./codingArea";
-import type { AnswerLine } from "./codeGameLogic";
+import { requiresPunctuation, type AnswerLine } from "./codeGameLogic";
 
 export const codingModule: RoomPuzzleModule = {
   puzzleType: "code_build",
@@ -48,6 +48,7 @@ export const codingModule: RoomPuzzleModule = {
       ctx,
       answer,
       output: solution.output,
+      requirePunctuation: requiresPunctuation(puzzle.mechanics), // punctuation tier keeps ( ) : ,
       termCmds,
       termWrite: (lines, state) => terminal?.write(lines, state), // no terminal → nowhere to echo
       snakeBeat,

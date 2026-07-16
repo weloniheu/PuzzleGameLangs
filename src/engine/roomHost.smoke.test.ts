@@ -17,7 +17,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { LevelEntry, Pack, Puzzle, PuzzleType } from "../schema/types";
 import { createRoomManager, type RoomManager } from "./roomManager";
-import { addUnlock } from "./core/codex";
+import { addUnlock, markTaught } from "./core/codex";
 import { roomSettings } from "./systems/settingsPanel";
 
 const ROOT = join(__dirname, "..", "..");
@@ -169,12 +169,13 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "Escape");
     expect((c.querySelector(".room-settings-panel") as HTMLElement).hidden).toBe(true);
 
-    // Menu portal at spawn → chooser lists Hub + Tutorial (no further level authored yet).
+    // Menu portal at spawn → chooser lists Hub + Tutorial + the JUST-UNLOCKED punctuation tier.
     press(c, "ArrowRight");        // (5,7) → (6,7) spawn / menu portal
     press(c, "Enter");
     const options = [...c.querySelectorAll(".room-destmenu-option")].map((b) => b.textContent);
-    expect(options).toHaveLength(2);
+    expect(options).toHaveLength(3);
     expect(options[0]).toContain("Hub");
+    expect(options).toContain("P · Parentheses");
     press(c, "Enter");             // select Hub → teleport away
 
     // --- BACK IN THE HUB: fresh mount, tutorial done (completed → no beats) ---
@@ -430,5 +431,81 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "Escape"); // esc ladder: exit inventory, do NOT open settings
     expect(c.querySelector(".room-inventory")!.classList.contains("focused")).toBe(false);
     expect((c.querySelector(".room-settings-panel") as HTMLElement).hidden).toBe(true);
+  });
+
+  // The punctuation TIER, driven through the real mount (proves the module threads
+  // requirePunctuation into doRun — not just the pure checker). The guided tutorial is
+  // pre-satisfied (every concept marked taught) so these drive the mechanic directly.
+  const skipCodingTutorial = () => {
+    for (const k of ["pickup", "place", "build", "run", "punctuation"]) markTaught(k);
+  };
+
+  it("punctuation level: collecting and placing the parens yourself solves it", () => {
+    const { container: c, manager } = world;
+    skipCodingTutorial();
+    manager.enter("py-code-punct-000");
+    press(c, "Enter"); // dismiss the snake on_enter greeting (guided tutorial is skipped)
+
+    // Collect print / ( / "hello world" / ) — in the order they'll be placed (FIFO).
+    press(c, "ArrowUp");           // (6,6)
+    press(c, "ArrowRight", 3);     // (9,6) print
+    press(c, "i");
+    press(c, "ArrowRight");        // (10,6) (
+    press(c, "i");
+    press(c, "ArrowUp", 2);        // (10,4)
+    press(c, "ArrowLeft");         // (9,4) "hello world"
+    press(c, "i");
+    press(c, "ArrowRight", 2);     // (11,4)
+    press(c, "ArrowDown", 2);      // (11,6) )
+    press(c, "i");
+
+    // Place print ( "hello world" ) at indent 0: (1,1) (2,1) (3,1) (4,1).
+    press(c, "ArrowUp", 5);        // (11,1)
+    press(c, "ArrowLeft", 10);     // (1,1)
+    press(c, "p");
+    press(c, "ArrowRight"); press(c, "p"); // (2,1)
+    press(c, "ArrowRight"); press(c, "p"); // (3,1)
+    press(c, "ArrowRight"); press(c, "p"); // (4,1)
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(4);
+
+    // Build, then Run → success.
+    press(c, "ArrowDown", 6);      // (4,1) → (4,7)
+    press(c, "ArrowLeft", 2);      // (2,7) Build
+    press(c, "Enter");
+    press(c, "ArrowRight", 3);     // (5,7) Run
+    press(c, "Enter");
+    expect(c.querySelector(".room-terminal-body")!.classList.contains("term-success")).toBe(true);
+    expect(text(c, ".room-terminal-body")).toContain("hello world");
+    manager.teardown();
+  });
+
+  it("punctuation level: omitting the parens does NOT solve it (the tier is enforced in-mount)", () => {
+    const { container: c, manager } = world;
+    skipCodingTutorial();
+    manager.enter("py-code-punct-000");
+    press(c, "Enter"); // dismiss on_enter
+
+    // Collect only print and "hello world" — skip the parens.
+    press(c, "ArrowUp");           // (6,6)
+    press(c, "ArrowRight", 3);     // (9,6) print
+    press(c, "i");
+    press(c, "ArrowUp", 2);        // (9,4) "hello world"
+    press(c, "i");
+
+    // Place print "hello world" (no parens) at (1,1) (2,1).
+    press(c, "ArrowUp", 3);        // (9,1)
+    press(c, "ArrowLeft", 8);      // (1,1)
+    press(c, "p");
+    press(c, "ArrowRight"); press(c, "p"); // (2,1)
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(2);
+
+    // Build + Run → rejected (guided mode would have accepted this; the tier does not).
+    press(c, "ArrowDown", 6);      // (2,1) → (2,7) Build
+    press(c, "Enter");
+    press(c, "ArrowRight", 3);     // (5,7) Run
+    press(c, "Enter");
+    expect(c.querySelector(".room-terminal-body")!.classList.contains("term-success")).toBe(false);
+    expect(text(c, ".room-terminal-body")).toContain("no output");
+    manager.teardown();
   });
 });
