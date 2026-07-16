@@ -5,28 +5,37 @@
 import { describe, it, expect } from "vitest";
 import pack from "../../../content/packs/python.code.v1.json";
 import {
-  run, createBuildState, markBuilt, requiresPunctuation, type AnswerLine, type CodeLine,
+  run, runAny, createBuildState, markBuilt, requiresPunctuation, type AnswerLine, type CodeLine,
 } from "./codeGameLogic";
 import type { Puzzle, CodeBuildSolution, RoomPile } from "../../schema/types";
 
 const puzzles = pack.puzzles as unknown as Puzzle[];
 const built = () => markBuilt(createBuildState());
 const asProgram = (answer: AnswerLine[]): CodeLine[] => answer.map((l) => ({ ...l }));
+// The accepted set, exactly as the coding module builds it (accepted[], else lines as one variant).
+const acceptedOf = (p: Puzzle): AnswerLine[][] => {
+  const sol = p.solution as CodeBuildSolution;
+  return sol.accepted ?? (sol.lines ? [sol.lines] : []);
+};
 
 describe("python.code.v1 — every level is solvable from its own floor tokens", () => {
   for (const p of puzzles) {
-    const answer = (p.solution as CodeBuildSolution).lines ?? [];
+    const accepted = acceptedOf(p);
     const piles = (p.room?.piles ?? []) as RoomPile[];
     const punct = requiresPunctuation(p.mechanics);
 
-    it(`${p.id}: the authored solution passes its own order-check`, () => {
-      expect(answer.length).toBeGreaterThan(0);
-      expect(run(built(), asProgram(answer), answer, punct)).toEqual({ ok: true });
+    it(`${p.id}: every accepted variant passes the order-check`, () => {
+      expect(accepted.length).toBeGreaterThan(0);
+      for (const variant of accepted) {
+        expect(runAny(built(), asProgram(variant), accepted, punct)).toEqual({ ok: true });
+      }
     });
 
-    it(`${p.id}: every token the answer needs is on the floor`, () => {
+    it(`${p.id}: every token an accepted variant needs is on the floor`, () => {
       const floor = piles.map((pile) => pile.token);
-      for (const line of answer) for (const tok of line.content) expect(floor).toContain(tok);
+      for (const variant of accepted) for (const line of variant) for (const tok of line.content) {
+        expect(floor).toContain(tok);
+      }
     });
   }
 });

@@ -13,13 +13,21 @@ describe("python.code.v1 — every puzzle passes load validation", () => {
     });
   }
 
-  it("base tutorial leads the ladder (ends on hello world); the explicit tier follows", () => {
+  it("ladder: base tutorial → base variables → explicit parentheses, with the right tiers", () => {
+    const byId = (id: string) => (pack.puzzles as unknown as Puzzle[]).find((p) => p.id === id)!;
     const prog = pack.progression?.find((x) => x.puzzle_type === "code_build");
-    expect(prog?.levels.map((l) => l.id)).toEqual(["py-code-tutorial-000", "py-code-explicit-000"]);
-    const tut = (pack.puzzles as unknown as Puzzle[]).find((p) => p.id === "py-code-tutorial-000")!;
-    expect(tut.mechanics?.tier).toBe("base");
-    expect((tut.solution as { output: string }).output).toBe("hello world");
-    const explicit = (pack.puzzles as unknown as Puzzle[]).find((p) => p.id === "py-code-explicit-000")!;
-    expect(explicit.mechanics?.tier).toBe("explicit");
+    expect(prog?.levels.map((l) => l.id)).toEqual([
+      "py-code-tutorial-000", "py-code-base-001", "py-code-explicit-000",
+    ]);
+    expect(byId("py-code-tutorial-000").mechanics?.tier).toBe("base");
+    expect((byId("py-code-tutorial-000").solution as { output: string }).output).toBe("hello world");
+    expect(byId("py-code-base-001").mechanics?.tier).toBe("base");
+    expect(byId("py-code-explicit-000").mechanics?.tier).toBe("explicit");
+  });
+
+  it("the base variables level is a genuine multi-line program", () => {
+    const vars = (pack.puzzles as unknown as Puzzle[]).find((p) => p.id === "py-code-base-001")!;
+    expect((vars.solution as { lines?: unknown[] }).lines?.length).toBe(2);
+    expect(vars.mechanics?.goalSpec?.output).toBe("5");
   });
 });

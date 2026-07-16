@@ -347,6 +347,13 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   display: block; font-family: "IBM Plex Mono", monospace; font-weight: 400;
   font-size: 10px; color: #c9a877;
 }
+/* Goal chip (base tier: show desired output/description, never the target code). */
+.room-hud-goal {
+  flex: 0 0 auto; max-width: 42%;
+  font-family: "IBM Plex Mono", monospace; font-size: 11px; color: #ffe8b0;
+  background: rgba(0, 0, 0, 0.22); border-radius: 6px; padding: 3px 8px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .room-hint { color: #c9a877; font-size: 0.85rem; }
 .room-gear {
   flex: none; cursor: pointer;

@@ -173,8 +173,9 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "ArrowRight");        // (5,7) → (6,7) spawn / menu portal
     press(c, "Enter");
     const options = [...c.querySelectorAll(".room-destmenu-option")].map((b) => b.textContent);
-    expect(options).toHaveLength(3);
+    expect(options).toHaveLength(4); // Hub + Tutorial + the two just-unlocked levels
     expect(options[0]).toContain("Hub");
+    expect(options).toContain("Variables");
     expect(options).toContain("Parentheses");
     press(c, "Enter");             // select Hub → teleport away
 
@@ -506,6 +507,57 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "Enter");
     expect(c.querySelector(".room-terminal-body")!.classList.contains("term-success")).toBe(false);
     expect(text(c, ".room-terminal-body")).toContain("no output");
+    manager.teardown();
+  });
+
+  it("base 'Variables' level: a two-line program (define x, then print it) solves it", () => {
+    const { container: c, manager } = world;
+    skipCodingTutorial();
+    markTaught("compose");
+    manager.enter("py-code-base-001");
+    press(c, "Enter"); // dismiss on_enter (guided tutorial skipped)
+
+    // The goal chip shows the desired output/description — never the target code.
+    expect(text(c, ".room-hud-goal")).toContain("Store 5 in x");
+
+    // Batch 1: collect x, =, 5 and lay line 0 "x = 5" at row 1.
+    press(c, "ArrowRight", 5);  // (6,7) → (11,7)
+    press(c, "ArrowUp", 4);     // (11,3) x pile
+    press(c, "i");
+    press(c, "ArrowDown");      // (11,4)
+    press(c, "ArrowLeft", 2);   // (9,4) = pile
+    press(c, "i");
+    press(c, "ArrowRight", 2);  // (11,4)
+    press(c, "ArrowDown", 2);   // (11,6) 5 pile
+    press(c, "i");
+    press(c, "ArrowUp", 5);     // (11,1)
+    press(c, "ArrowLeft", 10);  // (1,1)
+    press(c, "p");                          // x
+    press(c, "ArrowRight"); press(c, "p");  // (2,1) =
+    press(c, "ArrowRight"); press(c, "p");  // (3,1) 5
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(3);
+
+    // Batch 2: collect print, x and lay line 1 "print x" at row 2.
+    press(c, "ArrowDown", 6);   // (3,1) → (3,7)
+    press(c, "ArrowRight", 6);  // (9,7)
+    press(c, "ArrowUp");        // (9,6) print pile
+    press(c, "i");
+    press(c, "ArrowRight", 2);  // (11,6)
+    press(c, "ArrowUp", 3);     // (11,3) x pile
+    press(c, "i");
+    press(c, "ArrowUp");        // (11,2) — climb above the row-3 wall block before going left
+    press(c, "ArrowLeft", 10);  // (1,2) — row 2 is clear of the walls
+    press(c, "p");                          // print at (1,2)
+    press(c, "ArrowRight"); press(c, "p");  // (2,2) x
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(5);
+
+    // Build + Run → success, output 5.
+    press(c, "ArrowDown", 5);   // (2,2) → (2,7) Build
+    press(c, "Enter");
+    press(c, "ArrowRight", 3);  // (5,7) Run
+    press(c, "Enter");
+    expect(c.querySelector(".room-terminal-body")!.classList.contains("term-success")).toBe(true);
+    expect(text(c, ".room-terminal-body")).toContain("5");
     manager.teardown();
   });
 });

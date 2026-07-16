@@ -19,7 +19,8 @@ export const codingModule: RoomPuzzleModule = {
     // Code-game CONTENT (engine hardcodes none): the answer, beats, and terminal flavor.
     const payload = puzzle.payload as CodeBuildPayload;
     const solution = puzzle.solution as CodeBuildSolution;
-    const answer: AnswerLine[] = solution.lines ?? [];
+    // Accepted programs: `accepted` when the level lists alternates, else `lines` as one variant.
+    const accepted: AnswerLine[][] = solution.accepted ?? (solution.lines ? [solution.lines] : []);
     const beats: Record<string, string> = payload.beats ?? {};
     const termCmds = payload.terminal ?? { build: "$ build", run: "$ run" };
 
@@ -46,7 +47,7 @@ export const codingModule: RoomPuzzleModule = {
 
     const area = createCodingArea({
       ctx,
-      answer,
+      accepted,
       output: solution.output,
       requirePunctuation: requiresPunctuation(puzzle.mechanics), // punctuation tier keeps ( ) : ,
       termCmds,

@@ -177,3 +177,38 @@ export function run(
   if (!state.built) return { ok: false, reason: "build-first" };
   return checkProgram(lines, answer, requirePunctuation);
 }
+
+// --- multiple accepted solutions (base tier: genuinely different programs can be correct) ---
+// We NEVER execute (Rule 3); "behavior matching" = order-matching against ANY author-listed
+// accepted program. On failure we report the CLOSEST variant's reason (lower rank = nearer to
+// correct) so the feedback beat is the most helpful one.
+const REASON_RANK: Record<CheckReason, number> = {
+  "wrong-indent": 0, // content & order right, just the indent
+  "wrong-order": 1,  // right words, wrong order
+  "wrong-word": 2,   // a word that isn't in the answer
+  "extra-code": 3,   // too many lines
+  "build-first": 4,  // not built (handled before per-variant checks)
+};
+
+/** Order-check the program against a LIST of accepted answers: ok if it matches ANY; otherwise
+ *  the closest variant's failure reason. An empty list behaves like an empty answer (wrong-word). */
+export function checkProgramAny(
+  lines: CodeLine[], accepted: AnswerLine[][], requirePunctuation = false,
+): CheckResult {
+  const variants = accepted.length ? accepted : [[]];
+  let best: Extract<CheckResult, { ok: false }> | null = null;
+  for (const answer of variants) {
+    const res = checkProgram(lines, answer, requirePunctuation);
+    if (res.ok) return { ok: true };
+    if (!best || REASON_RANK[res.reason] < REASON_RANK[best.reason]) best = res;
+  }
+  return best ?? { ok: false, reason: "wrong-word" };
+}
+
+/** run(), but against a set of accepted programs (see checkProgramAny). */
+export function runAny(
+  state: BuildState, lines: CodeLine[], accepted: AnswerLine[][], requirePunctuation = false,
+): CheckResult {
+  if (!state.built) return { ok: false, reason: "build-first" };
+  return checkProgramAny(lines, accepted, requirePunctuation);
+}

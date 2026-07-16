@@ -12,7 +12,7 @@ import type { DialogueBeat, RoomControl } from "../../schema/types";
 import { pileAt, type Cell } from "../../engine/core/room";
 import type { EngineContext } from "../../engine/puzzleModule";
 import {
-  run as runProgram,
+  runAny as runProgram,
   createBuildState,
   markBuilt,
   markDirty,
@@ -59,8 +59,9 @@ export function runFeedback(
 
 export interface CodingAreaDeps {
   ctx: EngineContext;
-  /** The single correct answer (CONTENT — see CLAUDE.md Rule 2). */
-  answer: AnswerLine[];
+  /** The accepted programs (order-checked; the placed program passes if it matches ANY —
+   *  base tier may list several). `solution.lines` is sugar for one variant. CONTENT (Rule 2). */
+  accepted: AnswerLine[][];
   /** The output echoed on success (CONTENT). */
   output: string;
   /** Punctuation tier: the order-checker keeps + requires punctuation tokens (see
@@ -86,7 +87,7 @@ export interface CodingArea {
 }
 
 export function createCodingArea(deps: CodingAreaDeps): CodingArea {
-  const { ctx, answer, termCmds } = deps;
+  const { ctx, accepted, termCmds } = deps;
   const room = ctx.room;
   const hasCodingArea = ctx.features.has("coding_area");
   const dialogue = ctx.dialogue;
@@ -225,7 +226,7 @@ export function createCodingArea(deps: CodingAreaDeps): CodingArea {
 
   function doRun() {
     dialogue.notify("run"); // GUIDED TUTORIAL: satisfies a step waiting on "run" (any attempt)
-    const res = runProgram(buildState, currentProgram(), answer, deps.requirePunctuation);
+    const res = runProgram(buildState, currentProgram(), accepted, deps.requirePunctuation);
     // Terminal = pretend shell transcript (flavor); the SNAKE portrait delivers the beat.
     const fb = runFeedback(res, termCmds, deps.output);
     deps.termWrite(fb.term.lines, fb.term.state);

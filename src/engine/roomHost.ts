@@ -136,6 +136,18 @@ export function mountRoom(
   hudTitle.className = "room-hud-title";
   hudTitle.textContent = puzzle.metadata?.concept ?? "";
   topbar.appendChild(hudTitle);
+  // Goal display (CONTENT): the desired output / plain-language description — NEVER the target
+  // code (no tier reveals the answer; see MechanicsConfig.goalSpec). Generic: any room puzzle
+  // may declare a goalSpec; the engine never branches on type. Omitted ⇒ no goal line.
+  const goalSpec = puzzle.mechanics?.goalSpec;
+  if (goalSpec && (goalSpec.description || goalSpec.output)) {
+    const goalEl = document.createElement("div");
+    goalEl.className = "room-hud-goal";
+    goalEl.textContent = goalSpec.description
+      ? `🎯 ${goalSpec.description}`
+      : `🎯 Output: ${goalSpec.output}`;
+    topbar.appendChild(goalEl);
+  }
   container.appendChild(topbar);
 
   // --- stage (centers the viewport in the available space) → viewport → world ---

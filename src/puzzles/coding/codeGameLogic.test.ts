@@ -2,7 +2,9 @@ import { describe, it, expect } from "vitest";
 import {
   checkLine,
   checkProgram,
+  checkProgramAny,
   run,
+  runAny,
   normalizeContent,
   requiresPunctuation,
   createBuildState,
@@ -143,6 +145,30 @@ describe("punctuation tier — requirePunctuation keeps ( ) : , in the order-che
     expect(run(built, good, ANS, true)).toEqual({ ok: true });
     expect(run(built, missing, ANS, true)).toEqual({ ok: false, reason: "wrong-word" });
     expect(run(built, missing, ANS, false)).toEqual({ ok: true }); // guided ignores punctuation
+  });
+});
+
+// Base tier accepts multiple valid programs (order-matched against a SET — never executed).
+describe("checkProgramAny / runAny — multiple accepted solutions", () => {
+  const V1: AnswerLine[] = [{ content: ["x", "=", "5"], indent: 0 }, { content: ["print", "x"], indent: 0 }];
+  const V2: AnswerLine[] = [{ content: ["y", "=", "5"], indent: 0 }, { content: ["print", "y"], indent: 0 }];
+  const accepted = [V1, V2];
+  const prog = (v: AnswerLine[]): CodeLine[] => v.map((l) => ({ ...l }));
+
+  it("passes when the program matches ANY accepted variant", () => {
+    expect(checkProgramAny(prog(V1), accepted)).toEqual({ ok: true });
+    expect(checkProgramAny(prog(V2), accepted)).toEqual({ ok: true });
+  });
+
+  it("on no match, reports the CLOSEST variant's reason", () => {
+    // line 0 reversed → wrong-order vs V1 (right words), only wrong-word vs V2 → wrong-order wins
+    const reordered: CodeLine[] = [{ content: ["5", "=", "x"], indent: 0 }, { content: ["print", "x"], indent: 0 }];
+    expect(checkProgramAny(reordered, accepted)).toEqual({ ok: false, reason: "wrong-order" });
+  });
+
+  it("runAny still requires a built program first", () => {
+    expect(runAny(createBuildState(), prog(V1), accepted)).toEqual({ ok: false, reason: "build-first" });
+    expect(runAny(markBuilt(createBuildState()), prog(V1), accepted)).toEqual({ ok: true });
   });
 });
 

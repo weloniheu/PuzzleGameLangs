@@ -11,6 +11,11 @@
           "label": "Tutorial"
         },
         {
+          "id": "py-code-base-001",
+          "label": "Variables",
+          "unlock": "coding.tutorial.cleared"
+        },
+        {
           "id": "py-code-explicit-000",
           "label": "Parentheses",
           "unlock": "coding.tutorial.cleared"
@@ -28,7 +33,11 @@
       "difficulty": 1,
       "tutorial": true,
       "mechanics": {
-        "tier": "base"
+        "tier": "base",
+        "goalSpec": {
+          "output": "hello world",
+          "description": "Make the panel say: hello world"
+        }
       },
       "prompt": "Learn the ropes: pick up words, place them, then Build and Run.",
       "payload": {
@@ -264,6 +273,258 @@
           "marker": "❓"
         },
         "grants_unlock": "coding.tutorial.cleared",
+        "theme": "tech"
+      }
+    },
+    {
+      "id": "py-code-base-001",
+      "schema_version": "1.0.0",
+      "language": "python",
+      "puzzle_type": "code_build",
+      "validator_type": "code_match",
+      "difficulty": 2,
+      "mechanics": {
+        "tier": "base",
+        "goalSpec": {
+          "output": "5",
+          "description": "Store 5 in x, then print x."
+        }
+      },
+      "prompt": "Two lines this time: make a variable, then use it.",
+      "payload": {
+        "scenario": "The panel grew a second line. It can remember a value in a name — a variable — and use it later.",
+        "goal": "Store 5 in x, then print x. Output: 5",
+        "tokens": [
+          {
+            "text": "print",
+            "kind": "function",
+            "discovers": "print"
+          },
+          {
+            "text": "x",
+            "kind": "value"
+          },
+          {
+            "text": "=",
+            "kind": "keyword"
+          },
+          {
+            "text": "5",
+            "kind": "value"
+          },
+          {
+            "text": "y",
+            "kind": "decoy"
+          },
+          {
+            "text": "3",
+            "kind": "decoy"
+          },
+          {
+            "text": "prnt",
+            "kind": "decoy"
+          }
+        ],
+        "beats": {
+          "build-first": "🐍 Nothing's built yet — stand on Build and press Enter first.",
+          "wrong-order": "The lines are out of order. Give x its value FIRST, then print it on the line below.",
+          "wrong-indent": "Both lines sit against the left wall (indent 0) — slide them left.",
+          "wrong-word": "One of those isn't right — read carefully (prnt is not print). Use print, x, =, 5.",
+          "extra-code": "Too many lines. Keep exactly two: x = 5, then print x.",
+          "success": "x remembers 5, and the panel prints it: 5. ✅",
+          "first_run_no_build": "🐍 You ran before BUILDING. Stand on Build and press Enter first, then Run."
+        },
+        "terminal": {
+          "build": "$ python -m py_compile main.py",
+          "run": "$ python main.py"
+        },
+        "dialogue": {
+          "speakers": {
+            "snake": {
+              "name": "Sss",
+              "side": "left",
+              "portrait": "/assets/closeMouthSnake.png",
+              "portrait2": "/assets/talkingSnake.png"
+            },
+            "hint": {
+              "name": "Helper",
+              "side": "right",
+              "portrait": "🛰️",
+              "portrait2": "🛰️"
+            }
+          },
+          "on_enter": [
+            {
+              "id": "vars-enter-1",
+              "speaker": "snake",
+              "text": "Ssss — a name can hold a value. Set it on one line, use it on the next.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "First line: x = 5. Second line: print x.",
+              "tag": "intro"
+            },
+            {
+              "text": "Watch out for look-alikes on the floor (prnt, y, 3) — they're traps.",
+              "tag": "after:wrong-word"
+            }
+          ],
+          "guided_tutorial": [
+            {
+              "id": "vars-tut-compose",
+              "speaker": "narrator",
+              "text": "This program is TWO lines. Build the first line, then start the next one on the row below it.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false,
+              "teaches": "compose"
+            }
+          ]
+        }
+      },
+      "solution": {
+        "output": "5",
+        "lines": [
+          {
+            "content": [
+              "x",
+              "=",
+              "5"
+            ],
+            "indent": 0
+          },
+          {
+            "content": [
+              "print",
+              "x"
+            ],
+            "indent": 0
+          }
+        ]
+      },
+      "hints": [
+        "Line one: x = 5.",
+        "Line two: print x.",
+        "Ignore the look-alikes (prnt, y, 3)."
+      ],
+      "metadata": {
+        "concept": "variables — store a value, then use it",
+        "tags": [
+          "python",
+          "variables",
+          "composition"
+        ],
+        "generator": "human",
+        "reviewed": true
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#....###....#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "piles": [
+          {
+            "token": "print",
+            "pos": {
+              "x": 9,
+              "y": 6
+            }
+          },
+          {
+            "token": "x",
+            "pos": {
+              "x": 11,
+              "y": 3
+            }
+          },
+          {
+            "token": "=",
+            "pos": {
+              "x": 9,
+              "y": 4
+            }
+          },
+          {
+            "token": "5",
+            "pos": {
+              "x": 11,
+              "y": 6
+            }
+          },
+          {
+            "token": "y",
+            "pos": {
+              "x": 10,
+              "y": 2
+            }
+          },
+          {
+            "token": "3",
+            "pos": {
+              "x": 9,
+              "y": 2
+            }
+          },
+          {
+            "token": "prnt",
+            "pos": {
+              "x": 11,
+              "y": 4
+            }
+          }
+        ],
+        "features": [
+          "terminal",
+          "coding_area",
+          "inventory"
+        ],
+        "coding_area": {
+          "x": 1,
+          "y": 1,
+          "width": 7,
+          "height": 7
+        },
+        "inventory_slots": 5,
+        "controls": [
+          {
+            "action": "build",
+            "label": "Build",
+            "pos": {
+              "x": 2,
+              "y": 7
+            }
+          },
+          {
+            "action": "run",
+            "label": "Run",
+            "pos": {
+              "x": 5,
+              "y": 7
+            }
+          }
+        ],
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 2
+          },
+          "marker": "❓"
+        },
+        "grants_unlock": "coding.base.vars.cleared",
         "theme": "tech"
       }
     },
