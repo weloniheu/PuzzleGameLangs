@@ -370,7 +370,11 @@ export function mountRoom(
     for (const pile of room.piles) {
       const p = document.createElement("div");
       p.className = "tile-room tile-pile";
-      p.style.width = `${tile}px`;
+      // Long tokens (e.g. "hello world") span multiple tiles so they stay readable instead of
+      // truncating. The pile is still ONE logical cell — pickup is on its anchor (pile.pos); the
+      // box just extends to the right. ~6 monospace chars fit one tile at the label size.
+      const span = Math.max(1, Math.ceil(pile.token.length / 6));
+      p.style.width = `${span * tile}px`;
       p.style.height = `${tile}px`;
       p.style.transform = `translate(${pile.pos.x * tile}px, ${pile.pos.y * tile}px)`;
       const label = document.createElement("span");
