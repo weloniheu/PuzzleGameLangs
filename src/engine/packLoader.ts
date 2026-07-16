@@ -17,6 +17,14 @@ export async function loadPack(url: string): Promise<Pack> {
     if (ok) good.push(p);
     else console.warn(`Dropping puzzle "${(p as Puzzle).id}":`, errors);
   }
+  // Cross-check tutorial_refs against the pack's shared tutorials (validatePuzzle can't — it
+  // sees one puzzle at a time). A dangling ref just won't play; warn so authors catch typos.
+  const tutorialIds = new Set(Object.keys(pack.tutorials ?? {}));
+  for (const p of good) {
+    for (const ref of p.tutorial_refs ?? []) {
+      if (!tutorialIds.has(ref)) console.warn(`Puzzle "${p.id}" references unknown tutorial "${ref}"`);
+    }
+  }
   return { ...pack, puzzles: good };
 }
 

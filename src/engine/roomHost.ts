@@ -13,11 +13,10 @@
 // button, panel dragging, and to focus the room for keyboard (Rule 4).
 // ---------------------------------------------------------------------------
 
-import type { DialogueBeat, DialogueConfig, DialogueSpeaker, Puzzle } from "../schema/types";
+import type { DialogueBeat, DialogueConfig, DialogueSpeaker, Puzzle, TutorialBlock } from "../schema/types";
 import { parseRoom, step, pileAt, MOVE, type Cell, type Direction } from "./core/room";
 import {
   resetCodex, resetTutorials, getUnlocks, hasCompletedTutorial, completeTutorial,
-  hasTaught, markTaught,
 } from "./core/codex";
 import { createTeardown } from "./core/teardown";
 import { resolveFeatures, resolveInventorySlots } from "./core/roomFeatures";
@@ -57,6 +56,9 @@ export interface RoomCallbacks {
   /** Resolve the teleport flash color for a target id (the manager has the registry).
    *  Used by hub PORTALS so their transition flashes in the destination's color. */
   flashColorFor?: (target: string) => string;
+  /** Resolve a SHARED tutorial by id (the manager merges every pack's `tutorials` map).
+   *  Used for the level's `tutorial_refs` first-encounter playback. */
+  tutorialFor?: (id: string) => TutorialBlock | null;
 }
 /** Handle to a mounted room. `teardown()` destroys EVERYTHING the room created. */
 export interface RoomHandle {
@@ -547,18 +549,24 @@ export function mountRoom(
   // as ONE unskippable sequence, then marked seen (see codex.ts). Every later visit just
   // gets the normal on_enter greeting. Entering a room NEVER auto-opens the menu — the
   // auto-menu is a solve-time reward (see ctx.onSolved), so the first room plays normally.
-  // Overlap-aware filter: a beat tagged with `teaches` plays only until that CONCEPT has
-  // been taught (persisted per key); an untagged beat keeps the legacy per-room-id rule. So
-  // arriving at a harder tier re-teaches only the mechanics not yet seen (see codex.hasTaught).
-  const untaughtBeats = guidedTutorialBeats.filter((b) =>
-    b.teaches ? !hasTaught(b.teaches) : !hasCompletedTutorial(puzzle.id),
-  );
-  if (untaughtBeats.length) {
-    dialogue.play([...onEnterBeats, ...untaughtBeats], {
-      onComplete: () => {
-        for (const b of untaughtBeats) if (b.teaches) markTaught(b.teaches);
-        completeTutorial(puzzle.id); // legacy per-id flag still set (untagged tutorials rely on it)
-      },
+  // First-encounter teaching, WHOLE-UNIT (always the same, never partial): play each unseen
+  // SHARED tutorial the level references (in order), then the room's own guided_tutorial if the
+  // room itself is unseen. Each is keyed by its own id; a played sequence marks them all seen.
+  // "Replay tutorials" (settings) clears the flags so they play in full again.
+  const firstVisit: DialogueBeat[] = [];
+  const toMarkSeen: string[] = [];
+  for (const refId of puzzle.tutorial_refs ?? []) {
+    if (hasCompletedTutorial(refId)) continue;
+    const block = callbacks.tutorialFor?.(refId);
+    if (block?.dialogue?.length) { firstVisit.push(...block.dialogue); toMarkSeen.push(refId); }
+  }
+  if (guidedTutorialBeats.length && !hasCompletedTutorial(puzzle.id)) {
+    firstVisit.push(...guidedTutorialBeats);
+    toMarkSeen.push(puzzle.id);
+  }
+  if (firstVisit.length) {
+    dialogue.play([...onEnterBeats, ...firstVisit], {
+      onComplete: () => { for (const id of toMarkSeen) completeTutorial(id); },
       skippable: false,
     });
   } else if (onEnterBeats.length) {

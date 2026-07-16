@@ -88,22 +88,6 @@ export interface MechanicsConfig {
  *  - lowlight: limited vision radius (gameplay hook only for now; no visual rendering). */
 export type Modifier = "randomized" | "lowlight";
 
-/** Closed set of teaching CONCEPTS a tutorial beat can be tagged with (see DialogueBeat.teaches
- *  and the pack-level tutorials map). A beat replays only until its concept has been taught, so
- *  a player who jumps ahead is re-taught only what they haven't seen. Covers base mechanics,
- *  the mechanical tiers, the modifiers, and the Axis-1 concepts. */
-export type ConceptKey =
-  // base mechanics
-  | "pickup" | "place" | "build" | "run" | "indent"
-  // mechanical tiers (Axis 2)
-  | "base" | "mixed" | "explicit" | "punctuation" | "env_clues"
-  // modifiers (Axis 3)
-  | "randomized" | "lowlight"
-  // concepts (Axis 1)
-  | "conditionals" | "loops" | "function_def" | "function_call" | "compose"
-  // concept modes
-  | "debug" | "predict";
-
 // --- Type-specific payload / solution shapes (discriminated by puzzle_type) ---
 
 export interface MatchPayload {
@@ -355,10 +339,6 @@ export interface DialogueBeat {
   /** GUIDED TUTORIAL ONLY: if set, this beat does NOT auto-advance on a timer — it stays
    *  until the player actually performs this action, then advances. Omit for normal beats. */
   waitFor?: TutorialWaitFor;
-  /** GUIDED TUTORIAL ONLY: the CONCEPT this beat teaches. A tagged beat replays only until
-   *  that concept has been taught (persisted per key); an untagged beat keeps the legacy
-   *  per-room-id rule. Lets overlapping tier tutorials skip what a player already knows. */
-  teaches?: ConceptKey;
 }
 /** A speaker's portrait config (placeholder art is fine; portrait2 = optional talk frame). */
 export interface DialogueSpeaker {
@@ -384,6 +364,18 @@ export interface DialogueConfig {
    *  the persisted flag so it plays again next visit. */
   guided_tutorial?: DialogueBeat[];
 }
+
+/** A SHARED, reusable first-encounter tutorial (concept / mechanic tier / modifier), stored in
+ *  the pack's `tutorials` map and referenced by levels via `tutorial_refs`. Whole-unit: it plays
+ *  its full `dialogue` the first time a referencing level is entered, then is marked seen (one
+ *  flag per id); "Replay tutorials" clears the flag and it plays the same sequence again. */
+export interface TutorialBlock {
+  /** The full sequence, delivered through the two-speaker dialogue system. */
+  dialogue: DialogueBeat[];
+  /** OPTIONAL id of a level that demonstrates the concept (schema hook; not yet auto-used). */
+  demoLevel?: string;
+}
+
 /** One expected code line for the order-checker: content tokens (in order) + indent. */
 export interface CodeAnswerLine {
   content: string[];
@@ -568,6 +560,9 @@ export interface Puzzle {
   mechanics?: MechanicsConfig;
   /** OPTIONAL Axis-3 stackable modifiers (validated against the closed registry). Omitted ⇒ []. */
   modifiers?: Modifier[];
+  /** OPTIONAL ids of SHARED tutorials (see Pack.tutorials) to play on first entry, in order,
+   *  BEFORE this room's own guided_tutorial. Each plays whole, once (per-id seen flag). */
+  tutorial_refs?: string[];
   /** OPTIONAL world layer. When present, the puzzle opens in a walkable room. */
   room?: RoomLayout;
   /** OPTIONAL label marking this as a tutorial room. Purely a content label — the engine
@@ -613,6 +608,9 @@ export interface Pack {
   puzzles: Puzzle[];
   /** Ordered level lists per puzzle type (drives the menu portal's destination chooser). */
   progression?: ProgressionEntry[];
+  /** SHARED first-encounter tutorials, keyed by a content-defined id (e.g. "tier:mixed",
+   *  "concept:loops"). Levels opt in via `tutorial_refs`. See TutorialBlock. */
+  tutorials?: Record<string, TutorialBlock>;
 }
 
 // --- Engine-facing interfaces (Phase 2.2) ---

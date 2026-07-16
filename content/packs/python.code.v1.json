@@ -28,6 +28,19 @@
       ]
     }
   ],
+  "tutorials": {
+    "tier:mixed": {
+      "dialogue": [
+        {
+          "id": "t-mixed-1",
+          "speaker": "narrator",
+          "text": "New tier — MIXED. Some punctuation is already placed for you (the faded tiles). You supply the rest, in order, around it.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false
+        }
+      ]
+    }
+  },
   "puzzles": [
     {
       "id": "py-code-tutorial-000",
@@ -141,32 +154,28 @@
               "speaker": "narrator",
               "text": "Walk up to a word on the floor and press I to pick it up.",
               "trigger": "guided_tutorial",
-              "waitFor": "pickup",
-              "teaches": "pickup"
+              "waitFor": "pickup"
             },
             {
               "id": "ctut-3",
               "speaker": "narrator",
               "text": "Walk to an empty tile and press P to place it down.",
               "trigger": "guided_tutorial",
-              "waitFor": "place",
-              "teaches": "place"
+              "waitFor": "place"
             },
             {
               "id": "ctut-4",
               "speaker": "narrator",
               "text": "Stand on Build and press Enter to compile your line.",
               "trigger": "guided_tutorial",
-              "waitFor": "build",
-              "teaches": "build"
+              "waitFor": "build"
             },
             {
               "id": "ctut-5",
               "speaker": "narrator",
               "text": "Stand on Run and press Enter to see what your line does.",
               "trigger": "guided_tutorial",
-              "waitFor": "run",
-              "teaches": "run"
+              "waitFor": "run"
             }
           ]
         }
@@ -382,8 +391,7 @@
               "speaker": "narrator",
               "text": "This program is TWO lines. Build the first line, then start the next one on the row below it.",
               "trigger": "guided_tutorial",
-              "autoAdvance": false,
-              "teaches": "compose"
+              "autoAdvance": false
             }
           ]
         }
@@ -548,6 +556,9 @@
           "description": "The closing ) is already placed — build the rest."
         }
       },
+      "tutorial_refs": [
+        "tier:mixed"
+      ],
       "prompt": "Some of the punctuation is provided; you supply the rest.",
       "payload": {
         "scenario": "The panel meets you halfway: it drops the closing bracket in for you. You still place everything else, in order.",
@@ -611,16 +622,6 @@
             {
               "text": "Build print ( \"hello world\" to the LEFT of the provided ).",
               "tag": "intro"
-            }
-          ],
-          "guided_tutorial": [
-            {
-              "id": "mixed-tut",
-              "speaker": "narrator",
-              "text": "Some punctuation is already placed for you (the faded tiles). Fill in everything else, in order, around it.",
-              "trigger": "guided_tutorial",
-              "autoAdvance": false,
-              "teaches": "mixed"
             }
           ]
         }
@@ -836,40 +837,35 @@
               "speaker": "narrator",
               "text": "New rule: print needs parentheses around its words. You'll collect the ( and ) yourself and place them in order.",
               "trigger": "guided_tutorial",
-              "autoAdvance": false,
-              "teaches": "punctuation"
+              "autoAdvance": false
             },
             {
               "id": "punct-tut-pickup",
               "speaker": "narrator",
               "text": "Walk up to a word on the floor and press I to pick it up.",
               "trigger": "guided_tutorial",
-              "waitFor": "pickup",
-              "teaches": "pickup"
+              "waitFor": "pickup"
             },
             {
               "id": "punct-tut-place",
               "speaker": "narrator",
               "text": "Walk to an empty tile and press P to place it down.",
               "trigger": "guided_tutorial",
-              "waitFor": "place",
-              "teaches": "place"
+              "waitFor": "place"
             },
             {
               "id": "punct-tut-build",
               "speaker": "narrator",
               "text": "Stand on Build and press Enter to compile your line.",
               "trigger": "guided_tutorial",
-              "waitFor": "build",
-              "teaches": "build"
+              "waitFor": "build"
             },
             {
               "id": "punct-tut-run",
               "speaker": "narrator",
               "text": "Stand on Run and press Enter to see what your line does.",
               "trigger": "guided_tutorial",
-              "waitFor": "run",
-              "teaches": "run"
+              "waitFor": "run"
             }
           ]
         }

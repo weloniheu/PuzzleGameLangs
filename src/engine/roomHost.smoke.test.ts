@@ -15,9 +15,9 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { LevelEntry, Pack, Puzzle, PuzzleType } from "../schema/types";
+import type { LevelEntry, Pack, Puzzle, PuzzleType, TutorialBlock } from "../schema/types";
 import { createRoomManager, type RoomManager } from "./roomManager";
-import { addUnlock, markTaught } from "./core/codex";
+import { addUnlock, completeTutorial } from "./core/codex";
 import { roomSettings } from "./systems/settingsPanel";
 
 const ROOT = join(__dirname, "..", "..");
@@ -47,10 +47,12 @@ function bootWorld() {
     registry.set(p.id, p);
   }
   const levelsByType = new Map<PuzzleType, LevelEntry[]>();
+  const tutorialsById = new Map<string, TutorialBlock>();
   for (const pack of [hub, code, logic, logicHaw, grammar, vocab, vocabEn]) {
     for (const prog of pack.progression ?? []) {
       levelsByType.set(prog.puzzle_type, [...(levelsByType.get(prog.puzzle_type) ?? []), ...prog.levels]);
     }
+    for (const [id, block] of Object.entries(pack.tutorials ?? {})) tutorialsById.set(id, block);
   }
   const container = document.createElement("div");
   document.body.appendChild(container);
@@ -58,6 +60,7 @@ function bootWorld() {
     container,
     (id) => registry.get(id) ?? null,
     (t) => levelsByType.get(t) ?? [],
+    { tutorialFor: (id) => tutorialsById.get(id) ?? null },
   );
   return { container, manager };
 }
@@ -437,13 +440,13 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
   // The punctuation TIER, driven through the real mount (proves the module threads
   // requirePunctuation into doRun — not just the pure checker). The guided tutorial is
   // pre-satisfied (every concept marked taught) so these drive the mechanic directly.
-  const skipCodingTutorial = () => {
-    for (const k of ["pickup", "place", "build", "run", "punctuation"]) markTaught(k);
-  };
+  // Mark tutorials seen so these tests drive the mechanic directly (whole-unit model: a tutorial
+  // is skipped by marking its id — the room id for a guided_tutorial, or the shared tutorial id).
+  const skipTutorial = (...ids: string[]) => { for (const id of ids) completeTutorial(id); };
 
   it("punctuation level: collecting and placing the parens yourself solves it", () => {
     const { container: c, manager } = world;
-    skipCodingTutorial();
+    skipTutorial("py-code-explicit-000");
     manager.enter("py-code-explicit-000");
     press(c, "Enter"); // dismiss the snake on_enter greeting (guided tutorial is skipped)
 
@@ -482,7 +485,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
 
   it("punctuation level: omitting the parens does NOT solve it (the tier is enforced in-mount)", () => {
     const { container: c, manager } = world;
-    skipCodingTutorial();
+    skipTutorial("py-code-explicit-000");
     manager.enter("py-code-explicit-000");
     press(c, "Enter"); // dismiss on_enter
 
@@ -512,8 +515,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
 
   it("base 'Variables' level: a two-line program (define x, then print it) solves it", () => {
     const { container: c, manager } = world;
-    skipCodingTutorial();
-    markTaught("compose");
+    skipTutorial("py-code-base-001");
     manager.enter("py-code-base-001");
     press(c, "Enter"); // dismiss on_enter (guided tutorial skipped)
 
@@ -563,8 +565,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
 
   it("mixed 'Assisted parens': the scaffolded ) is prefilled and locked; you build the rest", () => {
     const { container: c, manager } = world;
-    skipCodingTutorial();
-    markTaught("mixed");
+    skipTutorial("py-code-mixed-000", "tier:mixed");
     manager.enter("py-code-mixed-000");
     press(c, "Enter"); // dismiss on_enter (guided tutorial skipped)
 
@@ -605,6 +606,22 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "Enter");
     expect(c.querySelector(".room-terminal-body")!.classList.contains("term-success")).toBe(true);
     expect(text(c, ".room-terminal-body")).toContain("hello world");
+    manager.teardown();
+  });
+
+  it("shared tutorial: a level's tutorial_refs play in full on first entry, not on the next", () => {
+    const { container: c, manager } = world;
+    // First visit: the shared "tier:mixed" tutorial plays after the snake greeting.
+    manager.enter("py-code-mixed-000");
+    press(c, "Enter"); // past the snake on_enter greeting → into the shared tier tutorial
+    expect(text(c, ".room-narrator")).toContain("New tier");
+    press(c, "Enter"); // finish the tutorial → the whole sequence completes → marked seen
+    manager.teardown();
+
+    // Second visit: tier:mixed already seen → greeting only, the tutorial does not replay.
+    manager.enter("py-code-mixed-000");
+    press(c, "Enter"); // greeting; nothing follows
+    expect(text(c, ".room-narrator")).not.toContain("New tier");
     manager.teardown();
   });
 });

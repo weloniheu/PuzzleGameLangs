@@ -2,7 +2,7 @@ import type {
   Puzzle, MatchPayload, MatchSolution, PuzzleType, ValidatorType,
   SentencePayload, ReorderSolution, CombinePayload, CombineSolution,
   CodeBuildPayload, CodeBuildSolution, LogicRulesPayload, GrammarBuildPayload, VocabMatchPayload,
-  MechanicTier, CodeMode, Modifier, ConceptKey, DialogueConfig,
+  MechanicTier, CodeMode, Modifier,
 } from "../schema/types";
 import { hasRenderer } from "../engine/renderers";
 import { hasValidator } from "../engine/validators";
@@ -20,13 +20,6 @@ const VALIDATOR_TYPES: ValidatorType[] = [
 const MECHANIC_TIERS: MechanicTier[] = ["base", "mixed", "explicit", "env_clues", "concept_modes"];
 const CODE_MODES: CodeMode[] = ["assemble", "debug", "predict"];
 const MODIFIERS: Modifier[] = ["randomized", "lowlight"];
-const CONCEPT_KEYS: ConceptKey[] = [
-  "pickup", "place", "build", "run", "indent",
-  "base", "mixed", "explicit", "punctuation", "env_clues",
-  "randomized", "lowlight",
-  "conditionals", "loops", "function_def", "function_call", "compose",
-  "debug", "predict",
-];
 
 /**
  * The single source of truth for "is this puzzle usable?". Used BOTH when loading
@@ -57,10 +50,10 @@ export function validatePuzzle(p: unknown): { ok: boolean; errors: string[] } {
     if (!Array.isArray(o.modifiers)) errors.push(`modifiers must be an array`);
     else for (const m of o.modifiers) if (!MODIFIERS.includes(m)) errors.push(`unknown modifier "${m}"`);
   }
-  // Guided-tutorial beats may tag a CONCEPT key (see DialogueBeat.teaches) — reject typos.
-  const dlg = (o.payload as { dialogue?: DialogueConfig } | undefined)?.dialogue;
-  for (const b of dlg?.guided_tutorial ?? []) {
-    if (b.teaches && !CONCEPT_KEYS.includes(b.teaches)) errors.push(`unknown teaches concept "${b.teaches}"`);
+  // tutorial_refs (shared first-encounter tutorials) — shape only; the pack-level cross-check
+  // that each id resolves lives in loadPack, which has the tutorials map.
+  if (o.tutorial_refs !== undefined && !Array.isArray(o.tutorial_refs)) {
+    errors.push(`tutorial_refs must be an array of tutorial ids`);
   }
 
   // --- the engine must actually be able to run it: a CARD renderer or a ROOM module ---

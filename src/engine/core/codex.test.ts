@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
   getUnlocks, hasUnlock, addUnlock, resetCodex, discover, getCodex,
-  hasTaught, markTaught, hasCompletedTutorial, completeTutorial, resetTutorials,
+  hasCompletedTutorial, completeTutorial, resetTutorials,
 } from "./codex";
 
 // codex.ts reads/writes localStorage lazily inside its functions, so a tiny in-memory
@@ -44,30 +44,24 @@ describe("Codex unlocks — persistence round-trip", () => {
   });
 });
 
-describe("taught concepts — overlap-aware tutorials (DialogueBeat.teaches)", () => {
-  it("starts untaught, then persists a taught concept", () => {
-    expect(hasTaught("pickup")).toBe(false);
-    markTaught("pickup");
-    expect(hasTaught("pickup")).toBe(true);
+describe("tutorial seen-flags — whole-unit, keyed by any id (room or shared tutorial)", () => {
+  it("starts unseen, then persists a seen tutorial id", () => {
+    expect(hasCompletedTutorial("tier:mixed")).toBe(false);
+    completeTutorial("tier:mixed");
+    expect(hasCompletedTutorial("tier:mixed")).toBe(true);
   });
 
-  it("is idempotent and tracks concepts independently", () => {
-    markTaught("build");
-    markTaught("build");
-    expect(hasTaught("build")).toBe(true);
-    expect(hasTaught("run")).toBe(false); // a different concept is unaffected
+  it("is idempotent and tracks ids independently", () => {
+    completeTutorial("py-code-tutorial-000");
+    completeTutorial("py-code-tutorial-000");
+    expect(hasCompletedTutorial("py-code-tutorial-000")).toBe(true);
+    expect(hasCompletedTutorial("concept:loops")).toBe(false);
   });
 
-  it("a concept key never collides with an equal room-id tutorial flag", () => {
-    completeTutorial("pickup");        // a room whose id happens to be "pickup"
-    expect(hasCompletedTutorial("pickup")).toBe(true);
-    expect(hasTaught("pickup")).toBe(false); // the "teach:" namespace keeps them apart
-  });
-
-  it("resetTutorials clears taught concepts too", () => {
-    markTaught("place");
+  it("resetTutorials clears every seen flag", () => {
+    completeTutorial("concept:loops");
     resetTutorials();
-    expect(hasTaught("place")).toBe(false);
+    expect(hasCompletedTutorial("concept:loops")).toBe(false);
   });
 });
 
