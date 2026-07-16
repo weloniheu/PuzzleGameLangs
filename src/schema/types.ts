@@ -405,6 +405,12 @@ export type RoomTile = "floor" | "wall" | "door";
 export interface RoomPile {
   token: string;            // the word added to inventory on pickup
   pos: { x: number; y: number };
+  /** VISUAL classification (6a/5b): punctuation renders as a purple bead, everything
+   *  else keeps the word chip. Purely a style token — validation never reads it. */
+  kind?: "function" | "keyword" | "string" | "value" | "punctuation" | "decoy";
+  /** Distractor tell (6a): dashed border + faded, TRAY-ONLY (a placed decoy renders
+   *  plain — the tell marks the unconfirmed pile, not the player's choice). */
+  decoy?: boolean;
 }
 /** Rectangular region (in cells) where the player may place tokens. The line's
  *  indent = a placed token's column minus this region's left edge (`x`). CONTENT. */
@@ -578,11 +584,22 @@ export interface LevelEntry {
   id: string;        // puzzle/room id this level mounts
   label: string;     // display text in the destination menu
   unlock?: string;   // unlock key required to be available (omit for the first level)
+  /** LADDER grouping key (5a). Usually omitted — stamped at merge from the pack's
+   *  `language`. OPAQUE to the engine (grouped by equality, never branched on). */
+  language?: string;
+  /** LADDER grouping key (5a): which mechanic rung this level belongs to. Usually
+   *  omitted — derived from the puzzle's mechanics tier / modifiers signature
+   *  (see engine/core/ladder.ts resolveMechanic). OPAQUE to the engine. */
+  mechanic?: string;
 }
 /** A puzzle type's ordered levels. The destination menu lists the UNLOCKED ones. */
 export interface ProgressionEntry {
   puzzle_type: PuzzleType;
   levels: LevelEntry[];
+  /** "Coming soon" sibling languages (5a): greyed, non-enterable rows on the ladder's
+   *  language rung (e.g. JavaScript / SQL under Coding). `beat` is the line spoken
+   *  when selected. Pure CONTENT — zero engine change to add one. */
+  locked_languages?: { label: string; beat?: string }[];
 }
 
 /** DOCUMENTATION ONLY — the engine NEVER reads this (see content/packs/README.md).
@@ -603,6 +620,9 @@ export interface Pack {
   pack_id: string;
   schema_version: string;
   language: string;
+  /** Learner-facing display name for `language` on the ladder's language rung
+   *  (e.g. "Python", "ʻŌlelo Hawaiʻi"). Omitted → the raw key is shown. CONTENT. */
+  language_label?: string;
   /** Documentation-only authoring aid; never engine-read. See PackTypology. */
   typology?: PackTypology;
   puzzles: Puzzle[];

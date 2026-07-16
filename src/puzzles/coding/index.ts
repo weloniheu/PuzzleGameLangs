@@ -45,6 +45,13 @@ export const codingModule: RoomPuzzleModule = {
         })
       : null;
 
+    // Token VISUAL kinds (5b/6a) — pure CONTENT: the palette (payload.tokens) tags each
+    // token's kind; a pile-level tag (RoomPile.kind) overrides. drawPlaced reads this so
+    // placed/prefilled punctuation keeps the bead silhouette.
+    const kindByToken = new Map<string, string>();
+    for (const t of payload.tokens ?? []) kindByToken.set(t.text, t.kind);
+    for (const pl of ctx.layout.piles ?? []) if (pl.kind) kindByToken.set(pl.token, pl.kind);
+
     const area = createCodingArea({
       ctx,
       accepted,
@@ -53,6 +60,7 @@ export const codingModule: RoomPuzzleModule = {
       termCmds,
       termWrite: (lines, state) => terminal?.write(lines, state), // no terminal → nowhere to echo
       snakeBeat,
+      tokenKind: (token) => kindByToken.get(token) ?? null,
     });
 
     terminal?.applyMode(); // terminal starts docked (bottom band)

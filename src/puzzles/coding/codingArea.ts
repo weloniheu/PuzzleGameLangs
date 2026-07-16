@@ -73,6 +73,9 @@ export interface CodingAreaDeps {
   termWrite(lines: string[], state: TermState): void;
   /** Wrap a beats-map entry as a snake portrait beat, or null when undefined (CONTENT). */
   snakeBeat(reason: string): DialogueBeat | null;
+  /** A token's visual kind (from the pack's tokens/piles tags — CONTENT). Placed
+   *  punctuation keeps the bead silhouette (5b); null/omitted → the word chip. */
+  tokenKind?(token: string): string | null;
 }
 
 export interface CodingArea {
@@ -183,6 +186,9 @@ export function createCodingArea(deps: CodingAreaDeps): CodingArea {
     for (const p of placed) {
       const t = document.createElement("div");
       t.className = p.locked ? "tile-room tile-placed tile-prefilled" : "tile-room tile-placed";
+      // Punctuation keeps its bead silhouette on the board too (5b); the decoy tell
+      // is TRAY-ONLY (6a) — a placed decoy renders as a plain chip.
+      if (deps.tokenKind?.(p.token) === "punctuation") t.classList.add("tile-token-punct");
       t.style.width = `${tile}px`;
       t.style.height = `${tile}px`;
       t.style.transform = `translate(${p.x * tile}px, ${p.y * tile}px)`;

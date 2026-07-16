@@ -541,6 +541,19 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
 
 .room-world { position: relative; transition: transform 0.1s ease; }
 
+/* Low-light modifier (5e, "locked in"): soft radial vision falloff pinned to the
+   player's screen cell — clear center → falloff ring → near-opaque dusk (rgba
+   10,8,16). Radii/center arrive as vars from the host's draw(); the defaults are
+   the spec's 60/90px. Reads as ambience, never a UI mask (pointer-events: none). */
+.room-lowlight {
+  position: absolute; inset: 0; z-index: 6; pointer-events: none;
+  background: radial-gradient(
+    circle at var(--lowlight-x, 50%) var(--lowlight-y, 50%),
+    rgba(10, 8, 16, 0) var(--lowlight-clear, 60px),
+    rgba(10, 8, 16, 0.94) var(--lowlight-fall, 90px)
+  );
+}
+
 /* Floors: warm sand with a faint checkerboard read (2a). Per-game tints below;
    the LOGIC room keeps its own module skin (.logic-room overrides these). */
 .tile-room { position: absolute; top: 0; left: 0; box-sizing: border-box; }
@@ -618,6 +631,29 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
 }
 @keyframes tile-snap { 0% { filter: brightness(1.7); } 100% { filter: brightness(1); } }
 @keyframes tile-ripple { 0% { transform: scale(0.72); opacity: 0.7; } 100% { transform: scale(1.18); opacity: 0; } }
+
+/* Punctuation token (5b): same bevel language as the word chip, but a circular BEAD
+   in the brackets' purple — same family, instantly distinct silhouette. Applies in
+   the tray (piles) and on the board (placed/prefilled) alike. */
+.tile-token-punct {
+  background: linear-gradient(#8f7ff0, #6b5bdb);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px #4634a8, inset 0 3px 0 rgba(255, 255, 255, 0.4), 0 4px 6px rgba(0, 0, 0, 0.24);
+}
+.tile-token-punct .tile-pile-label { color: #f4f0ff; }
+.tile-placed.tile-token-punct .tile-pile-label { color: #f4f0ff; }
+.tile-prefilled.tile-token-punct {
+  background: linear-gradient(#a99ee0, #8579c4); /* scaffolded bead: desaturated, still purple */
+  box-shadow: inset 0 0 0 2px #56499e, inset 0 3px 0 rgba(255, 255, 255, 0.3), 0 3px 5px rgba(0, 0, 0, 0.2);
+}
+/* Distractor tell (6a): dashed border + faded — TRAY-ONLY (the class is only ever
+   stamped on piles; a placed decoy renders as a plain chip). */
+.tile-token-decoy {
+  opacity: 0.75;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.18);
+  border: 2px dashed #8a5a2b;
+}
+.tile-token-decoy.tile-token-punct { border-color: #4634a8; }
 
 /* Coding-area zone: dashed drop region (2b). */
 .room-coding-zone {
@@ -717,7 +753,10 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
 }
 
-/* Destination chooser — a wooden menu; SOLID AMBER = the keyboard selection. */
+/* The LADDER chooser (5a) — a wooden drill-down menu; SOLID GOLD = the keyboard
+   selection. ← Back / ⌂ Return to hub are ordinary rows in the same column (only
+   their glyph marks them as navigation); the small dark CURRENT tag marks where
+   the player actually is and stays put regardless of the cursor. */
 .room-destmenu {
   position: fixed; inset: 0; z-index: 60;
   display: flex; align-items: center; justify-content: center;
@@ -726,7 +765,7 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
 }
 .room-destmenu[hidden] { display: none; }
 .room-destmenu-card {
-  min-width: 260px; max-width: 90vw;
+  min-width: 280px; max-width: 90vw;
   background: linear-gradient(var(--panel-wood-hi), var(--panel-wood-lo));
   color: var(--parchment);
   padding: 1.1rem 1.25rem; border-radius: 16px;
@@ -737,6 +776,7 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
 .room-destmenu-title { margin: 0 0 0.5rem; font-weight: 700; font-size: 1.15rem; }
 .room-destmenu-option {
   cursor: pointer; text-align: left; padding: 0.55rem 0.8rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.8rem;
   border: 1px solid var(--panel-chip-border); border-radius: 10px;
   font-family: inherit; font-size: 0.95rem; font-weight: 700;
   color: var(--panel-muted); background: var(--panel-chip);
@@ -744,6 +784,18 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
 /* Hover is SECONDARY feedback only — it never moves the keyboard selection. */
 .room-destmenu-option:hover { background: #5a4733; }
 .room-destmenu-option.selected { background: var(--amber); color: var(--amber-ink); border-color: var(--amber); box-shadow: none; }
+/* Coming-soon languages / groups with nothing unlocked: greyed, still selectable
+   (Enter fires their beat instead of transitioning). */
+.room-destmenu-option.locked { opacity: 0.5; font-style: italic; }
+.room-destmenu-option.locked.selected { opacity: 0.75; }
+/* The dark CURRENT chip — cursor-independent (readable on gold and on wood). */
+.room-destmenu-tag {
+  flex: none; font-family: "IBM Plex Mono", monospace; font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.08em; color: var(--parchment);
+  background: var(--panel-chip); border: 1px solid var(--panel-chip-border);
+  border-radius: 5px; padding: 0.12rem 0.4rem;
+}
+.room-destmenu-option.selected .room-destmenu-tag { background: var(--amber-ink); color: var(--amber); border-color: var(--amber-ink); }
 .room-destmenu-hint { margin: 0.4rem 0 0; color: #8a7a63; font-family: "IBM Plex Mono", monospace; font-size: 0.7rem; text-align: center; }
 
 /* Hint giver's "?" marker (3i's red help key). */
@@ -918,6 +970,8 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   position: absolute; inset: 0;
   border-radius: 50% 50% 46% 46% / 58% 58% 42% 42%;
   background: var(--slime);
+  /* thin inset rim-light tracing the top edge (3j) */
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35);
   transform-origin: 50% 100%;
   animation: slime-idle 2.2s ease-in-out infinite;
   transition: transform 0.12s ease;

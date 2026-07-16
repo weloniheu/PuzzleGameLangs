@@ -18,6 +18,7 @@
 import type { Puzzle, VocabMatchPayload, VocabPropDef, VocabTileDef } from "../../schema/types";
 import type { EngineContext, MountedPuzzle, RoomPuzzleModule } from "../../engine/puzzleModule";
 import { floorOrigin } from "../../engine/core/room";
+import { mulberry32, randomSeed, shufflePositions } from "../../engine/core/shuffle";
 import type { PropertyId } from "../logic/schema";
 import {
   tryMove,
@@ -109,6 +110,12 @@ export const vocabModule: RoomPuzzleModule = {
     // Vocab CONTENT (engine hardcodes none): tiles, pairings, help + feedback text.
     const payload = puzzle.payload as VocabMatchPayload;
     const defs = new Map<string, VocabTileDef>(payload.tiles.map((t) => [t.id, t]));
+    // `randomized` (Axis 3): permute the word-tiles' spawn cells within the authored
+    // set — runtime seed, fresh each mount, so re-entering rearranges the board.
+    // Signs/walls never move; reset() rebuilds from this same arrangement.
+    const tiles: VocabTileDef[] = puzzle.modifiers?.includes("randomized")
+      ? shufflePositions(payload.tiles, mulberry32(randomSeed()))
+      : payload.tiles;
     const pairs: VocabPair[] = payload.pairs;
     const feedback = payload.feedback ?? {};
     const { x: ox, y: oy } = floorOrigin(ctx.room);
@@ -143,7 +150,7 @@ export const vocabModule: RoomPuzzleModule = {
       const spawn = ctx.room.spawn;
       board.entities = [
         { id: "player", noun: "player", x: spawn.x - ox, y: spawn.y - oy },
-        ...payload.tiles.map((t): Entity => ({ id: t.id, noun: "tile", x: t.pos.x, y: t.pos.y })),
+        ...tiles.map((t): Entity => ({ id: t.id, noun: "tile", x: t.pos.x, y: t.pos.y })),
         // Floor signs are solid scenery (STOP) — they never move or match.
         ...props.map((p): Entity => ({ id: `prop:${p.id}`, noun: "prop", x: p.pos.x, y: p.pos.y })),
       ];

@@ -2,6 +2,7 @@
   "pack_id": "logic.room.en.v1",
   "schema_version": "1.0.0",
   "language": "en",
+  "language_label": "English",
   "puzzles": [
     {
       "id": "logic-rules-000",
@@ -479,6 +480,854 @@
         "grants_unlock": "logic8.cleared",
         "theme": "grove"
       }
+    },
+    {
+      "id": "logic-rules-001-shuffled",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 1,
+      "prompt": "Push the words to change the rules.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-01-welcome"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 3,
+          "y": 4
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic1.cleared",
+        "theme": "grove"
+      },
+      "modifiers": [
+        "randomized"
+      ]
+    },
+    {
+      "id": "logic-rules-001-shrouded",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 1,
+      "prompt": "Push the words to change the rules.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-01-welcome"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 3,
+          "y": 4
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic1.cleared",
+        "theme": "grove"
+      },
+      "modifiers": [
+        "randomized",
+        "lowlight"
+      ]
+    },
+    {
+      "id": "logic-rules-002-shuffled",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 2,
+      "prompt": "Push the words to change the rules.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-02-push"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 3,
+          "y": 4
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic2.cleared",
+        "theme": "grove"
+      },
+      "modifiers": [
+        "randomized"
+      ]
+    },
+    {
+      "id": "logic-rules-002-shrouded",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 2,
+      "prompt": "Push the words to change the rules.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-02-push"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 3,
+          "y": 4
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic2.cleared",
+        "theme": "grove"
+      },
+      "modifiers": [
+        "randomized",
+        "lowlight"
+      ]
+    },
+    {
+      "id": "logic-rules-003-shuffled",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 3,
+      "prompt": "Push the words to change the rules.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-03-break-wall"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 3,
+          "y": 5
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic3.cleared",
+        "theme": "grove"
+      },
+      "modifiers": [
+        "randomized"
+      ]
+    },
+    {
+      "id": "logic-rules-003-shrouded",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 3,
+      "prompt": "Push the words to change the rules.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-03-break-wall"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 3,
+          "y": 5
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic3.cleared",
+        "theme": "grove"
+      },
+      "modifiers": [
+        "randomized",
+        "lowlight"
+      ]
+    },
+    {
+      "id": "logic-rules-004-shuffled",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 4,
+      "prompt": "Push the words to change the rules.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-04-make-win"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 3,
+          "y": 7
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic4.cleared",
+        "theme": "grove"
+      },
+      "modifiers": [
+        "randomized"
+      ]
+    },
+    {
+      "id": "logic-rules-004-shrouded",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 4,
+      "prompt": "Push the words to change the rules.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-04-make-win"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 3,
+          "y": 7
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic4.cleared",
+        "theme": "grove"
+      },
+      "modifiers": [
+        "randomized",
+        "lowlight"
+      ]
+    },
+    {
+      "id": "logic-rules-005-shuffled",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 5,
+      "prompt": "Push the words to change the rules.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-05-become"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 3,
+          "y": 7
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic5.cleared",
+        "theme": "grove"
+      },
+      "modifiers": [
+        "randomized"
+      ]
+    },
+    {
+      "id": "logic-rules-005-shrouded",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 5,
+      "prompt": "Push the words to change the rules.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-05-become"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 3,
+          "y": 7
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic5.cleared",
+        "theme": "grove"
+      },
+      "modifiers": [
+        "randomized",
+        "lowlight"
+      ]
+    },
+    {
+      "id": "logic-rules-006-shuffled",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 6,
+      "prompt": "Two phases: unmake a rule, then finish another beyond the breach.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-06-through"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 3,
+          "y": 5
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic6.cleared",
+        "theme": "grove"
+      },
+      "modifiers": [
+        "randomized"
+      ]
+    },
+    {
+      "id": "logic-rules-006-shrouded",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 6,
+      "prompt": "Two phases: unmake a rule, then finish another beyond the breach.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-06-through"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 3,
+          "y": 5
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic6.cleared",
+        "theme": "grove"
+      },
+      "modifiers": [
+        "randomized",
+        "lowlight"
+      ]
+    },
+    {
+      "id": "logic-rules-007-shuffled",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 7,
+      "prompt": "The flag is sealed. Deduce which rule actually wins.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-07-which-rule"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 2,
+          "y": 3
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic7.cleared",
+        "theme": "grove"
+      },
+      "modifiers": [
+        "randomized"
+      ]
+    },
+    {
+      "id": "logic-rules-007-shrouded",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 7,
+      "prompt": "The flag is sealed. Deduce which rule actually wins.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-07-which-rule"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 2,
+          "y": 3
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic7.cleared",
+        "theme": "grove"
+      },
+      "modifiers": [
+        "randomized",
+        "lowlight"
+      ]
+    },
+    {
+      "id": "logic-rules-008-shuffled",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 8,
+      "prompt": "Two locks, one path. Break, cross, build, win.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-08-two-locks"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 2,
+          "y": 6
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic8.cleared",
+        "theme": "grove"
+      },
+      "modifiers": [
+        "randomized"
+      ]
+    },
+    {
+      "id": "logic-rules-008-shrouded",
+      "schema_version": "1.0.0",
+      "language": "en",
+      "puzzle_type": "logic_rules",
+      "validator_type": "exact_match",
+      "difficulty": 8,
+      "prompt": "Two locks, one path. Break, cross, build, win.",
+      "payload": {
+        "pack_url": "/content/packs/logic.rules.en.v1.json",
+        "board_id": "en-08-two-locks"
+      },
+      "solution": {
+        "note": "win conditions live in the logic pack's boards"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": true,
+        "concept": "rule manipulation",
+        "tags": [
+          "logic",
+          "baba",
+          "room"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 2,
+          "y": 6
+        },
+        "flash_color": "#5fbe6f",
+        "grants_unlock": "logic8.cleared",
+        "theme": "grove"
+      },
+      "modifiers": [
+        "randomized",
+        "lowlight"
+      ]
     }
   ],
   "progression": [
@@ -528,6 +1377,86 @@
           "id": "logic-rules-008",
           "label": "Logic VIII",
           "unlock": "logic7.cleared"
+        },
+        {
+          "id": "logic-rules-001-shuffled",
+          "label": "Logic I",
+          "unlock": "logic1.cleared"
+        },
+        {
+          "id": "logic-rules-001-shrouded",
+          "label": "Logic I",
+          "unlock": "logic1.cleared"
+        },
+        {
+          "id": "logic-rules-002-shuffled",
+          "label": "Logic II",
+          "unlock": "logic2.cleared"
+        },
+        {
+          "id": "logic-rules-002-shrouded",
+          "label": "Logic II",
+          "unlock": "logic2.cleared"
+        },
+        {
+          "id": "logic-rules-003-shuffled",
+          "label": "Logic III",
+          "unlock": "logic3.cleared"
+        },
+        {
+          "id": "logic-rules-003-shrouded",
+          "label": "Logic III",
+          "unlock": "logic3.cleared"
+        },
+        {
+          "id": "logic-rules-004-shuffled",
+          "label": "Logic IV",
+          "unlock": "logic4.cleared"
+        },
+        {
+          "id": "logic-rules-004-shrouded",
+          "label": "Logic IV",
+          "unlock": "logic4.cleared"
+        },
+        {
+          "id": "logic-rules-005-shuffled",
+          "label": "Logic V",
+          "unlock": "logic5.cleared"
+        },
+        {
+          "id": "logic-rules-005-shrouded",
+          "label": "Logic V",
+          "unlock": "logic5.cleared"
+        },
+        {
+          "id": "logic-rules-006-shuffled",
+          "label": "Logic VI",
+          "unlock": "logic6.cleared"
+        },
+        {
+          "id": "logic-rules-006-shrouded",
+          "label": "Logic VI",
+          "unlock": "logic6.cleared"
+        },
+        {
+          "id": "logic-rules-007-shuffled",
+          "label": "Logic VII",
+          "unlock": "logic7.cleared"
+        },
+        {
+          "id": "logic-rules-007-shrouded",
+          "label": "Logic VII",
+          "unlock": "logic7.cleared"
+        },
+        {
+          "id": "logic-rules-008-shuffled",
+          "label": "Logic VIII",
+          "unlock": "logic8.cleared"
+        },
+        {
+          "id": "logic-rules-008-shrouded",
+          "label": "Logic VIII",
+          "unlock": "logic8.cleared"
         }
       ]
     }
