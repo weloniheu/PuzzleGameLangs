@@ -310,6 +310,10 @@ export interface VocabMatchSolution {
 // --- dialogue (two portrait-only speakers sharing one presentation) ---
 export type DialogueTrigger =
   | "on_enter" | "build-first" | "wrong-order" | "wrong-indent" | "wrong-word" | "success" | "hint"
+  // GUIDED TUTORIAL beats (room-world `dialogue.guided_tutorial` AND card-game
+  // `payload.guided_tutorial` both tag every step this way — see systems/tutorialCard.ts,
+  // the shared popup that renders them; content/TUTORIAL_SCRIPTS.md documents authoring).
+  | "guided_tutorial"
   // FIRST-TIME triggers (tutorial rooms): fire ONCE the first time that mechanic happens
   // per room-load, through the same beat system. Optional — a room without them is unaffected.
   | "first_pickup" | "first_inventory_full" | "first_place"

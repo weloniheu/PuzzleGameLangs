@@ -2,14 +2,15 @@
 // Guided-tutorial overlay for the CARD-GAME renderers (match / combine /
 // sentence_build). The room world has its own richer version integrated with
 // the dialogue presenter (portrait interjections etc. — see systems/dialogue.ts
-// + roomRenderer); this is the lightweight sibling for renderers that have no
-// dialogue system: a single narrator-style bar over the board.
+// + roomHost); this is the lightweight sibling for renderers that have no
+// dialogue system — it drives the SAME visual popup card (systems/tutorialCard.ts)
+// directly, since every beat here is guided-tutorial content already.
 //
 // Semantics (mirrors the room world's guided tutorials):
 //   • A step with `waitFor` stays until the player actually performs that action
 //     (the renderer reports it via notify()); gameplay stays LIVE meanwhile.
 //   • A step without `waitFor` is informational: it waits for Enter (visible
-//     "Enter ▸" cue) and SUPPRESSES gameplay keys while showing — same
+//     Enter-gated pill) and SUPPRESSES gameplay keys while showing — same
 //     "dialogue blocks input" rule the room world uses. No reading-speed timers.
 //   • The sequence is unskippable (Escape is swallowed) and plays ONCE EVER.
 //
@@ -20,12 +21,13 @@
 // the room tutorials; Settings → "Replay tutorials" clears it all).
 //
 // Content stays in the pack (`payload.guided_tutorial`, the same DialogueBeat
-// shape the room world uses — `speaker`/`trigger` are ignored here); the enum of
-// waitFor kinds and this display mechanism are engine. See content/TUTORIAL_SCRIPTS.md.
+// shape the room world uses — `speaker` is ignored here); the enum of waitFor
+// kinds and this display mechanism are engine. See content/TUTORIAL_SCRIPTS.md.
 // ---------------------------------------------------------------------------
 
 import type { DialogueBeat, Puzzle, TutorialWaitFor } from "../../schema/types";
 import { hasCompletedTutorial, completeTutorial } from "../core/codex";
+import { paintTutorialCard, removeTutorialCard, tutorialModuleMeta } from "./tutorialCard";
 
 export interface TutorialOverlay {
   /** Report that `kind` actually happened. Advances a step waiting on exactly it. */
@@ -58,14 +60,7 @@ export function mountGuidedTutorial(container: HTMLElement, puzzle: Puzzle): Tut
   const saveKey = puzzle.puzzle_type; // per-TYPE persistence (see header comment)
   if (!beats.length || hasCompletedTutorial(saveKey)) return NOOP;
 
-  // --- the bar (own scoped classes — leaks into no renderer's board styles) ---
-  const bar = document.createElement("div");
-  bar.className = "tutorial-bar";
-  const text = document.createElement("span");
-  const cue = document.createElement("div");
-  cue.className = "tutorial-bar-cue";
-  bar.append(text, cue);
-  container.appendChild(bar);
+  const module = tutorialModuleMeta(puzzle.puzzle_type, puzzle.id);
 
   let idx = 0;
   let done = false;
@@ -77,10 +72,7 @@ export function mountGuidedTutorial(container: HTMLElement, puzzle: Puzzle): Tut
   function show() {
     const beat = current();
     if (!beat) return;
-    text.textContent = beat.text;
-    cue.textContent = beat.waitFor ? "" : "Enter ▸";
-    bar.classList.remove("shown");
-    requestAnimationFrame(() => bar.classList.add("shown"));
+    paintTutorialCard(container, { beat, idx, total: beats.length, module });
   }
 
   function advance() {
@@ -92,7 +84,7 @@ export function mountGuidedTutorial(container: HTMLElement, puzzle: Puzzle): Tut
   function finish() {
     done = true;
     completeTutorial(saveKey);
-    bar.remove();
+    removeTutorialCard(container);
     container.removeEventListener("keydown", onKeydown, true);
     if (activeTeardown === teardown) activeTeardown = null;
   }
@@ -111,7 +103,7 @@ export function mountGuidedTutorial(container: HTMLElement, puzzle: Puzzle): Tut
 
   const teardown = () => {
     done = true;
-    bar.remove();
+    removeTutorialCard(container);
     container.removeEventListener("keydown", onKeydown, true);
   };
   activeTeardown = teardown;
