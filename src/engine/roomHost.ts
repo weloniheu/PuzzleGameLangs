@@ -217,6 +217,8 @@ export function mountRoom(
   const dialogue = createDialogue({
     container,
     markerLayer,
+    puzzleType: puzzle.puzzle_type,
+    puzzleId: puzzle.id,
     speakers,
     hintGiver,
     hintLines,

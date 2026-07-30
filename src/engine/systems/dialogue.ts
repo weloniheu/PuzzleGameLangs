@@ -15,7 +15,8 @@
 //     (content, e.g. the coding `beats` map) is injected as `firstTimeBeat`.
 // ---------------------------------------------------------------------------
 
-import type { DialogueBeat, DialogueSpeaker, HintBeat, TutorialWaitFor } from "../../schema/types";
+import type { DialogueBeat, DialogueSpeaker, HintBeat, PuzzleType, TutorialWaitFor } from "../../schema/types";
+import { paintTutorialCard, removeTutorialCard, tutorialModuleMeta } from "./tutorialCard";
 
 // --- timing/threshold constants (moved from roomRenderer, unchanged) ---
 export const AUTO_LEN = 48;     // text shorter than this auto-advances when autoAdvance is unset
@@ -57,6 +58,8 @@ export function narratorDwell(text: string, autoPause: number = AUTO_PAUSE): num
 export interface DialogueDeps {
   container: HTMLElement;                  // hosts the portrait + narrator overlays
   markerLayer: HTMLElement;                // world layer for the hint giver's marker
+  puzzleType: PuzzleType;                  // GUIDED TUTORIAL card badge (see tutorialCard.ts)
+  puzzleId: string;                        // ditto — the "hub" sentinel special-case
   speakers: Record<string, DialogueSpeaker>;
   hintGiver: { pos: { x: number; y: number }; marker?: string } | null;
   hintLines: HintBeat[];
@@ -193,13 +196,22 @@ export function createDialogue(deps: DialogueDeps): Dialogue {
     showBeat();
   }
 
-  /** Route a beat to a surface: a defined character in a terminal room → PORTRAIT;
-   *  everything else (speaker "narrator", or no defined character) → NARRATOR text.
-   *  The OTHER surface hides immediately — only one voice is ever on screen. */
+  /** Route a beat to a surface: GUIDED TUTORIAL beats (trigger "guided_tutorial") always go
+   *  to the visual popup card (see tutorialCard.ts), regardless of speaker — a defined
+   *  character in a terminal room → PORTRAIT; everything else (speaker "narrator", or no
+   *  defined character) → NARRATOR text. The OTHER surfaces hide immediately — only one
+   *  voice is ever on screen. */
   function showBeat() {
     clearTimers();
     const beat = currentBeat(state);
     if (!beat) return;
+    if (beat.trigger === "guided_tutorial") {
+      hideNarratorNow();
+      hidePortraitNow();
+      showTutorialCardBeat(beat);
+      return;
+    }
+    hideTutorialCardNow();
     const sp = deps.speakers[beat.speaker];
     if (sp && dialogueEl && dlgPortrait && dlgName && dlgText && dlgCue) {
       hideNarratorNow();
@@ -208,6 +220,24 @@ export function createDialogue(deps: DialogueDeps): Dialogue {
       hidePortraitNow();
       showNarratorBeat(beat);
     }
+  }
+
+  /** GUIDED TUTORIAL surface: the center-dominant popup card (tutorialCard.ts). No
+   *  auto-advance timer — a waitFor step waits for the real action (notify()); an
+   *  informational step waits for Enter (see roomHost's dialogueBlocks → advance() wiring).
+   *  Dot progress counts only the guided-tutorial run within the current queue, so it stays
+   *  correct even when a story `on_enter` beat happens to share the same play() call. */
+  function showTutorialCardBeat(beat: DialogueBeat) {
+    const run = state.beats.filter((b) => b.trigger === "guided_tutorial");
+    paintTutorialCard(deps.container, {
+      beat,
+      idx: run.indexOf(beat),
+      total: run.length,
+      module: tutorialModuleMeta(deps.puzzleType, deps.puzzleId),
+    });
+  }
+  function hideTutorialCardNow() {
+    removeTutorialCard(deps.container);
   }
 
   /** Instantly drop a surface (no fade) — used when the queue switches surfaces, or a new
@@ -307,6 +337,7 @@ export function createDialogue(deps: DialogueDeps): Dialogue {
     clearTimers();
     state = { beats: [], idx: -1 };
     highlightMarker(false);
+    hideTutorialCardNow();
     if (dialogueEl && dlgPortrait) {
       dlgPortrait.classList.remove("talking");
       dialogueEl.classList.remove("shown"); // slide out
