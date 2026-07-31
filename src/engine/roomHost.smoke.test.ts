@@ -73,6 +73,9 @@ const press = (c: HTMLElement, key: string, times = 1) => {
 };
 const text = (c: HTMLElement, sel: string) =>
   (c.querySelector(sel)?.textContent ?? "").replace(/\s+/g, " ").trim();
+// GUIDED TUTORIAL beats (trigger "guided_tutorial") render via the popup card
+// (systems/tutorialCard.ts), not the narrator bar — see dialogue.ts's showBeat().
+const card = (c: HTMLElement) => text(c, ".tutorial-card-caption");
 const slimeAt = (c: HTMLElement) =>
   (c.querySelector(".slime") as HTMLElement).style.transform;
 
@@ -93,15 +96,15 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     expect(c.querySelector(".room-world")).toBeTruthy();
     expect(c.querySelectorAll(".room-door-layer .tile-portal")).toHaveLength(4);
     expect(c.querySelector(".slime")).toBeTruthy();
-    expect(text(c, ".room-narrator")).toContain("Welcome to Puzzle Patch");
+    expect(card(c)).toContain("Welcome to Puzzle Patch");
 
     // Tutorial: Enter past beat 1; beat 2 waits for an ACTUAL move.
     press(c, "Enter");
-    expect(text(c, ".room-narrator")).toContain("Move around");
+    expect(card(c)).toContain("Move around");
     const before = slimeAt(c);
     press(c, "ArrowLeft"); // (6,4) → (5,4): satisfies waitFor "move"
     expect(slimeAt(c)).not.toBe(before);
-    expect(text(c, ".room-narrator")).toContain("Settings");
+    expect(card(c)).toContain("Settings");
     press(c, "Enter"); // → final step: waits for enter_door
 
     // (Every hub portal is open now, so the old coming_soon interjection probe is
@@ -121,7 +124,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     expect(c.querySelectorAll(".tile-pile")).toHaveLength(3); // print, hello, world
     expect(text(c, ".room-dialogue")).toContain("Welcome to the practice pod");
     press(c, "Enter", 2); // through the on_enter beats → tutorial step 1
-    expect(text(c, ".room-narrator")).toContain("code puzzle");
+    expect(card(c)).toContain("code puzzle");
     press(c, "Enter");    // → waits for pickup
 
     // Pick up print / hello / world (FIFO), from spawn (6,7).
@@ -129,7 +132,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "ArrowRight", 3);     // (9,6) print pile
     press(c, "i");
     expect(text(c, ".room-inventory")).toContain("print");
-    expect(text(c, ".room-narrator")).toContain("press P"); // tutorial advanced to "place"
+    expect(card(c)).toContain("press P"); // tutorial advanced to "place"
     press(c, "ArrowRight");        // (10,6) hello
     press(c, "i");
     press(c, "ArrowRight");        // (11,6) world
@@ -140,7 +143,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "ArrowLeft", 10);     // (1,1) — the coding area's left edge
     press(c, "p");
     expect(c.querySelectorAll(".tile-placed")).toHaveLength(1);
-    expect(text(c, ".room-narrator")).toContain("Build"); // tutorial advanced to "build"
+    expect(card(c)).toContain("Build"); // tutorial advanced to "build"
     press(c, "ArrowRight");        // (2,1)
     press(c, "p");
     press(c, "ArrowRight");        // (3,1)
@@ -158,7 +161,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "ArrowLeft");         // (2,7) Build
     press(c, "Enter");
     expect(text(c, ".room-terminal-body")).toContain("compiled");
-    expect(text(c, ".room-narrator")).toContain("Run"); // tutorial advanced to "run"
+    expect(card(c)).toContain("Run"); // tutorial advanced to "run"
     press(c, "ArrowRight", 3);     // (5,7) Run
     press(c, "Enter");
     expect(text(c, ".room-terminal-body")).toContain("hello world");
@@ -226,14 +229,14 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
 
     // The room's own guided tutorial: step 1 waits for Enter; step 2 waits for a
     // REAL move (the module reports it — arrows pass through while it shows).
-    expect(text(c, ".room-narrator")).toContain("RULES");
+    expect(card(c)).toContain("RULES");
     press(c, "Enter");
-    expect(text(c, ".room-narrator")).toContain("arrow key");
+    expect(card(c)).toContain("arrow key");
     const slime0 = slimeAt(c);
     const board0 = c.querySelector(".logic-board-layer")!.innerHTML;
     press(c, "ArrowRight");              // the you-entity moves → advances the tutorial
     expect(slimeAt(c)).not.toBe(slime0); // the slime IS the controlled entity
-    expect(text(c, ".room-narrator")).toContain("FLAG IS WIN");
+    expect(card(c)).toContain("FLAG IS WIN");
     press(c, "Enter"); // → the undo/reset step
     press(c, "Enter"); // tutorial done
 
@@ -289,13 +292,13 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
 
     // The room's own guided tutorial: step 2 waits for a REAL push (a plain step
     // doesn't count; the module reports the shove).
-    expect(text(c, ".room-narrator")).toContain("sentence frame");
+    expect(card(c)).toContain("sentence frame");
     press(c, "Enter");
-    expect(text(c, ".room-narrator")).toContain("PUSH");
+    expect(card(c)).toContain("PUSH");
     press(c, "ArrowLeft");    // board (5,5) → (4,5): a step, no push — the beat stays
-    expect(text(c, ".room-narrator")).toContain("PUSH");
+    expect(card(c)).toContain("PUSH");
     press(c, "ArrowUp");      // shoves "the slime" up → advances the tutorial
-    expect(text(c, ".room-narrator")).toContain("checks itself");
+    expect(card(c)).toContain("checks itself");
     press(c, "Enter"); // → the undo/reset step
     press(c, "Enter"); // tutorial done
 
@@ -374,22 +377,23 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     expect(c.querySelectorAll(".slime")).toHaveLength(1);
 
     // The room's own guided tutorial: step 2 waits for a REAL push.
-    expect(text(c, ".room-narrator")).toContain("SAME thing");
+    expect(card(c)).toContain("SAME thing");
     press(c, "Enter");
-    expect(text(c, ".room-narrator")).toContain("PUSH");
+    expect(card(c)).toContain("PUSH");
 
     // PROBE help with nothing nearby → the pack's hint line INTERJECTS over the
-    // tutorial, then the tutorial resumes at the same step.
+    // tutorial (an ordinary "hint" beat — still the narrator, not the tutorial
+    // card), then the tutorial resumes at the same step (back on the card).
     press(c, "?");
     expect(text(c, ".room-narrator")).toContain("beside a tile");
     press(c, "Enter"); // dismiss the interjection
-    expect(text(c, ".room-narrator")).toContain("PUSH"); // resumed where it left off
+    expect(card(c)).toContain("PUSH"); // resumed where it left off
 
     // Walk left of aloha and shove it once → the tutorial advances.
     press(c, "ArrowLeft", 3); // board (4,5) → (1,5)
     press(c, "ArrowUp", 2);   // (1,3), left of aloha at (2,3)
     press(c, "ArrowRight");   // pushes aloha (2,3) → (3,3)
-    expect(text(c, ".room-narrator")).toContain("lock together");
+    expect(card(c)).toContain("lock together");
     press(c, "Enter"); // → the ?/undo/reset step
     press(c, "Enter"); // tutorial done
 
@@ -666,14 +670,14 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // First visit: the shared "tier:mixed" tutorial plays after the snake greeting.
     manager.enter("py-code-mixed-000");
     press(c, "Enter"); // past the snake on_enter greeting → into the shared tier tutorial
-    expect(text(c, ".room-narrator")).toContain("New tier");
+    expect(card(c)).toContain("New tier");
     press(c, "Enter"); // finish the tutorial → the whole sequence completes → marked seen
     manager.teardown();
 
     // Second visit: tier:mixed already seen → greeting only, the tutorial does not replay.
     manager.enter("py-code-mixed-000");
     press(c, "Enter"); // greeting; nothing follows
-    expect(text(c, ".room-narrator")).not.toContain("New tier");
+    expect(card(c)).not.toContain("New tier");
     manager.teardown();
   });
 });

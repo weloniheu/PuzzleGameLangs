@@ -821,20 +821,203 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
 .room-narrator-cue { margin-top: 0.3rem; font-family: "IBM Plex Mono", monospace; font-size: 0.7rem; color: rgba(255, 246, 230, 0.55); min-height: 1em; }
 .room-narrator-cue:empty { display: none; }
 
-/* Guided-tutorial bar for the CARD games (systems/tutorialOverlay.ts) — the narrator's
-   lightweight sibling. Own scoped classes; styles no puzzle board. */
-.tutorial-bar {
-  position: fixed; left: 50%; bottom: 24px; z-index: 60;
-  transform: translateX(-50%) translateY(12px);
-  max-width: min(620px, 90vw); pointer-events: none; text-align: center;
-  background: rgba(20, 17, 13, 0.88); color: #fff6e6;
-  padding: 0.7rem 1.1rem; border-radius: 12px; line-height: 1.45;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 246, 230, 0.12);
-  opacity: 0; transition: transform 0.22s ease, opacity 0.22s ease;
+/* Guided-tutorial POPUP CARD (systems/tutorialCard.ts) — shared by the room world
+   (dialogue.ts, `guided_tutorial` beats) AND the card games (tutorialOverlay.ts). A
+   center-dominant, dimmed scrim over the dimmed-not-hidden scene (Style Guide 7a):
+   a short looping demo of the actual mechanic, dot progress, an Enter-gated pill.
+   Own scoped classes; z-index sits above the narrator/dialogue (50) but below
+   Settings (60) so the gear icon (Rule 4's one mouse exception) stays reachable. */
+.tutorial-card-scrim {
+  position: fixed; inset: 0; z-index: 58;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(20, 16, 23, 0.68); backdrop-filter: blur(1.5px);
+  pointer-events: none; opacity: 0; transition: opacity 0.18s ease;
 }
-.tutorial-bar.shown { opacity: 1; transform: translateX(-50%) translateY(0); }
-.tutorial-bar-cue { margin-top: 0.3rem; font-size: 0.75rem; color: rgba(255, 246, 230, 0.55); min-height: 1em; }
-.tutorial-bar-cue:empty { display: none; }
+.tutorial-card-scrim.shown { opacity: 1; }
+/* waitFor steps: no dimming, docked at the bottom edge (same spot the old text bar
+   used) — the room stays fully visible so the player can see the mechanic they're
+   performing. See paintTutorialCard's `--live` toggle. */
+.tutorial-card-scrim.tutorial-card-scrim--live {
+  align-items: flex-end; justify-content: center;
+  background: transparent; backdrop-filter: none;
+  padding-bottom: 20px;
+}
+.tutorial-card {
+  width: min(360px, 88vw);
+  background: linear-gradient(var(--wood-light), var(--wood));
+  border: 3px solid var(--wood-dark); border-radius: 16px;
+  padding: 18px; box-shadow: 0 16px 34px rgba(0, 0, 0, 0.5);
+  font-family: "Fredoka", system-ui, sans-serif; color: var(--parchment);
+}
+.tutorial-card-scrim--live .tutorial-card { width: min(320px, 80vw); padding: 12px 16px; }
+.tutorial-card-scrim--live .tutorial-card-demo { height: 64px; margin-bottom: 8px; }
+.tutorial-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.tutorial-card-badge {
+  flex: none; width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(#8f7ff0, #6b5bdb); border: 2px solid #4634a8;
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: #fff; overflow: hidden;
+}
+.tutorial-card-badge img { width: 78%; height: 78%; object-fit: contain; }
+.tutorial-card-module {
+  font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--panel-muted);
+}
+.tutorial-card-demo {
+  background: #241c11; border: 2px solid #4a3022; border-radius: 10px;
+  height: 92px; padding: 10px 14px; margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
+}
+.tutorial-card-caption { font-size: 0.85rem; line-height: 1.45; margin: 0 0 12px; }
+.tutorial-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.tutorial-card-dots { display: flex; gap: 5px; }
+.tutorial-card-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, 0.25); }
+.tutorial-card-dot.active { background: var(--amber); }
+/* The pill is a VISUAL cue, not a click target (Rule 4: gameplay is keyboard-only) —
+   Enter is what actually advances (see roomHost's dialogueBlocks → advance() wiring). */
+.tutorial-card-pill {
+  margin-left: auto; font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; font-weight: 700;
+  color: var(--amber-ink); background: linear-gradient(#f2c66b, var(--amber));
+  border: 2px solid #b07d2a; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35);
+  padding: 6px 12px; border-radius: 8px; animation: cue-nudge 1s ease-in-out infinite;
+}
+
+/* --- per-mechanic mini demos (closed TutorialWaitFor set; transform/opacity only) --- */
+.tdemo { display: flex; align-items: center; justify-content: center; }
+.tdemo-chip {
+  width: 26px; height: 26px; border-radius: 6px;
+  background: linear-gradient(#a7d98f, #78b85e); border: 1.5px solid #4f8a3a;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+}
+.tdemo-slot { width: 26px; height: 26px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.14); }
+.tdemo-dot { width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle, var(--slime), #4f9a3a 70%); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); }
+.tdemo-key {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: linear-gradient(#f2c66b, var(--amber)); border: 1.5px solid #b07d2a;
+  display: flex; align-items: center; justify-content: center;
+  font-family: "IBM Plex Mono", monospace; font-weight: 700; font-size: 15px; color: var(--amber-ink);
+  animation: tdemo-key-glow 2.2s ease-in-out infinite;
+}
+@keyframes tdemo-key-glow {
+  0%, 20%, 100% { box-shadow: 0 3px 0 #8a5a2b, 0 0 0 0 rgba(242, 198, 107, 0); }
+  32% { box-shadow: 0 1px 0 #8a5a2b, 0 0 0 5px rgba(242, 198, 107, 0.45); }
+  44%, 100% { box-shadow: 0 3px 0 #8a5a2b, 0 0 0 0 rgba(242, 198, 107, 0); }
+}
+
+/* move: a 4-arrow cluster pulses through up→right→down→left, looping. */
+.tdemo-movepad { position: relative; width: 76px; height: 76px; }
+.tdemo-arrow {
+  position: absolute; width: 24px; height: 24px; border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08); border: 1.5px solid rgba(255, 255, 255, 0.2);
+  display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--panel-muted);
+  animation: tdemo-arrow-pulse 2.4s ease-in-out infinite;
+}
+.tdemo-arrow-up { top: 0; left: 26px; animation-delay: 0s; }
+.tdemo-arrow-right { top: 26px; right: 0; animation-delay: 0.6s; }
+.tdemo-arrow-down { bottom: 0; left: 26px; animation-delay: 1.2s; }
+.tdemo-arrow-left { top: 26px; left: 0; animation-delay: 1.8s; }
+@keyframes tdemo-arrow-pulse {
+  0%, 20%, 100% { background: rgba(255, 255, 255, 0.08); color: var(--panel-muted); transform: scale(1); }
+  8% { background: linear-gradient(#f2c66b, var(--amber)); color: var(--amber-ink); transform: scale(1.12); }
+}
+
+/* enter_door: a doorframe glows while a slime dot slides in and fades, looping. */
+.tdemo-enter_door { gap: 14px; }
+.tdemo-door {
+  width: 30px; height: 44px; border-radius: 6px 6px 3px 3px;
+  background: linear-gradient(#8a5a2b, #6b4420); border: 2px solid #4a3016;
+  animation: tdemo-door-glow 2s ease-in-out infinite;
+}
+@keyframes tdemo-door-glow { 0%, 55%, 100% { box-shadow: none; } 75% { box-shadow: 0 0 14px 3px rgba(242, 198, 107, 0.6); } }
+.tdemo-door-slime { animation: tdemo-door-slide 2s ease-in-out infinite; }
+@keyframes tdemo-door-slide {
+  0%, 45% { transform: translateX(0); opacity: 1; }
+  75% { transform: translateX(30px) scale(0.5); opacity: 0.3; }
+  76%, 100% { transform: translateX(0); opacity: 1; }
+}
+
+/* pickup: a floor chip lifts up into an inventory slot, then resets. */
+.tdemo-pickup { gap: 16px; }
+.tdemo-pickup-chip { animation: tdemo-lift 2s ease-in-out infinite; }
+@keyframes tdemo-lift {
+  0%, 15% { transform: translate(0, 0) scale(1); opacity: 1; }
+  55% { transform: translate(30px, -22px) scale(0.7); opacity: 1; }
+  70%, 100% { transform: translate(30px, -22px) scale(0.7); opacity: 0; }
+}
+
+/* place: a chip drops from an inventory slot onto an empty floor tile, with a pop. */
+.tdemo-place { gap: 16px; }
+.tdemo-place-chip { animation: tdemo-drop 2s ease-in-out infinite; }
+@keyframes tdemo-drop {
+  0%, 15% { transform: translate(0, -22px) scale(0.7); opacity: 0; }
+  16% { opacity: 1; }
+  55% { transform: translate(0, 0) scale(1); }
+  62% { transform: translate(0, 0) scale(1.15); }
+  70%, 100% { transform: translate(0, 0) scale(1); }
+}
+
+/* build: a chunky button depresses, then a checkmark flashes. */
+.tdemo-button {
+  padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.78rem;
+  font-family: "IBM Plex Mono", monospace; color: var(--amber-ink);
+}
+.tdemo-button-build {
+  background: linear-gradient(#c97b3c, #a5622a); border-bottom: 4px solid #8a4f22; color: #2a1810;
+  animation: tdemo-press 2s ease-in-out infinite;
+}
+@keyframes tdemo-press {
+  0%, 30%, 100% { border-bottom-width: 4px; transform: translateY(0); }
+  40% { border-bottom-width: 1px; transform: translateY(3px); }
+  50%, 100% { border-bottom-width: 4px; transform: translateY(0); }
+}
+.tdemo-check {
+  margin-left: 12px; width: 22px; height: 22px; border-radius: 50%;
+  background: #78b85e; color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; opacity: 0; animation: tdemo-check-pop 2s ease-in-out infinite;
+}
+@keyframes tdemo-check-pop {
+  0%, 40%, 100% { transform: scale(0); opacity: 0; }
+  55% { transform: scale(1.2); opacity: 1; }
+  70%, 100% { transform: scale(1); opacity: 1; }
+}
+
+/* run: a terminal glyph blinks a cursor as an output line "types" out. */
+.tdemo-terminal {
+  font-family: "IBM Plex Mono", monospace; font-size: 0.85rem; color: var(--terminal-ok, #7ec06a);
+  background: #14110d; border-radius: 6px; padding: 8px 12px; display: flex; gap: 2px;
+}
+.tdemo-terminal-cursor { animation: tdemo-blink 1s step-end infinite; }
+@keyframes tdemo-blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+
+/* combine: two chips slide into a bowl and merge with a spark. */
+.tdemo-combine { gap: 14px; }
+.tdemo-bowl {
+  width: 30px; height: 18px; border-radius: 0 0 15px 15px;
+  background: linear-gradient(#5a4636, #3a2e26); border: 2px solid #4a3016;
+  position: relative;
+}
+.tdemo-combine-chip { animation-duration: 2s; animation-iteration-count: infinite; animation-timing-function: ease-in-out; }
+.tdemo-combine-a { animation-name: tdemo-combine-a; }
+.tdemo-combine-b { animation-name: tdemo-combine-b; }
+@keyframes tdemo-combine-a {
+  0%, 20% { transform: translateX(0); opacity: 1; }
+  55%, 70% { transform: translateX(22px) scale(0.6); opacity: 1; }
+  85%, 100% { transform: translateX(22px) scale(0.6); opacity: 0; }
+}
+@keyframes tdemo-combine-b {
+  0%, 20% { transform: translateX(0); opacity: 1; }
+  55%, 70% { transform: translateX(-22px) scale(0.6); opacity: 1; }
+  85%, 100% { transform: translateX(-22px) scale(0.6); opacity: 0; }
+}
+
+/* push: a chip slides sideways into a slot and locks (border flash on arrival). */
+.tdemo-push { gap: 16px; }
+.tdemo-push-chip { animation: tdemo-push-slide 2s ease-in-out infinite; }
+@keyframes tdemo-push-slide {
+  0%, 20% { transform: translateX(0); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.18); }
+  55%, 100% { transform: translateX(42px); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.18), 0 0 0 2px var(--amber); }
+}
 
 /* Debug readout (toggle with `). */
 .room-debug {

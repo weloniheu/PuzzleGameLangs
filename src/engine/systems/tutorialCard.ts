@@ -62,6 +62,13 @@ export function paintTutorialCard(container: HTMLElement, opts: TutorialCardOpti
 
   const { beat, idx, total, module } = opts;
 
+  // A waitFor step needs the room ITSELF visible — the player has to see the slime/board
+  // to actually perform the move/push/pickup/etc. the step is waiting on ("gameplay stays
+  // LIVE meanwhile"). Only an informational step (gameplay already paused) gets the full
+  // center-dominant, dimmed treatment; a waitFor step docks at the bottom, undimmed —
+  // the same position the old text bar used, so it never covers the mechanic being taught.
+  scrim.classList.toggle("tutorial-card-scrim--live", !!beat.waitFor);
+
   const card = document.createElement("div");
   card.className = "tutorial-card";
 
