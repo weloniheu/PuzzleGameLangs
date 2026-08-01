@@ -1,20 +1,26 @@
 // ---------------------------------------------------------------------------
 // Portals & transitions (shared engine system). Extracted from roomRenderer:
 // hub doors (one mechanic, data-driven reaction), the level MENU PORTAL and its
-// destination chooser, the teleport flash, and the strict TELEPORT-AWAY
-// sequence — 1) flash the player's CURRENT cell in the destination's color,
-// 2) remove the player element, 3) change map (manager teardown + mount).
+// LADDER chooser (5a: Language → Mechanic → Difficulty, drill-down), the
+// teleport flash, and the strict TELEPORT-AWAY sequence — 1) flash the player's
+// CURRENT cell in the destination's color, 2) remove the player element,
+// 3) change map (manager teardown + mount).
 //
-// PURE, testable bits: `moveSelection` (the chooser's cursor clamp) and
-// `awaySequence` (the ordering contract). Colors/targets/labels are all data —
-// see core/portalColors + core/doors; the engine never names a level.
+// PURE, testable bits: `moveSelection` (the chooser's cursor clamp),
+// `awaySequence` (the ordering contract), and the rung builders themselves
+// (core/ladder). Colors/targets/labels are all data — see core/portalColors +
+// core/doors; the engine never names a level or a language.
 // ---------------------------------------------------------------------------
 
 import type { PuzzleType, RoomDoor } from "../../schema/types";
 import type { Cell, Room } from "../core/room";
 import { doorReaction, effectiveDoorState } from "../core/doors";
 import { portalFlashColor } from "../core/portalColors";
-import type { DestinationOption } from "../core/progression";
+import { HUB_ID } from "../core/progression";
+import {
+  languageRung, mechanicRung, levelRung,
+  type LadderData, type LadderRow, type LadderRung,
+} from "../core/ladder";
 import type { Dialogue } from "./dialogue";
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
@@ -51,12 +57,13 @@ export interface PortalsDeps {
   dialogue: Dialogue;
   removePlayer(): void;
   focusRoom(): void;
-  /** The destination chooser's options, recomputed FRESH on each open. */
-  menuDestinations?: () => DestinationOption[];
-  /** A door's own chooser options (e.g. a hub portal's level list for its puzzle
-   *  type). Non-empty → interacting with the OPEN door opens a chooser instead of
-   *  transitioning directly; empty/omitted → the old direct transition. */
-  doorDestinations?: (target: string) => DestinationOption[];
+  /** The menu portal's LADDER data (this room's puzzle type), recomputed FRESH on
+   *  each open so a just-earned unlock shows up immediately. */
+  menuLadder?: () => LadderData | null;
+  /** A door's own LADDER data (the target's puzzle type). Non-null with levels →
+   *  interacting with the OPEN door opens the ladder instead of transitioning
+   *  directly; null/empty → the old direct transition. */
+  doorLadder?: (target: string) => LadderData | null;
   /** Resolve a teleport flash color from a target id (the manager has the registry). */
   flashColorFor?: (target: string) => string;
   /** Commit a transition — the manager tears this room down and mounts the target. */
@@ -74,6 +81,8 @@ export interface Portals {
   isDestMenuOpen(): boolean;
   openDestinationMenu(): void;
   closeDestinationMenu(): void;
+  /** Esc inside the chooser: pop one rung, or close when already at the top. */
+  escBack(): void;
   moveDestSel(delta: number): void;
   selectDestination(): void;
   playFlash(cell: Cell, color: string, onDone?: () => void): void;
@@ -91,8 +100,9 @@ export function createPortals(deps: PortalsDeps): Portals {
   const menuPortalEl = menuPortalCell ? document.createElement("div") : null;
   if (menuPortalEl) menuPortalEl.className = "tile-room tile-portal";
 
-  // --- destination menu (the menu portal's chooser: Hub + unlocked levels). A menu
-  //     surface like settings: mouse-clickable AND keyboard-navigable; Esc cancels. ---
+  // --- the LADDER chooser (5a): a drill-down over Language → Mechanic → Level.
+  //     A menu surface like settings: mouse-clickable AND keyboard-navigable;
+  //     Esc pops one rung (closes at the top). ---
   const destMenuEl = document.createElement("div");
   destMenuEl.className = "room-destmenu";
   destMenuEl.hidden = true;
@@ -102,8 +112,12 @@ export function createPortals(deps: PortalsDeps): Portals {
   deps.container.appendChild(destMenuEl);
   let destMenuOpen = false;
   let destSel = 0;
-  let destOptions: DestinationOption[] = [];
-  let destTitle = "Where to?";
+  let ladder: LadderData | null = null;
+  let ladderTitle = "Where to?";
+  // The drill-down position: [{}] = language rung; a chosen lang adds the mechanic
+  // rung; a chosen mech adds the level rung. Rows recompute from this each render.
+  let rungStack: Array<{ lang?: string; mech?: string }> = [{}];
+  let currentRows: LadderRow[] = [];
   // Who opened the chooser: the level MENU PORTAL, or a hub DOOR (a door-sourced
   // selection is the actual door transition, so it fires the enter_door signal).
   let destSource: "portal" | "door" = "portal";
@@ -201,12 +215,12 @@ export function createPortals(deps: PortalsDeps): Portals {
   function activateDoor(d: RoomDoor) {
     const reaction = doorReaction(d, unlocks);
     if (reaction.kind === "transition") {
-      // A door with its OWN destinations (e.g. a hub portal → its puzzle type's
-      // unlocked levels) opens a chooser instead of teleporting straight away.
-      // enter_door then fires on the SELECTION (the actual transition), not here.
-      const options = deps.doorDestinations?.(reaction.target) ?? [];
-      if (options.length) {
-        openChooser(options, d.label, "door");
+      // A door with its OWN ladder (e.g. a hub portal → its puzzle type's languages)
+      // opens the drill-down chooser instead of teleporting straight away.
+      // enter_door then fires on the final SELECTION (the actual transition), not here.
+      const data = deps.doorLadder?.(reaction.target) ?? null;
+      if (data && data.levels.length) {
+        openChooser(data, `${d.label} portal`, "door");
         return;
       }
       // GUIDED TUTORIAL: an OPEN-door transition satisfies "enter_door" (stricter than
@@ -226,38 +240,73 @@ export function createPortals(deps: PortalsDeps): Portals {
     if (d.beat) deps.dialogue.play([{ id: `door-${reaction.reason}`, speaker: "narrator", text: d.beat, trigger: "door" }]);
   }
 
-  // --- destination menu (the menu portal's / a door's chooser) --------------
-  function openChooser(options: DestinationOption[], title: string, source: "portal" | "door") {
-    destOptions = options;
-    destTitle = title;
+  // --- the LADDER chooser (the menu portal's / a door's drill-down) ----------
+  /** The rung the drill-down currently shows, computed fresh from the stack top
+   *  (so availability/CURRENT reflect the latest data on every render). */
+  function currentRung(): LadderRung {
+    const top = rungStack[rungStack.length - 1];
+    if (top.mech !== undefined) return levelRung(ladder!, top.lang!, top.mech);
+    if (top.lang !== undefined) return mechanicRung(ladder!, top.lang);
+    return languageRung(ladder!, ladderTitle);
+  }
+  function openChooser(data: LadderData, title: string, source: "portal" | "door") {
+    ladder = data;
+    ladderTitle = title;
     destSource = source;
-    destSel = 0;
+    rungStack = [{}]; // open at the LANGUAGE rung (rung 1, puzzle type, is the hub itself)
+    destSel = 1;      // the cursor starts on the first CHOICE (row 0 is ← Back)
     destMenuOpen = true;
     renderDestMenu();
     destMenuEl.hidden = false;
   }
   function openDestinationMenu() {
-    if (!deps.menuDestinations) return;
-    const options = deps.menuDestinations(); // fresh: a just-earned unlock shows up now
-    if (!options.length) return;
-    openChooser(options, "Where to?", "portal");
+    const data = deps.menuLadder?.(); // fresh: a just-earned unlock shows up now
+    if (!data || !data.levels.length) return;
+    openChooser(data, "Where to?", "portal");
   }
   function closeDestinationMenu() {
     destMenuOpen = false;
     destMenuEl.hidden = true;
     deps.focusRoom();
   }
+  /** Esc / the ← Back row: pop one rung; at the top there is nothing above — close. */
+  function escBack() {
+    if (rungStack.length > 1) {
+      rungStack.pop();
+      destSel = 1; // back onto the first choice (row 0 is ← Back)
+      renderDestMenu();
+      return;
+    }
+    closeDestinationMenu();
+  }
   function renderDestMenu() {
+    if (!ladder) return;
+    const rung = currentRung();
+    currentRows = rung.rows;
+    destSel = moveSelection(destSel, 0, currentRows.length); // clamp after a rung change
     destMenuCard.innerHTML = "";
     const title = document.createElement("p");
     title.className = "room-destmenu-title";
-    title.textContent = destTitle;
+    title.textContent = rung.title;
     destMenuCard.appendChild(title);
-    destOptions.forEach((opt, i) => {
+    rung.rows.forEach((row, i) => {
       const b = document.createElement("button");
       b.type = "button";
-      b.className = `room-destmenu-option${i === destSel ? " selected" : ""}`;
-      b.textContent = opt.kind === "hub" ? `⌂ ${opt.label}` : opt.label;
+      const cls = ["room-destmenu-option"];
+      if (i === destSel) cls.push("selected");
+      if (row.kind === "locked") cls.push("locked");
+      if (row.kind === "back" || row.kind === "hub") cls.push("nav");
+      b.className = cls.join(" ");
+      const label = document.createElement("span");
+      label.textContent = row.label;
+      b.appendChild(label);
+      // The small dark CURRENT tag — marks where the player IS; cursor-independent (5a).
+      if (row.current) {
+        const tag = document.createElement("span");
+        tag.className = "room-destmenu-tag";
+        tag.textContent = "CURRENT";
+        b.appendChild(tag);
+      }
       // Mouse is SECONDARY: a click picks directly, but hovering never moves the
       // keyboard cursor (arrows own the selection; hover feedback is CSS-only).
       b.onclick = () => { destSel = i; selectDestination(); };
@@ -265,29 +314,61 @@ export function createPortals(deps: PortalsDeps): Portals {
     });
     const hint = document.createElement("p");
     hint.className = "room-destmenu-hint";
-    hint.textContent = "↑↓ choose · Enter go · Esc cancel";
+    hint.textContent = "↑↓ choose · Enter go · Esc back";
     destMenuCard.appendChild(hint);
   }
   function moveDestSel(delta: number) {
-    destSel = moveSelection(destSel, delta, destOptions.length);
+    destSel = moveSelection(destSel, delta, currentRows.length);
     renderDestMenu();
   }
-  /** Commit the highlighted choice — the TELEPORT-AWAY sequence, in strict order (see
+  /** Commit a LEVEL/HUB choice — the TELEPORT-AWAY sequence, in strict order (see
    *  awaySequence): flash the player's cell in the destination's color, remove the
    *  player, change map. */
-  function selectDestination() {
-    const opt = destOptions[destSel];
-    if (!opt) return;
+  function commitTransition(target: string, flashColor?: string) {
     closeDestinationMenu();
     // A door-sourced choice IS the door transition: satisfy "enter_door" now,
     // BEFORE the flash/teardown (see activateDoor's direct path).
     if (destSource === "door") deps.dialogue.notify("enter_door");
-    const color = opt.flashColor ?? portalFlashColor({ hub: opt.kind === "hub", puzzleType: deps.puzzleType });
+    const color = flashColor
+      ?? portalFlashColor({ hub: target === HUB_ID, puzzleType: deps.puzzleType });
     awaySequence(
       (onDone) => playFlash(deps.pos(), color, onDone),
       deps.removePlayer,
-      () => deps.onTransition(opt.id),
+      () => deps.onTransition(target),
     );
+  }
+  /** Enter on the highlighted row: drill into a group, transition on a level/hub
+   *  row, pop on Back, or speak a locked row's beat (and stay put). */
+  function selectDestination() {
+    const row = currentRows[destSel];
+    if (!row) return;
+    switch (row.kind) {
+      case "back":
+        escBack();
+        return;
+      case "enter": {
+        const top = rungStack[rungStack.length - 1];
+        rungStack.push(top.lang === undefined ? { lang: row.key } : { lang: top.lang, mech: row.key });
+        destSel = 1; // onto the first choice of the next rung (row 0 is ← Back)
+        renderDestMenu();
+        return;
+      }
+      case "locked":
+        // Greyed row: no transition. Speak its beat (as the narrator) if it has one.
+        closeDestinationMenu();
+        if (row.beat) {
+          deps.dialogue.play([{ id: `ladder-locked-${row.label}`, speaker: "narrator", text: row.beat, trigger: "door" }]);
+        }
+        return;
+      case "hub":
+        // From a hub DOOR the player is already standing in the hub — just close
+        // (the row exists to switch types: close, walk to another portal).
+        if (destSource === "door") { closeDestinationMenu(); return; }
+        commitTransition(HUB_ID);
+        return;
+      case "level":
+        commitTransition(row.id!, row.flashColor);
+    }
   }
 
   return {
@@ -301,6 +382,7 @@ export function createPortals(deps: PortalsDeps): Portals {
     isDestMenuOpen: () => destMenuOpen,
     openDestinationMenu,
     closeDestinationMenu,
+    escBack,
     moveDestSel,
     selectDestination,
     playFlash,

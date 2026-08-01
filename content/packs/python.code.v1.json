@@ -2,6 +2,7 @@
   "pack_id": "python.code.v1",
   "schema_version": "1.0.0",
   "language": "python",
+  "language_label": "Python",
   "progression": [
     {
       "puzzle_type": "code_build",
@@ -54,6 +55,16 @@
           "id": "py-code-args-002",
           "label": "Arguments II",
           "unlock": "coding.args.1.cleared"
+        }
+      ],
+      "locked_languages": [
+        {
+          "label": "JavaScript",
+          "beat": "JavaScript isn't paved yet — the snake is still laying tiles. Master Python first!"
+        },
+        {
+          "label": "SQL",
+          "beat": "The SQL wing is still under construction. Come back later!"
         }
       ]
     }
@@ -316,7 +327,8 @@
             "pos": {
               "x": 9,
               "y": 6
-            }
+            },
+            "kind": "function"
           },
           {
             "token": "hello",
@@ -539,49 +551,59 @@
             "pos": {
               "x": 9,
               "y": 6
-            }
+            },
+            "kind": "function"
           },
           {
             "token": "x",
             "pos": {
               "x": 11,
               "y": 3
-            }
+            },
+            "kind": "value"
           },
           {
             "token": "=",
             "pos": {
               "x": 9,
               "y": 4
-            }
+            },
+            "kind": "keyword"
           },
           {
             "token": "5",
             "pos": {
               "x": 11,
               "y": 6
-            }
+            },
+            "kind": "value"
           },
           {
             "token": "y",
             "pos": {
               "x": 10,
               "y": 2
-            }
+            },
+            "kind": "decoy",
+            "decoy": true
           },
           {
             "token": "3",
             "pos": {
               "x": 9,
               "y": 2
-            }
+            },
+            "kind": "decoy",
+            "decoy": true
           },
           {
             "token": "prnt",
             "pos": {
               "x": 11,
               "y": 4
-            }
+            },
+            "kind": "decoy",
+            "decoy": true
           }
         ],
         "features": [
@@ -663,6 +685,14 @@
           },
           {
             "text": "]",
+            "kind": "decoy"
+          },
+          {
+            "text": "(\"hello\")",
+            "kind": "decoy"
+          },
+          {
+            "text": "[\"hello world\"]",
             "kind": "decoy"
           }
         ],
@@ -763,28 +793,51 @@
             "pos": {
               "x": 9,
               "y": 6
-            }
+            },
+            "kind": "function"
           },
           {
             "token": "(",
             "pos": {
               "x": 10,
               "y": 6
-            }
+            },
+            "kind": "punctuation"
           },
           {
             "token": "\"hello world\"",
             "pos": {
               "x": 9,
               "y": 4
-            }
+            },
+            "kind": "string"
           },
           {
             "token": "]",
             "pos": {
               "x": 11,
               "y": 6
-            }
+            },
+            "kind": "decoy",
+            "decoy": true
+          },
+          {
+            "token": "(\"hello\")",
+            "pos": {
+              "x": 9,
+              "y": 3
+            },
+            "kind": "decoy",
+            "decoy": true
+          },
+          {
+            "token": "[\"hello world\"]",
+            "pos": {
+              "x": 9,
+              "y": 5
+            },
+            "kind": "decoy",
+            "decoy": true
           }
         ],
         "features": [
@@ -1007,28 +1060,32 @@
             "pos": {
               "x": 9,
               "y": 6
-            }
+            },
+            "kind": "function"
           },
           {
             "token": "\"hello world\"",
             "pos": {
               "x": 9,
               "y": 4
-            }
+            },
+            "kind": "string"
           },
           {
             "token": "(",
             "pos": {
               "x": 10,
               "y": 6
-            }
+            },
+            "kind": "punctuation"
           },
           {
             "token": ")",
             "pos": {
               "x": 11,
               "y": 6
-            }
+            },
+            "kind": "punctuation"
           }
         ],
         "features": [
@@ -1094,15 +1151,44 @@
         "scenario": "The panel is tired of repetition. It offers a loop: write the line once, run it many times.",
         "goal": "Print hi three times using a loop. Body sits one tile in.",
         "tokens": [
-          { "text": "for", "kind": "keyword" },
-          { "text": "i", "kind": "value" },
-          { "text": "in", "kind": "keyword" },
-          { "text": "range", "kind": "function", "discovers": "range" },
-          { "text": "3", "kind": "value" },
-          { "text": "print", "kind": "function", "discovers": "print" },
-          { "text": "\"hi\"", "kind": "string" },
-          { "text": "while", "kind": "decoy" },
-          { "text": "4", "kind": "decoy" }
+          {
+            "text": "for",
+            "kind": "keyword"
+          },
+          {
+            "text": "i",
+            "kind": "value"
+          },
+          {
+            "text": "in",
+            "kind": "keyword"
+          },
+          {
+            "text": "range",
+            "kind": "function",
+            "discovers": "range"
+          },
+          {
+            "text": "3",
+            "kind": "value"
+          },
+          {
+            "text": "print",
+            "kind": "function",
+            "discovers": "print"
+          },
+          {
+            "text": "\"hi\"",
+            "kind": "string"
+          },
+          {
+            "text": "while",
+            "kind": "decoy"
+          },
+          {
+            "text": "4",
+            "kind": "decoy"
+          }
         ],
         "beats": {
           "build-first": "🐍 Build the line first — stand on Build and press Enter.",
@@ -1113,26 +1199,65 @@
           "success": "The loop spins three times: hi, hi, hi. ✅",
           "first_run_no_build": "🐍 You ran before BUILDING. Build first, then Run."
         },
-        "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
+        "terminal": {
+          "build": "$ python -m py_compile main.py",
+          "run": "$ python main.py"
+        },
         "dialogue": {
           "speakers": {
-            "snake": { "name": "Sss", "side": "left", "portrait": "/assets/closeMouthSnake.png", "portrait2": "/assets/talkingSnake.png" },
-            "hint": { "name": "Helper", "side": "right", "portrait": "🛰️", "portrait2": "🛰️" }
+            "snake": {
+              "name": "Sss",
+              "side": "left",
+              "portrait": "/assets/closeMouthSnake.png",
+              "portrait2": "/assets/talkingSnake.png"
+            },
+            "hint": {
+              "name": "Helper",
+              "side": "right",
+              "portrait": "🛰️",
+              "portrait2": "🛰️"
+            }
           },
           "on_enter": [
-            { "id": "loops1-enter", "speaker": "snake", "text": "Ssss — one line, many runs. Watch the indent on the body.", "trigger": "on_enter" }
+            {
+              "id": "loops1-enter",
+              "speaker": "snake",
+              "text": "Ssss — one line, many runs. Watch the indent on the body.",
+              "trigger": "on_enter"
+            }
           ],
           "hints": [
-            { "text": "Header: for i in range 3. Body (indented): print \"hi\".", "tag": "intro" },
-            { "text": "The body must sit one tile to the RIGHT of the for.", "tag": "after:wrong-indent" }
+            {
+              "text": "Header: for i in range 3. Body (indented): print \"hi\".",
+              "tag": "intro"
+            },
+            {
+              "text": "The body must sit one tile to the RIGHT of the for.",
+              "tag": "after:wrong-indent"
+            }
           ]
         }
       },
       "solution": {
         "output": "hi\nhi\nhi",
         "lines": [
-          { "content": ["for", "i", "in", "range", "3"], "indent": 0 },
-          { "content": ["print", "hi"], "indent": 1 }
+          {
+            "content": [
+              "for",
+              "i",
+              "in",
+              "range",
+              "3"
+            ],
+            "indent": 0
+          },
+          {
+            "content": [
+              "print",
+              "hi"
+            ],
+            "indent": 1
+          }
         ]
       },
       "hints": [
@@ -1142,14 +1267,21 @@
       ],
       "metadata": {
         "concept": "loops — repeat a line",
-        "tags": ["python", "loops", "indentation"],
+        "tags": [
+          "python",
+          "loops",
+          "indentation"
+        ],
         "generator": "human",
         "reviewed": true
       },
       "room": {
         "width": 13,
         "height": 9,
-        "spawn": { "x": 6, "y": 7 },
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
         "tiles": [
           "#############",
           "#...........#",
@@ -1162,24 +1294,118 @@
           "#############"
         ],
         "piles": [
-          { "token": "for", "pos": { "x": 7, "y": 6 } },
-          { "token": "i", "pos": { "x": 8, "y": 6 } },
-          { "token": "in", "pos": { "x": 9, "y": 6 } },
-          { "token": "range", "pos": { "x": 10, "y": 6 } },
-          { "token": "3", "pos": { "x": 11, "y": 6 } },
-          { "token": "print", "pos": { "x": 7, "y": 4 } },
-          { "token": "\"hi\"", "pos": { "x": 8, "y": 4 } },
-          { "token": "while", "pos": { "x": 10, "y": 2 } },
-          { "token": "4", "pos": { "x": 11, "y": 2 } }
+          {
+            "token": "for",
+            "pos": {
+              "x": 7,
+              "y": 6
+            },
+            "kind": "keyword"
+          },
+          {
+            "token": "i",
+            "pos": {
+              "x": 8,
+              "y": 6
+            },
+            "kind": "value"
+          },
+          {
+            "token": "in",
+            "pos": {
+              "x": 9,
+              "y": 6
+            },
+            "kind": "keyword"
+          },
+          {
+            "token": "range",
+            "pos": {
+              "x": 10,
+              "y": 6
+            },
+            "kind": "function"
+          },
+          {
+            "token": "3",
+            "pos": {
+              "x": 11,
+              "y": 6
+            },
+            "kind": "value"
+          },
+          {
+            "token": "print",
+            "pos": {
+              "x": 7,
+              "y": 4
+            },
+            "kind": "function"
+          },
+          {
+            "token": "\"hi\"",
+            "pos": {
+              "x": 8,
+              "y": 4
+            },
+            "kind": "string"
+          },
+          {
+            "token": "while",
+            "pos": {
+              "x": 10,
+              "y": 2
+            },
+            "kind": "decoy",
+            "decoy": true
+          },
+          {
+            "token": "4",
+            "pos": {
+              "x": 11,
+              "y": 2
+            },
+            "kind": "decoy",
+            "decoy": true
+          }
         ],
-        "features": ["terminal", "coding_area", "inventory"],
-        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "features": [
+          "terminal",
+          "coding_area",
+          "inventory"
+        ],
+        "coding_area": {
+          "x": 1,
+          "y": 1,
+          "width": 7,
+          "height": 7
+        },
         "inventory_slots": 7,
         "controls": [
-          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
-          { "action": "run", "label": "Run", "pos": { "x": 5, "y": 7 } }
+          {
+            "action": "build",
+            "label": "Build",
+            "pos": {
+              "x": 2,
+              "y": 7
+            }
+          },
+          {
+            "action": "run",
+            "label": "Run",
+            "pos": {
+              "x": 5,
+              "y": 7
+            }
+          }
         ],
-        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 4
+          },
+          "marker": "❓"
+        },
         "grants_unlock": "coding.loops.1.cleared",
         "theme": "tech"
       }
@@ -1206,14 +1432,40 @@
         "scenario": "The loop hands you a number each turn — its counter, i. Show it.",
         "goal": "Print 0, 1, 2 by printing i inside the loop.",
         "tokens": [
-          { "text": "for", "kind": "keyword" },
-          { "text": "i", "kind": "value" },
-          { "text": "in", "kind": "keyword" },
-          { "text": "range", "kind": "function", "discovers": "range" },
-          { "text": "3", "kind": "value" },
-          { "text": "print", "kind": "function", "discovers": "print" },
-          { "text": "n", "kind": "decoy" },
-          { "text": "\"i\"", "kind": "decoy" }
+          {
+            "text": "for",
+            "kind": "keyword"
+          },
+          {
+            "text": "i",
+            "kind": "value"
+          },
+          {
+            "text": "in",
+            "kind": "keyword"
+          },
+          {
+            "text": "range",
+            "kind": "function",
+            "discovers": "range"
+          },
+          {
+            "text": "3",
+            "kind": "value"
+          },
+          {
+            "text": "print",
+            "kind": "function",
+            "discovers": "print"
+          },
+          {
+            "text": "n",
+            "kind": "decoy"
+          },
+          {
+            "text": "\"i\"",
+            "kind": "decoy"
+          }
         ],
         "beats": {
           "build-first": "🐍 Build the line first — stand on Build and press Enter.",
@@ -1224,25 +1476,61 @@
           "success": "Each turn prints the counter: 0, 1, 2. ✅",
           "first_run_no_build": "🐍 You ran before BUILDING. Build first, then Run."
         },
-        "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
+        "terminal": {
+          "build": "$ python -m py_compile main.py",
+          "run": "$ python main.py"
+        },
         "dialogue": {
           "speakers": {
-            "snake": { "name": "Sss", "side": "left", "portrait": "/assets/closeMouthSnake.png", "portrait2": "/assets/talkingSnake.png" },
-            "hint": { "name": "Helper", "side": "right", "portrait": "🛰️", "portrait2": "🛰️" }
+            "snake": {
+              "name": "Sss",
+              "side": "left",
+              "portrait": "/assets/closeMouthSnake.png",
+              "portrait2": "/assets/talkingSnake.png"
+            },
+            "hint": {
+              "name": "Helper",
+              "side": "right",
+              "portrait": "🛰️",
+              "portrait2": "🛰️"
+            }
           },
           "on_enter": [
-            { "id": "loops2-enter", "speaker": "snake", "text": "Ssss — the same i from the header is yours to print.", "trigger": "on_enter" }
+            {
+              "id": "loops2-enter",
+              "speaker": "snake",
+              "text": "Ssss — the same i from the header is yours to print.",
+              "trigger": "on_enter"
+            }
           ],
           "hints": [
-            { "text": "Body: print i (the counter), not \"i\" in quotes.", "tag": "intro" }
+            {
+              "text": "Body: print i (the counter), not \"i\" in quotes.",
+              "tag": "intro"
+            }
           ]
         }
       },
       "solution": {
         "output": "0\n1\n2",
         "lines": [
-          { "content": ["for", "i", "in", "range", "3"], "indent": 0 },
-          { "content": ["print", "i"], "indent": 1 }
+          {
+            "content": [
+              "for",
+              "i",
+              "in",
+              "range",
+              "3"
+            ],
+            "indent": 0
+          },
+          {
+            "content": [
+              "print",
+              "i"
+            ],
+            "indent": 1
+          }
         ]
       },
       "hints": [
@@ -1252,14 +1540,21 @@
       ],
       "metadata": {
         "concept": "loops — use the counter",
-        "tags": ["python", "loops", "variables"],
+        "tags": [
+          "python",
+          "loops",
+          "variables"
+        ],
         "generator": "human",
         "reviewed": true
       },
       "room": {
         "width": 13,
         "height": 9,
-        "spawn": { "x": 6, "y": 7 },
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
         "tiles": [
           "#############",
           "#...........#",
@@ -1272,23 +1567,110 @@
           "#############"
         ],
         "piles": [
-          { "token": "for", "pos": { "x": 7, "y": 6 } },
-          { "token": "i", "pos": { "x": 8, "y": 6 } },
-          { "token": "in", "pos": { "x": 9, "y": 6 } },
-          { "token": "range", "pos": { "x": 10, "y": 6 } },
-          { "token": "3", "pos": { "x": 11, "y": 6 } },
-          { "token": "print", "pos": { "x": 7, "y": 4 } },
-          { "token": "n", "pos": { "x": 10, "y": 2 } },
-          { "token": "\"i\"", "pos": { "x": 11, "y": 2 } }
+          {
+            "token": "for",
+            "pos": {
+              "x": 7,
+              "y": 6
+            },
+            "kind": "keyword"
+          },
+          {
+            "token": "i",
+            "pos": {
+              "x": 8,
+              "y": 6
+            },
+            "kind": "value"
+          },
+          {
+            "token": "in",
+            "pos": {
+              "x": 9,
+              "y": 6
+            },
+            "kind": "keyword"
+          },
+          {
+            "token": "range",
+            "pos": {
+              "x": 10,
+              "y": 6
+            },
+            "kind": "function"
+          },
+          {
+            "token": "3",
+            "pos": {
+              "x": 11,
+              "y": 6
+            },
+            "kind": "value"
+          },
+          {
+            "token": "print",
+            "pos": {
+              "x": 7,
+              "y": 4
+            },
+            "kind": "function"
+          },
+          {
+            "token": "n",
+            "pos": {
+              "x": 10,
+              "y": 2
+            },
+            "kind": "decoy",
+            "decoy": true
+          },
+          {
+            "token": "\"i\"",
+            "pos": {
+              "x": 11,
+              "y": 2
+            },
+            "kind": "decoy",
+            "decoy": true
+          }
         ],
-        "features": ["terminal", "coding_area", "inventory"],
-        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "features": [
+          "terminal",
+          "coding_area",
+          "inventory"
+        ],
+        "coding_area": {
+          "x": 1,
+          "y": 1,
+          "width": 7,
+          "height": 7
+        },
         "inventory_slots": 7,
         "controls": [
-          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
-          { "action": "run", "label": "Run", "pos": { "x": 5, "y": 7 } }
+          {
+            "action": "build",
+            "label": "Build",
+            "pos": {
+              "x": 2,
+              "y": 7
+            }
+          },
+          {
+            "action": "run",
+            "label": "Run",
+            "pos": {
+              "x": 5,
+              "y": 7
+            }
+          }
         ],
-        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 4
+          },
+          "marker": "❓"
+        },
         "grants_unlock": "coding.loops.2.cleared",
         "theme": "tech"
       }
@@ -1315,12 +1697,32 @@
         "scenario": "The panel lets you name a block of code — a function — and run it whenever you call its name.",
         "goal": "Define greet (body: print hi), then call greet.",
         "tokens": [
-          { "text": "def", "kind": "keyword" },
-          { "text": "greet", "kind": "value", "discovers": "def" },
-          { "text": "print", "kind": "function", "discovers": "print" },
-          { "text": "\"hi\"", "kind": "string" },
-          { "text": "return", "kind": "decoy" },
-          { "text": "gret", "kind": "decoy" }
+          {
+            "text": "def",
+            "kind": "keyword"
+          },
+          {
+            "text": "greet",
+            "kind": "value",
+            "discovers": "def"
+          },
+          {
+            "text": "print",
+            "kind": "function",
+            "discovers": "print"
+          },
+          {
+            "text": "\"hi\"",
+            "kind": "string"
+          },
+          {
+            "text": "return",
+            "kind": "decoy"
+          },
+          {
+            "text": "gret",
+            "kind": "decoy"
+          }
         ],
         "beats": {
           "build-first": "🐍 Build the lines first — stand on Build and press Enter.",
@@ -1330,27 +1732,68 @@
           "extra-code": "Three lines: def greet, the indented print, then greet on its own.",
           "success": "You defined greet and called it: hi. ✅"
         },
-        "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
+        "terminal": {
+          "build": "$ python -m py_compile main.py",
+          "run": "$ python main.py"
+        },
         "dialogue": {
           "speakers": {
-            "snake": { "name": "Sss", "side": "left", "portrait": "/assets/closeMouthSnake.png", "portrait2": "/assets/talkingSnake.png" },
-            "hint": { "name": "Helper", "side": "right", "portrait": "🛰️", "portrait2": "🛰️" }
+            "snake": {
+              "name": "Sss",
+              "side": "left",
+              "portrait": "/assets/closeMouthSnake.png",
+              "portrait2": "/assets/talkingSnake.png"
+            },
+            "hint": {
+              "name": "Helper",
+              "side": "right",
+              "portrait": "🛰️",
+              "portrait2": "🛰️"
+            }
           },
           "on_enter": [
-            { "id": "funcs1-enter", "speaker": "snake", "text": "Ssss — name it, fill its body, then call it below.", "trigger": "on_enter" }
+            {
+              "id": "funcs1-enter",
+              "speaker": "snake",
+              "text": "Ssss — name it, fill its body, then call it below.",
+              "trigger": "on_enter"
+            }
           ],
           "hints": [
-            { "text": "def greet — then an indented print \"hi\" — then greet on its own line.", "tag": "intro" },
-            { "text": "The call 'greet' sits back at indent 0, below the body.", "tag": "after:wrong-indent" }
+            {
+              "text": "def greet — then an indented print \"hi\" — then greet on its own line.",
+              "tag": "intro"
+            },
+            {
+              "text": "The call 'greet' sits back at indent 0, below the body.",
+              "tag": "after:wrong-indent"
+            }
           ]
         }
       },
       "solution": {
         "output": "hi",
         "lines": [
-          { "content": ["def", "greet"], "indent": 0 },
-          { "content": ["print", "hi"], "indent": 1 },
-          { "content": ["greet"], "indent": 0 }
+          {
+            "content": [
+              "def",
+              "greet"
+            ],
+            "indent": 0
+          },
+          {
+            "content": [
+              "print",
+              "hi"
+            ],
+            "indent": 1
+          },
+          {
+            "content": [
+              "greet"
+            ],
+            "indent": 0
+          }
         ]
       },
       "hints": [
@@ -1360,14 +1803,20 @@
       ],
       "metadata": {
         "concept": "functions — define and call",
-        "tags": ["python", "functions"],
+        "tags": [
+          "python",
+          "functions"
+        ],
         "generator": "human",
         "reviewed": true
       },
       "room": {
         "width": 13,
         "height": 9,
-        "spawn": { "x": 6, "y": 7 },
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
         "tiles": [
           "#############",
           "#...........#",
@@ -1380,21 +1829,94 @@
           "#############"
         ],
         "piles": [
-          { "token": "def", "pos": { "x": 7, "y": 6 } },
-          { "token": "greet", "pos": { "x": 8, "y": 6 } },
-          { "token": "print", "pos": { "x": 9, "y": 6 } },
-          { "token": "\"hi\"", "pos": { "x": 10, "y": 6 } },
-          { "token": "return", "pos": { "x": 10, "y": 2 } },
-          { "token": "gret", "pos": { "x": 11, "y": 2 } }
+          {
+            "token": "def",
+            "pos": {
+              "x": 7,
+              "y": 6
+            },
+            "kind": "keyword"
+          },
+          {
+            "token": "greet",
+            "pos": {
+              "x": 8,
+              "y": 6
+            },
+            "kind": "value"
+          },
+          {
+            "token": "print",
+            "pos": {
+              "x": 9,
+              "y": 6
+            },
+            "kind": "function"
+          },
+          {
+            "token": "\"hi\"",
+            "pos": {
+              "x": 10,
+              "y": 6
+            },
+            "kind": "string"
+          },
+          {
+            "token": "return",
+            "pos": {
+              "x": 10,
+              "y": 2
+            },
+            "kind": "decoy",
+            "decoy": true
+          },
+          {
+            "token": "gret",
+            "pos": {
+              "x": 11,
+              "y": 2
+            },
+            "kind": "decoy",
+            "decoy": true
+          }
         ],
-        "features": ["terminal", "coding_area", "inventory"],
-        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "features": [
+          "terminal",
+          "coding_area",
+          "inventory"
+        ],
+        "coding_area": {
+          "x": 1,
+          "y": 1,
+          "width": 7,
+          "height": 7
+        },
         "inventory_slots": 7,
         "controls": [
-          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
-          { "action": "run", "label": "Run", "pos": { "x": 5, "y": 7 } }
+          {
+            "action": "build",
+            "label": "Build",
+            "pos": {
+              "x": 2,
+              "y": 7
+            }
+          },
+          {
+            "action": "run",
+            "label": "Run",
+            "pos": {
+              "x": 5,
+              "y": 7
+            }
+          }
         ],
-        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 4
+          },
+          "marker": "❓"
+        },
         "grants_unlock": "coding.funcs.1.cleared",
         "theme": "tech"
       }
@@ -1421,12 +1943,32 @@
         "scenario": "One name, several lines. Everything indented under def belongs to the function.",
         "goal": "greet should print hi then bye. Define it, then call greet once.",
         "tokens": [
-          { "text": "def", "kind": "keyword" },
-          { "text": "greet", "kind": "value", "discovers": "def" },
-          { "text": "print", "kind": "function", "discovers": "print" },
-          { "text": "\"hi\"", "kind": "string" },
-          { "text": "\"bye\"", "kind": "string" },
-          { "text": "gret", "kind": "decoy" }
+          {
+            "text": "def",
+            "kind": "keyword"
+          },
+          {
+            "text": "greet",
+            "kind": "value",
+            "discovers": "def"
+          },
+          {
+            "text": "print",
+            "kind": "function",
+            "discovers": "print"
+          },
+          {
+            "text": "\"hi\"",
+            "kind": "string"
+          },
+          {
+            "text": "\"bye\"",
+            "kind": "string"
+          },
+          {
+            "text": "gret",
+            "kind": "decoy"
+          }
         ],
         "beats": {
           "build-first": "🐍 Build the lines first — stand on Build and press Enter.",
@@ -1436,27 +1978,71 @@
           "extra-code": "Four lines: def greet, two indented prints, then greet.",
           "success": "greet runs its whole body: hi, then bye. ✅"
         },
-        "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
+        "terminal": {
+          "build": "$ python -m py_compile main.py",
+          "run": "$ python main.py"
+        },
         "dialogue": {
           "speakers": {
-            "snake": { "name": "Sss", "side": "left", "portrait": "/assets/closeMouthSnake.png", "portrait2": "/assets/talkingSnake.png" },
-            "hint": { "name": "Helper", "side": "right", "portrait": "🛰️", "portrait2": "🛰️" }
+            "snake": {
+              "name": "Sss",
+              "side": "left",
+              "portrait": "/assets/closeMouthSnake.png",
+              "portrait2": "/assets/talkingSnake.png"
+            },
+            "hint": {
+              "name": "Helper",
+              "side": "right",
+              "portrait": "🛰️",
+              "portrait2": "🛰️"
+            }
           },
           "on_enter": [
-            { "id": "funcs2-enter", "speaker": "snake", "text": "Ssss — everything indented under def is part of greet.", "trigger": "on_enter" }
+            {
+              "id": "funcs2-enter",
+              "speaker": "snake",
+              "text": "Ssss — everything indented under def is part of greet.",
+              "trigger": "on_enter"
+            }
           ],
           "hints": [
-            { "text": "Two indented body lines (print hi, print bye), then greet at indent 0.", "tag": "intro" }
+            {
+              "text": "Two indented body lines (print hi, print bye), then greet at indent 0.",
+              "tag": "intro"
+            }
           ]
         }
       },
       "solution": {
         "output": "hi\nbye",
         "lines": [
-          { "content": ["def", "greet"], "indent": 0 },
-          { "content": ["print", "hi"], "indent": 1 },
-          { "content": ["print", "bye"], "indent": 1 },
-          { "content": ["greet"], "indent": 0 }
+          {
+            "content": [
+              "def",
+              "greet"
+            ],
+            "indent": 0
+          },
+          {
+            "content": [
+              "print",
+              "hi"
+            ],
+            "indent": 1
+          },
+          {
+            "content": [
+              "print",
+              "bye"
+            ],
+            "indent": 1
+          },
+          {
+            "content": [
+              "greet"
+            ],
+            "indent": 0
+          }
         ]
       },
       "hints": [
@@ -1466,14 +2052,20 @@
       ],
       "metadata": {
         "concept": "functions — a multi-line body",
-        "tags": ["python", "functions"],
+        "tags": [
+          "python",
+          "functions"
+        ],
         "generator": "human",
         "reviewed": true
       },
       "room": {
         "width": 13,
         "height": 9,
-        "spawn": { "x": 6, "y": 7 },
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
         "tiles": [
           "#############",
           "#...........#",
@@ -1486,21 +2078,93 @@
           "#############"
         ],
         "piles": [
-          { "token": "def", "pos": { "x": 7, "y": 6 } },
-          { "token": "greet", "pos": { "x": 8, "y": 6 } },
-          { "token": "print", "pos": { "x": 9, "y": 6 } },
-          { "token": "\"hi\"", "pos": { "x": 10, "y": 6 } },
-          { "token": "\"bye\"", "pos": { "x": 11, "y": 6 } },
-          { "token": "gret", "pos": { "x": 11, "y": 2 } }
+          {
+            "token": "def",
+            "pos": {
+              "x": 7,
+              "y": 6
+            },
+            "kind": "keyword"
+          },
+          {
+            "token": "greet",
+            "pos": {
+              "x": 8,
+              "y": 6
+            },
+            "kind": "value"
+          },
+          {
+            "token": "print",
+            "pos": {
+              "x": 9,
+              "y": 6
+            },
+            "kind": "function"
+          },
+          {
+            "token": "\"hi\"",
+            "pos": {
+              "x": 10,
+              "y": 6
+            },
+            "kind": "string"
+          },
+          {
+            "token": "\"bye\"",
+            "pos": {
+              "x": 11,
+              "y": 6
+            },
+            "kind": "string"
+          },
+          {
+            "token": "gret",
+            "pos": {
+              "x": 11,
+              "y": 2
+            },
+            "kind": "decoy",
+            "decoy": true
+          }
         ],
-        "features": ["terminal", "coding_area", "inventory"],
-        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "features": [
+          "terminal",
+          "coding_area",
+          "inventory"
+        ],
+        "coding_area": {
+          "x": 1,
+          "y": 1,
+          "width": 7,
+          "height": 7
+        },
         "inventory_slots": 7,
         "controls": [
-          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
-          { "action": "run", "label": "Run", "pos": { "x": 5, "y": 7 } }
+          {
+            "action": "build",
+            "label": "Build",
+            "pos": {
+              "x": 2,
+              "y": 7
+            }
+          },
+          {
+            "action": "run",
+            "label": "Run",
+            "pos": {
+              "x": 5,
+              "y": 7
+            }
+          }
         ],
-        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 4
+          },
+          "marker": "❓"
+        },
         "grants_unlock": "coding.funcs.2.cleared",
         "theme": "tech"
       }
@@ -1527,13 +2191,36 @@
         "scenario": "greet is more useful if you can tell it WHO. Give it a slot and hand it a name.",
         "goal": "def greet(name), print the name, then call greet with \"Sam\".",
         "tokens": [
-          { "text": "def", "kind": "keyword" },
-          { "text": "greet", "kind": "value", "discovers": "def" },
-          { "text": "name", "kind": "value" },
-          { "text": "print", "kind": "function", "discovers": "print" },
-          { "text": "\"Sam\"", "kind": "string" },
-          { "text": "\"name\"", "kind": "decoy" },
-          { "text": "gret", "kind": "decoy" }
+          {
+            "text": "def",
+            "kind": "keyword"
+          },
+          {
+            "text": "greet",
+            "kind": "value",
+            "discovers": "def"
+          },
+          {
+            "text": "name",
+            "kind": "value"
+          },
+          {
+            "text": "print",
+            "kind": "function",
+            "discovers": "print"
+          },
+          {
+            "text": "\"Sam\"",
+            "kind": "string"
+          },
+          {
+            "text": "\"name\"",
+            "kind": "decoy"
+          },
+          {
+            "text": "gret",
+            "kind": "decoy"
+          }
         ],
         "beats": {
           "build-first": "🐍 Build the lines first — stand on Build and press Enter.",
@@ -1543,27 +2230,70 @@
           "extra-code": "Three lines: the def with its slot, the indented print, then the call.",
           "success": "You passed \"Sam\" into the name slot: Sam. ✅"
         },
-        "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
+        "terminal": {
+          "build": "$ python -m py_compile main.py",
+          "run": "$ python main.py"
+        },
         "dialogue": {
           "speakers": {
-            "snake": { "name": "Sss", "side": "left", "portrait": "/assets/closeMouthSnake.png", "portrait2": "/assets/talkingSnake.png" },
-            "hint": { "name": "Helper", "side": "right", "portrait": "🛰️", "portrait2": "🛰️" }
+            "snake": {
+              "name": "Sss",
+              "side": "left",
+              "portrait": "/assets/closeMouthSnake.png",
+              "portrait2": "/assets/talkingSnake.png"
+            },
+            "hint": {
+              "name": "Helper",
+              "side": "right",
+              "portrait": "🛰️",
+              "portrait2": "🛰️"
+            }
           },
           "on_enter": [
-            { "id": "args1-enter", "speaker": "snake", "text": "Ssss — a slot in the ( ), a value when you call. Print the slot, not a quoted word.", "trigger": "on_enter" }
+            {
+              "id": "args1-enter",
+              "speaker": "snake",
+              "text": "Ssss — a slot in the ( ), a value when you call. Print the slot, not a quoted word.",
+              "trigger": "on_enter"
+            }
           ],
           "hints": [
-            { "text": "def greet name → print name (indented) → greet \"Sam\".", "tag": "intro" },
-            { "text": "print name, not print \"name\" — the slot, not the literal word.", "tag": "after:wrong-word" }
+            {
+              "text": "def greet name → print name (indented) → greet \"Sam\".",
+              "tag": "intro"
+            },
+            {
+              "text": "print name, not print \"name\" — the slot, not the literal word.",
+              "tag": "after:wrong-word"
+            }
           ]
         }
       },
       "solution": {
         "output": "Sam",
         "lines": [
-          { "content": ["def", "greet", "name"], "indent": 0 },
-          { "content": ["print", "name"], "indent": 1 },
-          { "content": ["greet", "\"Sam\""], "indent": 0 }
+          {
+            "content": [
+              "def",
+              "greet",
+              "name"
+            ],
+            "indent": 0
+          },
+          {
+            "content": [
+              "print",
+              "name"
+            ],
+            "indent": 1
+          },
+          {
+            "content": [
+              "greet",
+              "\"Sam\""
+            ],
+            "indent": 0
+          }
         ]
       },
       "hints": [
@@ -1573,14 +2303,21 @@
       ],
       "metadata": {
         "concept": "functions — arguments",
-        "tags": ["python", "functions", "arguments"],
+        "tags": [
+          "python",
+          "functions",
+          "arguments"
+        ],
         "generator": "human",
         "reviewed": true
       },
       "room": {
         "width": 13,
         "height": 9,
-        "spawn": { "x": 6, "y": 7 },
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
         "tiles": [
           "#############",
           "#...........#",
@@ -1593,22 +2330,102 @@
           "#############"
         ],
         "piles": [
-          { "token": "def", "pos": { "x": 7, "y": 6 } },
-          { "token": "greet", "pos": { "x": 8, "y": 6 } },
-          { "token": "name", "pos": { "x": 9, "y": 6 } },
-          { "token": "print", "pos": { "x": 10, "y": 6 } },
-          { "token": "\"Sam\"", "pos": { "x": 11, "y": 6 } },
-          { "token": "\"name\"", "pos": { "x": 10, "y": 2 } },
-          { "token": "gret", "pos": { "x": 11, "y": 2 } }
+          {
+            "token": "def",
+            "pos": {
+              "x": 7,
+              "y": 6
+            },
+            "kind": "keyword"
+          },
+          {
+            "token": "greet",
+            "pos": {
+              "x": 8,
+              "y": 6
+            },
+            "kind": "value"
+          },
+          {
+            "token": "name",
+            "pos": {
+              "x": 9,
+              "y": 6
+            },
+            "kind": "value"
+          },
+          {
+            "token": "print",
+            "pos": {
+              "x": 10,
+              "y": 6
+            },
+            "kind": "function"
+          },
+          {
+            "token": "\"Sam\"",
+            "pos": {
+              "x": 11,
+              "y": 6
+            },
+            "kind": "string"
+          },
+          {
+            "token": "\"name\"",
+            "pos": {
+              "x": 10,
+              "y": 2
+            },
+            "kind": "decoy",
+            "decoy": true
+          },
+          {
+            "token": "gret",
+            "pos": {
+              "x": 11,
+              "y": 2
+            },
+            "kind": "decoy",
+            "decoy": true
+          }
         ],
-        "features": ["terminal", "coding_area", "inventory"],
-        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "features": [
+          "terminal",
+          "coding_area",
+          "inventory"
+        ],
+        "coding_area": {
+          "x": 1,
+          "y": 1,
+          "width": 7,
+          "height": 7
+        },
         "inventory_slots": 7,
         "controls": [
-          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
-          { "action": "run", "label": "Run", "pos": { "x": 5, "y": 7 } }
+          {
+            "action": "build",
+            "label": "Build",
+            "pos": {
+              "x": 2,
+              "y": 7
+            }
+          },
+          {
+            "action": "run",
+            "label": "Run",
+            "pos": {
+              "x": 5,
+              "y": 7
+            }
+          }
         ],
-        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 4
+          },
+          "marker": "❓"
+        },
         "grants_unlock": "coding.args.1.cleared",
         "theme": "tech"
       }
@@ -1635,14 +2452,40 @@
         "scenario": "One name isn't enough — greet a first and a last. Two slots, two values, matched by order.",
         "goal": "def greet(first, last); print first then last; call greet with \"Sam\" \"Lee\".",
         "tokens": [
-          { "text": "def", "kind": "keyword" },
-          { "text": "greet", "kind": "value", "discovers": "def" },
-          { "text": "first", "kind": "value" },
-          { "text": "last", "kind": "value" },
-          { "text": "print", "kind": "function", "discovers": "print" },
-          { "text": "\"Sam\"", "kind": "string" },
-          { "text": "\"Lee\"", "kind": "string" },
-          { "text": "gret", "kind": "decoy" }
+          {
+            "text": "def",
+            "kind": "keyword"
+          },
+          {
+            "text": "greet",
+            "kind": "value",
+            "discovers": "def"
+          },
+          {
+            "text": "first",
+            "kind": "value"
+          },
+          {
+            "text": "last",
+            "kind": "value"
+          },
+          {
+            "text": "print",
+            "kind": "function",
+            "discovers": "print"
+          },
+          {
+            "text": "\"Sam\"",
+            "kind": "string"
+          },
+          {
+            "text": "\"Lee\"",
+            "kind": "string"
+          },
+          {
+            "text": "gret",
+            "kind": "decoy"
+          }
         ],
         "beats": {
           "build-first": "🐍 Build the lines first — stand on Build and press Enter.",
@@ -1652,27 +2495,75 @@
           "extra-code": "Four lines: the def, two indented prints, then the call.",
           "success": "Both slots filled in order: Sam, then Lee. ✅"
         },
-        "terminal": { "build": "$ python -m py_compile main.py", "run": "$ python main.py" },
+        "terminal": {
+          "build": "$ python -m py_compile main.py",
+          "run": "$ python main.py"
+        },
         "dialogue": {
           "speakers": {
-            "snake": { "name": "Sss", "side": "left", "portrait": "/assets/closeMouthSnake.png", "portrait2": "/assets/talkingSnake.png" },
-            "hint": { "name": "Helper", "side": "right", "portrait": "🛰️", "portrait2": "🛰️" }
+            "snake": {
+              "name": "Sss",
+              "side": "left",
+              "portrait": "/assets/closeMouthSnake.png",
+              "portrait2": "/assets/talkingSnake.png"
+            },
+            "hint": {
+              "name": "Helper",
+              "side": "right",
+              "portrait": "🛰️",
+              "portrait2": "🛰️"
+            }
           },
           "on_enter": [
-            { "id": "args2-enter", "speaker": "snake", "text": "Ssss — two slots, filled by ORDER: the first value lands in the first slot.", "trigger": "on_enter" }
+            {
+              "id": "args2-enter",
+              "speaker": "snake",
+              "text": "Ssss — two slots, filled by ORDER: the first value lands in the first slot.",
+              "trigger": "on_enter"
+            }
           ],
           "hints": [
-            { "text": "def greet first last → print first → print last → greet \"Sam\" \"Lee\".", "tag": "intro" }
+            {
+              "text": "def greet first last → print first → print last → greet \"Sam\" \"Lee\".",
+              "tag": "intro"
+            }
           ]
         }
       },
       "solution": {
         "output": "Sam\nLee",
         "lines": [
-          { "content": ["def", "greet", "first", "last"], "indent": 0 },
-          { "content": ["print", "first"], "indent": 1 },
-          { "content": ["print", "last"], "indent": 1 },
-          { "content": ["greet", "\"Sam\"", "\"Lee\""], "indent": 0 }
+          {
+            "content": [
+              "def",
+              "greet",
+              "first",
+              "last"
+            ],
+            "indent": 0
+          },
+          {
+            "content": [
+              "print",
+              "first"
+            ],
+            "indent": 1
+          },
+          {
+            "content": [
+              "print",
+              "last"
+            ],
+            "indent": 1
+          },
+          {
+            "content": [
+              "greet",
+              "\"Sam\"",
+              "\"Lee\""
+            ],
+            "indent": 0
+          }
         ]
       },
       "hints": [
@@ -1682,14 +2573,21 @@
       ],
       "metadata": {
         "concept": "functions — multiple arguments",
-        "tags": ["python", "functions", "arguments"],
+        "tags": [
+          "python",
+          "functions",
+          "arguments"
+        ],
         "generator": "human",
         "reviewed": true
       },
       "room": {
         "width": 13,
         "height": 9,
-        "spawn": { "x": 6, "y": 7 },
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
         "tiles": [
           "#############",
           "#...........#",
@@ -1702,23 +2600,109 @@
           "#############"
         ],
         "piles": [
-          { "token": "def", "pos": { "x": 7, "y": 6 } },
-          { "token": "greet", "pos": { "x": 8, "y": 6 } },
-          { "token": "first", "pos": { "x": 9, "y": 6 } },
-          { "token": "last", "pos": { "x": 10, "y": 6 } },
-          { "token": "print", "pos": { "x": 11, "y": 6 } },
-          { "token": "\"Sam\"", "pos": { "x": 7, "y": 4 } },
-          { "token": "\"Lee\"", "pos": { "x": 8, "y": 4 } },
-          { "token": "gret", "pos": { "x": 11, "y": 2 } }
+          {
+            "token": "def",
+            "pos": {
+              "x": 7,
+              "y": 6
+            },
+            "kind": "keyword"
+          },
+          {
+            "token": "greet",
+            "pos": {
+              "x": 8,
+              "y": 6
+            },
+            "kind": "value"
+          },
+          {
+            "token": "first",
+            "pos": {
+              "x": 9,
+              "y": 6
+            },
+            "kind": "value"
+          },
+          {
+            "token": "last",
+            "pos": {
+              "x": 10,
+              "y": 6
+            },
+            "kind": "value"
+          },
+          {
+            "token": "print",
+            "pos": {
+              "x": 11,
+              "y": 6
+            },
+            "kind": "function"
+          },
+          {
+            "token": "\"Sam\"",
+            "pos": {
+              "x": 7,
+              "y": 4
+            },
+            "kind": "string"
+          },
+          {
+            "token": "\"Lee\"",
+            "pos": {
+              "x": 8,
+              "y": 4
+            },
+            "kind": "string"
+          },
+          {
+            "token": "gret",
+            "pos": {
+              "x": 11,
+              "y": 2
+            },
+            "kind": "decoy",
+            "decoy": true
+          }
         ],
-        "features": ["terminal", "coding_area", "inventory"],
-        "coding_area": { "x": 1, "y": 1, "width": 7, "height": 7 },
+        "features": [
+          "terminal",
+          "coding_area",
+          "inventory"
+        ],
+        "coding_area": {
+          "x": 1,
+          "y": 1,
+          "width": 7,
+          "height": 7
+        },
         "inventory_slots": 7,
         "controls": [
-          { "action": "build", "label": "Build", "pos": { "x": 2, "y": 7 } },
-          { "action": "run", "label": "Run", "pos": { "x": 5, "y": 7 } }
+          {
+            "action": "build",
+            "label": "Build",
+            "pos": {
+              "x": 2,
+              "y": 7
+            }
+          },
+          {
+            "action": "run",
+            "label": "Run",
+            "pos": {
+              "x": 5,
+              "y": 7
+            }
+          }
         ],
-        "hint_giver": { "pos": { "x": 11, "y": 4 }, "marker": "❓" },
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 4
+          },
+          "marker": "❓"
+        },
         "grants_unlock": "coding.args.2.cleared",
         "theme": "tech"
       }

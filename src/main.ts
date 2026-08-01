@@ -1,9 +1,10 @@
 import "./style.css";
-import type { Pack, Puzzle, PuzzleType, LevelEntry, TutorialBlock } from "./schema/types";
+import type { Pack, Puzzle, PuzzleType, TutorialBlock } from "./schema/types";
 import { loadPack } from "./engine/packLoader";
 import { runPuzzle } from "./engine/puzzleRunner";
 import { mountRoom } from "./engine/roomHost";
-import { createRoomManager, type RoomManager } from "./engine/roomManager";
+import { createRoomManager, type RoomManager, type TypeLadder } from "./engine/roomManager";
+import { resolveMechanic, type LadderLevel } from "./engine/core/ladder";
 
 // The code game boots into a minimal TEST HUB (throwaway — real hub design comes later);
 // the hub's doors transition to the Python code pack's puzzles via the room manager.
@@ -100,7 +101,11 @@ async function loadAndShow(url: string) {
 // door's `target` (another puzzle, or "hub" for an exit) just names a room.
 let roomManager: RoomManager | null = null;
 const roomRegistry = new Map<string, Puzzle>();
-const levelsByType = new Map<PuzzleType, LevelEntry[]>(); // ordered level lists per puzzle type
+// The LADDER's per-type data (5a): ALL levels across packs, each STAMPED with its
+// grouping keys — language (from the entry or its pack) and mechanic (from the entry,
+// or derived from the puzzle's tier/modifiers signature). The keys stay OPAQUE to the
+// engine (grouped by equality, never branched on), plus the coming-soon languages.
+const laddersByType = new Map<PuzzleType, TypeLadder>();
 const tutorialsById = new Map<string, TutorialBlock>();   // shared first-encounter tutorials
 
 async function bootHub() {
@@ -113,10 +118,20 @@ async function bootHub() {
     for (const p of [...hub.puzzles, ...code.puzzles, ...logic.puzzles, ...logicHaw.puzzles, ...grammar.puzzles, ...vocab.puzzles, ...vocabEn.puzzles]) {
       roomRegistry.set(p.id, p);
     }
-    // Merge each pack's progression → type map (menu portal) and tutorials → id map (first-encounter).
+    // Merge each pack's progression → the per-type ladder (stamped levels + locked
+    // languages) and tutorials → id map (first-encounter).
     for (const pack of [hub, code, logic, logicHaw, grammar, vocab, vocabEn]) {
       for (const prog of pack.progression ?? []) {
-        levelsByType.set(prog.puzzle_type, [...(levelsByType.get(prog.puzzle_type) ?? []), ...prog.levels]);
+        const ladder = laddersByType.get(prog.puzzle_type) ?? { levels: [], lockedLanguages: [] };
+        const stamped: LadderLevel[] = prog.levels.map((lv) => ({
+          ...lv,
+          language: lv.language ?? pack.language,
+          languageLabel: pack.language_label,
+          mechanic: lv.mechanic ?? resolveMechanic(roomRegistry.get(lv.id)),
+        }));
+        ladder.levels.push(...stamped);
+        ladder.lockedLanguages.push(...(prog.locked_languages ?? []));
+        laddersByType.set(prog.puzzle_type, ladder);
       }
       for (const [id, block] of Object.entries(pack.tutorials ?? {})) tutorialsById.set(id, block);
     }
@@ -125,7 +140,7 @@ async function bootHub() {
     roomManager = createRoomManager(
       gameRoot,
       (id) => roomRegistry.get(id) ?? null,
-      (puzzleType) => levelsByType.get(puzzleType) ?? [],
+      (puzzleType) => laddersByType.get(puzzleType) ?? { levels: [], lockedLanguages: [] },
       { onBeforeMount: useFullscreen, tutorialFor: (id) => tutorialsById.get(id) ?? null },
     );
   }

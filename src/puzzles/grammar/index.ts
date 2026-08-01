@@ -14,6 +14,7 @@
 import type { GrammarBuildPayload, Puzzle } from "../../schema/types";
 import type { EngineContext, MountedPuzzle, RoomPuzzleModule } from "../../engine/puzzleModule";
 import { floorOrigin } from "../../engine/core/room";
+import { mulberry32, randomSeed, shufflePositions } from "../../engine/core/shuffle";
 import { tryMove, DIRECTIONS, type Entity } from "../logic/ruleEngine";
 import { checkSentence } from "./grammarCheck";
 import { PUSH_RULES, buildGrammarBoard, slotCell, filledSlots, type GrammarBoard } from "./grammarBoard";
@@ -47,7 +48,13 @@ export const grammarModule: RoomPuzzleModule = {
   mount(ctx: EngineContext, puzzle: Puzzle): MountedPuzzle {
     // Grammar CONTENT (engine hardcodes none): the frame, the tagged word bank
     // (with board positions), the acceptable role orders, and the win text.
-    const payload = puzzle.payload as GrammarBuildPayload;
+    // `randomized` (Axis 3): permute the word-tiles' spawn cells within the authored
+    // set (runtime seed, fresh each mount). The frame/slots never move; reset()
+    // rebuilds from this same arrangement (the payload copy holds it).
+    const rawPayload = puzzle.payload as GrammarBuildPayload;
+    const payload: GrammarBuildPayload = puzzle.modifiers?.includes("randomized")
+      ? { ...rawPayload, words: shufflePositions(rawPayload.words, mulberry32(randomSeed())) }
+      : rawPayload;
     const structure = payload.structure;
     const feedback = payload.feedback ?? {};
     const { x: ox, y: oy } = floorOrigin(ctx.room);

@@ -20,10 +20,11 @@ import {
 } from "./core/codex";
 import { createTeardown } from "./core/teardown";
 import { resolveFeatures, resolveInventorySlots } from "./core/roomFeatures";
-import type { DestinationOption } from "./core/progression";
+import type { LadderData } from "./core/ladder";
+import { mulberry32, randomSeed, shufflePositions } from "./core/shuffle";
 import { renderTileLayer } from "./systems/tileLayer";
 import { computeTile, computeViewport } from "./systems/camera";
-import { createSlime, drawPlayer } from "./systems/player";
+import { cameraOffset, createSlime, drawPlayer } from "./systems/player";
 import { createDialogue } from "./systems/dialogue";
 import { createSettingsPanel, roomSettings } from "./systems/settingsPanel";
 import { createInventoryHud } from "./systems/inventoryHud";
@@ -47,12 +48,12 @@ export interface RoomCallbacks {
   /** The room's puzzle was solved → may earn an unlock (see RoomLayout.grants_unlock). */
   onSolved?: (puzzle: Puzzle) => void;
   /** When provided, this room is a LEVEL: a persistent MENU PORTAL sits at spawn, and this
-   *  returns the destination chooser (Hub + unlocked levels), recomputed fresh on each open.
-   *  Omitted for the hub (no menu portal). */
-  menuDestinations?: () => DestinationOption[];
-  /** A door's own chooser (e.g. a hub portal → its type's unlocked levels). Returning
-   *  a non-empty list makes the OPEN door open a chooser instead of teleporting. */
-  doorDestinations?: (target: string) => DestinationOption[];
+   *  returns the LADDER data for this room's puzzle type (Language → Mechanic → Level),
+   *  recomputed fresh on each open. Omitted for the hub (no menu portal). */
+  menuLadder?: () => LadderData | null;
+  /** A door's own ladder (e.g. a hub portal → its target type's languages). Returning
+   *  data with levels makes the OPEN door open the drill-down instead of teleporting. */
+  doorLadder?: (target: string) => LadderData | null;
   /** Resolve the teleport flash color for a target id (the manager has the registry).
    *  Used by hub PORTALS so their transition flashes in the destination's color. */
   flashColorFor?: (target: string) => string;
@@ -102,6 +103,16 @@ export function mountRoom(
 
   const room = parseRoom(layout);
   let pos: Cell = { ...room.spawn };
+
+  // AXIS-3 MODIFIERS (see schema Modifier) — read once at mount, dispatch-only.
+  const modifiers = new Set(puzzle.modifiers ?? []);
+  // randomized: permute the piles' spawn cells WITHIN the authored set (the pool is
+  // exactly the cells content placed piles on — the engine never invents a cell).
+  // Runtime seed, fresh each mount; shuffled COPIES so pack data is never mutated.
+  // Board games shuffle their own movable tiles the same way (see each module).
+  if (modifiers.has("randomized") && room.piles.length) {
+    room.piles = shufflePositions(room.piles, mulberry32(randomSeed()));
+  }
 
   // View sizing — recomputed by relayout(); everything pixel-based reads these.
   let tile = FIXED_TILE;
@@ -177,6 +188,16 @@ export function mountRoom(
   stage.appendChild(viewport);
   container.appendChild(stage);
 
+  // lowlight (5e): a soft radial vision falloff pinned to the player's SCREEN cell —
+  // transparent at the center, near-opaque at the edge. A later sibling of the world
+  // inside the (overflow-clipped) viewport, so it dims every layer but never the HUD
+  // or dialogue. Purely a challenge/visual layer; repositioned in draw().
+  const lowlightEl = modifiers.has("lowlight") ? document.createElement("div") : null;
+  if (lowlightEl) {
+    lowlightEl.className = "room-lowlight";
+    viewport.appendChild(lowlightEl);
+  }
+
   const focusRoom = () => viewport.focus({ preventScroll: true });
 
   // --- inventory + HUD (FEATURE-GATED system): FIFO slots, drop/cancel flow, the
@@ -217,8 +238,6 @@ export function mountRoom(
   const dialogue = createDialogue({
     container,
     markerLayer,
-    puzzleType: puzzle.puzzle_type,
-    puzzleId: puzzle.id,
     speakers,
     hintGiver,
     hintLines,
@@ -239,14 +258,14 @@ export function mountRoom(
     doors,
     unlocks,
     puzzleType: puzzle.puzzle_type,
-    hasMenuPortal: !!callbacks.menuDestinations,
+    hasMenuPortal: !!callbacks.menuLadder,
     tile: () => tile,
     pos: () => pos,
     dialogue,
     removePlayer: () => slime.remove(), // remove the slime before the map changes
     focusRoom,
-    menuDestinations: callbacks.menuDestinations,
-    doorDestinations: callbacks.doorDestinations,
+    menuLadder: callbacks.menuLadder,
+    doorLadder: callbacks.doorLadder,
     flashColorFor: callbacks.flashColorFor,
     onTransition: (target) => callbacks.onDoor?.(target), // manager tears THIS room down + mounts target
   });
@@ -273,22 +292,19 @@ export function mountRoom(
     },
     reflow: () => applyViewport(),
     focusRoom,
-    // A BOARD module (logic / grammar / vocab) claims movement and drives the slime
-    // through here instead of moveOrCursor, so the step animations have to happen
-    // here too — otherwise the slime teleports cell to cell with no facing, squish,
-    // or dust in exactly those rooms. Only a single orthogonal step is a walk;
-    // undo / reset / respawn relocate further and snap silently (dust at a cell the
-    // slime never walked from would read as a glitch).
     movePlayer: (cell) => {
-      const before = pos;
-      const dx = cell.x - before.x, dy = cell.y - before.y;
-      pos = { ...cell };
-      draw();
-      if (Math.abs(dx) + Math.abs(dy) === 1) {
+      // Board modules (logic/grammar/vocab) drive the slime through here — give
+      // their moves the same juice as engine walking (3j/3i): eyes track the travel
+      // direction, the body squishes for the slide, dust puffs at the departed cell.
+      const dx = Math.sign(cell.x - pos.x);
+      const dy = Math.sign(cell.y - pos.y);
+      if (dx || dy) {
         faceDirection({ dx, dy });
         squishForStep();
-        puffDust(before);
+        puffDust(pos);
       }
+      pos = { ...cell };
+      draw();
     },
     dialogue,
     inventory: inv,
@@ -297,7 +313,7 @@ export function mountRoom(
       // AUTO-MENU ON SOLVE (toggleable): the moment a level is completed, open its
       // destination chooser so the player can move on without walking back to the
       // portal. Only level rooms have a chooser. Generic — no puzzle-type branching.
-      if (roomSettings.autoMenuOnSolve && callbacks.menuDestinations) portals.openDestinationMenu();
+      if (roomSettings.autoMenuOnSolve && callbacks.menuLadder) portals.openDestinationMenu();
     },
     teardown,
   };
@@ -317,7 +333,7 @@ export function mountRoom(
       overlayFocused: mounted?.panel?.containsActive() ?? false,
     });
     switch (resolution) {
-      case "close-dest-menu": portals.closeDestinationMenu(); return; // close it, stay in the room
+      case "close-dest-menu": portals.escBack(); return; // pop one rung (closes at the top)
       case "settings-back": settings.escBack(); return;   // back out (sub-tab → menu → closed)
       case "exit-inventory": exitInventory(); focusRoom(); return; // does NOT open settings
       case "refocus-room": focusRoom(); return;
@@ -402,6 +418,10 @@ export function mountRoom(
     for (const pile of room.piles) {
       const p = document.createElement("div");
       p.className = "tile-room tile-pile";
+      // Token VISUAL classification (CONTENT — see RoomPile): punctuation renders as a
+      // purple bead (5b); decoys get the dashed tray-only distractor tell (6a).
+      if (pile.kind === "punctuation") p.classList.add("tile-token-punct");
+      if (pile.decoy || pile.kind === "decoy") p.classList.add("tile-token-decoy");
       // Long tokens (e.g. "hello world") span multiple tiles so they stay readable instead of
       // truncating. The pile is still ONE logical cell — pickup is on its anchor (pile.pos); the
       // box just extends to the right. ~6 monospace chars fit one tile at the label size.
@@ -423,6 +443,15 @@ export function mountRoom(
     drawPlayer(slime, world, {
       pos, tile, viewCols, viewRows, roomWidth: room.width, roomHeight: room.height,
     });
+    if (lowlightEl) {
+      // Center the falloff on the player's SCREEN cell (world cell minus the camera).
+      // Radii scale with the tile (1.5 / 2.25 tiles = the spec's 60/90px at a 40px tile).
+      const { camX, camY } = cameraOffset(pos, viewCols, viewRows, room.width, room.height);
+      lowlightEl.style.setProperty("--lowlight-x", `${(pos.x + 0.5 - camX) * tile}px`);
+      lowlightEl.style.setProperty("--lowlight-y", `${(pos.y + 0.5 - camY) * tile}px`);
+      lowlightEl.style.setProperty("--lowlight-clear", `${Math.round(tile * 1.5)}px`);
+      lowlightEl.style.setProperty("--lowlight-fall", `${Math.round(tile * 2.25)}px`);
+    }
     mounted?.onPlayerDraw?.(); // position-dependent readouts (e.g. the debug line)
   }
 
