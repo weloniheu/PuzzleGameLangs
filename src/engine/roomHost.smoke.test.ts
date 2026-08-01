@@ -326,6 +326,31 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     expect(c.innerHTML).toBe("");
   });
 
+  it("board rooms animate the slime step: facing, squish, and dust (via movePlayer)", () => {
+    const { container: c, manager } = world;
+    manager.enter("grammar-build-001"); // a board module — it CLAIMS movement
+    press(c, "Enter");                  // dismiss the on_enter greeting
+    const slime = c.querySelector(".slime") as HTMLElement;
+
+    // A board move goes through ctx.movePlayer, NOT moveOrCursor — the step feel has
+    // to survive that path, or the slime teleports cell to cell in exactly these rooms.
+    press(c, "ArrowLeft");
+    expect(slime.dataset.facing).toBe("left");
+    expect(slime.classList.contains("moving")).toBe(true);
+    expect(c.querySelectorAll(".room-dust")).toHaveLength(2); // one puff per foot
+
+    press(c, "ArrowUp"); // facing tracks each new direction
+    expect(slime.dataset.facing).toBe("up");
+
+    // A RESET is a jump, not a walk: it relocates by more than one cell and must
+    // snap silently (dust at a cell the slime never walked from reads as a glitch).
+    const dustBefore = c.querySelectorAll(".room-dust").length;
+    press(c, "r");
+    expect(c.querySelectorAll(".room-dust")).toHaveLength(dustBefore);
+
+    manager.teardown();
+  });
+
   it("entering a level NEVER auto-opens the menu (even one already cleared)", () => {
     const { container: c, manager } = world;
     addUnlock("grammar1.cleared"); // Grammar I is already completed

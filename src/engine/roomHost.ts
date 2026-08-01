@@ -273,7 +273,23 @@ export function mountRoom(
     },
     reflow: () => applyViewport(),
     focusRoom,
-    movePlayer: (cell) => { pos = { ...cell }; draw(); },
+    // A BOARD module (logic / grammar / vocab) claims movement and drives the slime
+    // through here instead of moveOrCursor, so the step animations have to happen
+    // here too — otherwise the slime teleports cell to cell with no facing, squish,
+    // or dust in exactly those rooms. Only a single orthogonal step is a walk;
+    // undo / reset / respawn relocate further and snap silently (dust at a cell the
+    // slime never walked from would read as a glitch).
+    movePlayer: (cell) => {
+      const before = pos;
+      const dx = cell.x - before.x, dy = cell.y - before.y;
+      pos = { ...cell };
+      draw();
+      if (Math.abs(dx) + Math.abs(dy) === 1) {
+        faceDirection({ dx, dy });
+        squishForStep();
+        puffDust(before);
+      }
+    },
     dialogue,
     inventory: inv,
     onSolved: () => {
