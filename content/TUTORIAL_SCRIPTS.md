@@ -1,20 +1,30 @@
 # Guided tutorial scripts
 
-One script per puzzle type / room, played ONCE ever on first encounter, persisted in
-`codex.tutorials.v1` (Settings → Controls → "🔁 Replay tutorials" clears the flags).
-Tone: cut-and-dry, no character voice, all ages.
+One script per puzzle type / room, played **every time** that room is entered. Tone:
+cut-and-dry, no character voice, all ages.
+
+**Always-on, always skippable.** There are no "seen" flags and no replay button. A
+tutorial is a standing offer rather than a one-shot you can miss: coming back to a room
+you half-remember re-teaches it, and the player who does remember presses **Escape** once
+to leave. Every card advertises that on every step ("Esc — skip"), and Escape ends the
+whole opening sequence — greeting included — in a single press.
+
+Escape reaches the tutorial through the room's **esc ladder** (`systems/focus.ts`), as the
+last rung before "open settings". Nearer claims on Escape still win: a `waitFor` step
+leaves gameplay live, so if the player has the inventory or a menu open, Escape closes
+that first and skips the tutorial on the next press.
 
 **Two delivery mechanisms, one authoring shape** (`DialogueBeat[]`, field
 `guided_tutorial` — see `src/schema/types.ts`):
 
 - **Room world** (hub, code puzzles): `payload.dialogue.guided_tutorial`, played
   through the dialogue presenter (`systems/dialogue.ts`) — appended after `on_enter`
-  story beats; side dialogue (errors, blocked doors, hints) interjects and resumes.
-  Persisted per ROOM ID.
+  story beats. The run is `guarded`: side dialogue (errors, blocked doors, hints)
+  interjects and the tutorial resumes at the same step, rather than being talked over.
+  `guarded` is independent of `skippable` — the game cannot clobber a tutorial, but the
+  player can always leave it.
 - **Card games** (match, combine, sentence_build): `payload.guided_tutorial`, played
-  by the lightweight bar (`systems/tutorialOverlay.ts`). Persisted per PUZZLE TYPE —
-  "learn match once", even when several packs open with a match puzzle (each entry
-  puzzle carries the same script; whichever the player meets first plays it).
+  by the lightweight bar (`systems/tutorialOverlay.ts`), which handles its own Escape.
 
 Step mechanics (both mechanisms):
 
@@ -24,6 +34,23 @@ Step mechanics (both mechanisms):
 - No `waitFor` — informational: stays until Enter, with an "Enter ▸" cue. (Room-world
   beats additionally need `autoAdvance: false` for this; the card-game bar always
   Enter-gates informational steps.)
+- `demo: <TutorialDemo>` — which picture the card draws. Defaults to `waitFor`, so an
+  interactive step illustrates its own action for free and should NOT set this. Set it
+  on an INFORMATIONAL step to give it a picture. Closed engine set: every `waitFor`
+  kind, plus the CONCEPT demos `prefilled`, `loop`, `indent`, `function`, `argument`,
+  `shuffle`, `lowlight`.
+
+**Show-the-idea rule (new mechanics):** a step that introduces a new CONCEPT — a tier, a
+loop, indentation — must carry a `demo`. A concept is the hardest thing in the game to
+convey and the least suited to prose; the picture does the explaining and the caption
+stays to roughly one line. Text-only is for follow-up clarifications, not for the
+introduction itself. If a concept has no demo that fits, add one to `TutorialDemo`
+(engine, closed set) rather than writing a longer paragraph.
+
+**No-restating-what-just-played rule:** never repeat a step the player has already done
+in the SAME puzzle type. A later coding level introducing parentheses says only the new
+rule — it does not replay pick-up / place / build / run. Re-teaching a control the player
+just used delays the actual new idea and reads as distrust.
 
 **Control-restating rule:** baseline movement (arrows/WASD) and the generic idea of
 Enter-to-interact are taught once, in the hub — never restated. Every puzzle-specific
@@ -32,20 +59,21 @@ in that puzzle's own tutorial, even when it overlaps another puzzle's controls.
 
 ---
 
-## Hub (`hub.test.v1.json`, room world, key `hub`)
+## Hub (`hub.test.v1.json`, room world)
 
 1. "Hi! Welcome to Puzzle Patch. Let's get you started." — Enter
 2. "Move around using the arrow keys or WASD." — `waitFor: move`
-3. "You can open Settings anytime — click the ⚙ icon in the corner — to change your
-   controls or replay this tutorial." — Enter
-4. "Now try interacting. Walk up to the Coding door and press Enter." — `waitFor: enter_door`
+3. "Now try interacting. Walk up to the Coding door and press Enter." — `waitFor: enter_door`
 
-## Code puzzle (`python.code.v1.json` tutorial, room world, key `py-code-tutorial-000`)
+Three steps, two of them interactive. Settings is deliberately NOT mentioned here: the
+opening must get the player moving and through a door, and a menu they have no reason to
+want yet is the one interruption between those two goals. Settings discovers itself.
+
+## Code puzzle (`python.code.v1.json` tutorial, room world)
 
 The mechanics tutorial; ends on `print("hello world")`. Tutorials are WHOLE-UNIT:
-each plays its full sequence once (keyed by a stable id — the room id for a
-`guided_tutorial`, or a shared id for `Pack.tutorials` referenced via
-`tutorial_refs`), and "Replay tutorials" (settings) plays the same thing again.
+each plays its full sequence, every entry — a partial replay would teach step 4 to
+someone who never saw step 1. Escape ends the whole unit at once.
 
 1. "This is a code puzzle. Let's learn how it works." — Enter
 2. "Walk up to a word on the floor and press I to pick it up." — `waitFor: pickup`
@@ -55,16 +83,43 @@ each plays its full sequence once (keyed by a stable id — the room id for a
 
 Shared tier/concept tutorials live in the pack's `tutorials` map and are pulled
 in by a level's `tutorial_refs` (e.g. the `mixed` level references `tier:mixed`).
-They play in full before that level's own `guided_tutorial` on first entry.
+They play in full before that level's own `guided_tutorial`. Each one
+carries a `demo` (see the show-the-idea rule above) and keeps its caption to one line:
 
-## Match (card game, key `match` — on `haw-match-001` AND `eng-match-pos-001`)
+- `tier:mixed` — `demo: prefilled` — some tiles come already placed.
+- `tier:explicit` — `demo: place` — nothing is placed for you; every bracket is yours.
+- `concept:loops` — `demo: loop`, then `demo: indent` — what a loop repeats, then what
+  the one-tile offset means. Indentation is the single hardest idea in the coding
+  module, so it gets its own step and its own picture.
+- `concept:function_def` — `demo: function` — a named block, apart from its call.
+- `concept:function_call` — `demo: argument` — a value travelling into a named slot.
+
+### One tutorial per DIFFICULTY (enforced)
+
+The ladder's mechanic rungs ARE the difficulties (`core/ladder.resolveMechanic`): **Base,
+Mixed, Explicit, Shuffled, Shrouded**. Base is the entry rung and adds nothing to explain —
+the room's own `guided_tutorial` teaches the controls there. **Every rung above Base
+changes a rule, so every rung above Base has a `tier:<name>` tutorial and every level on
+that rung lists it in `tutorial_refs`.** `packTutorials.test.ts` fails the build otherwise.
+
+The two cross-module tiers come from the Axis-3 modifiers, so they read the same in
+grammar, logic and vocab (each of those packs carries its own copy, as the card-game
+scripts already do):
+
+- `tier:shuffled` (`randomized`) — `demo: shuffle` — "The tiles are dealt to new spots
+  every time you enter. Same puzzle — only the layout moved."
+- `tier:shrouded` (`randomized` + `lowlight`) — `demo: lowlight` — "Now the room is dark:
+  you only see what is near you. Walk around to reveal the rest." One beat, because a
+  player reaching Shrouded has already been taught Shuffled; only the darkness is new.
+
+## Match (card game — on `haw-match-001` AND `eng-match-pos-001`)
 
 1. "This is a matching puzzle. Let's learn how it works." — Enter
 2. "Walk into a word block to push it one space." — `waitFor: push`
 3. "Push each meaning onto the word it matches. Fill every slot to finish — press R
    to reset the board if you get stuck." — Enter
 
-## Combine (card game, key `combine` — on `combine-rope-001`)
+## Combine (card game — on `combine-rope-001`)
 
 1. "This is a combining puzzle. Let's learn how it works." — Enter
 2. "Walk onto an object and press Enter to drop it into the bowl. Enter again takes
@@ -72,7 +127,7 @@ They play in full before that level's own `guided_tutorial` on first entry.
 3. "When the bowl has what you need, stand on 🧪 Mix and press Enter." — `waitFor: combine`
 4. "Mix the right things together to reach the goal." — Enter
 
-## Sentence build (card game, key `sentence_build` — on `eng-sentence-001`)
+## Sentence build (card game — on `eng-sentence-001`)
 
 1. "This is a sentence puzzle. Let's learn how it works." — Enter
 2. "Walk to a word and press Enter to drop it into the next open slot." — `waitFor: place`

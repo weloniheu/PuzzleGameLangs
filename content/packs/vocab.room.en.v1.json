@@ -644,7 +644,10 @@
         "goalSpec": {
           "description": "Push each word into the one that MEANS the same. One word here matches nothing. Everything loose starts somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "vocab-en-000-shrouded",
@@ -794,7 +797,10 @@
         "goalSpec": {
           "description": "Push each word into the one that MEANS the same. One word here matches nothing. Rearranged, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     },
     {
       "id": "vocab-en-001-shuffled",
@@ -976,7 +982,10 @@
         "goalSpec": {
           "description": "Three pairs among eight tiles. Only 3 looks — spend them on the words you can't reason out. Everything loose starts somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "vocab-en-001-shrouded",
@@ -1159,7 +1168,10 @@
         "goalSpec": {
           "description": "Three pairs among eight tiles. Only 3 looks — spend them on the words you can't reason out. Rearranged, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     },
     {
       "id": "vocab-en-002-shuffled",
@@ -1330,7 +1342,10 @@
         "goalSpec": {
           "description": "The nearest word may be the OPPOSITE. Two looks only. Everything loose starts somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "vocab-en-002-shrouded",
@@ -1502,7 +1517,10 @@
         "goalSpec": {
           "description": "The nearest word may be the OPPOSITE. Two looks only. Rearranged, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     }
   ],
   "progression": [
@@ -1556,5 +1574,31 @@
         }
       ]
     }
-  ]
+  ],
+  "tutorials": {
+    "tier:shuffled": {
+      "dialogue": [
+        {
+          "id": "t-shuffled-1",
+          "speaker": "narrator",
+          "text": "The tiles are dealt to new spots every time you enter. Same puzzle — only the layout moved.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false,
+          "demo": "shuffle"
+        }
+      ]
+    },
+    "tier:shrouded": {
+      "dialogue": [
+        {
+          "id": "t-shrouded-1",
+          "speaker": "narrator",
+          "text": "Now the room is dark: you only see what is near you. Walk around to reveal the rest.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false,
+          "demo": "lowlight"
+        }
+      ]
+    }
+  }
 }

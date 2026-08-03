@@ -15,9 +15,7 @@
 
 import type { DialogueBeat, DialogueConfig, DialogueSpeaker, Puzzle, TutorialBlock } from "../schema/types";
 import { parseRoom, step, pileAt, MOVE, type Cell, type Direction } from "./core/room";
-import {
-  resetCodex, resetTutorials, getUnlocks, hasCompletedTutorial, completeTutorial,
-} from "./core/codex";
+import { resetCodex, getUnlocks } from "./core/codex";
 import { createTeardown } from "./core/teardown";
 import { resolveFeatures, resolveInventorySlots } from "./core/roomFeatures";
 import type { LadderData } from "./core/ladder";
@@ -224,7 +222,6 @@ export function mountRoom(
     relayout: () => relayout(),
     applyTermFont: () => mounted?.panel?.applyFont?.(),
     resetCodex,
-    resetTutorials,
     onBeforeOpen: () => dropFocusToRoom(), // clear inventory/panel focus before opening
     onClose: focusRoom,
     onEscape: () => handleEscape(),        // route esc through the room's esc ladder
@@ -249,8 +246,11 @@ export function mountRoom(
     hudGap: HUD_GAP,
     onEnd: focusRoom,
     firstTimeBeat: (trigger) => mounted?.firstTimeBeat?.(trigger) ?? null,
-    puzzleType: "match",
-    puzzleId: ""
+    // GUIDED TUTORIAL card badge (see systems/tutorialCard.ts). These MUST be this room's
+    // own identity: the card names the module the player is standing in, and tutorialCard's
+    // "hub" sentinel keys off the id.
+    puzzleType: puzzle.puzzle_type,
+    puzzleId: puzzle.id,
   });
 
   // --- portals & transitions (system): doors, menu portal, chooser, flash ----
@@ -333,12 +333,14 @@ export function mountRoom(
       settingsOpen: settings.isOpen(),
       inventoryFocused: inv?.focused() ?? false,
       overlayFocused: mounted?.panel?.containsActive() ?? false,
+      tutorialActive: dialogue.isActive() && dialogue.canSkip(),
     });
     switch (resolution) {
       case "close-dest-menu": portals.escBack(); return; // pop one rung (closes at the top)
       case "settings-back": settings.escBack(); return;   // back out (sub-tab → menu → closed)
       case "exit-inventory": exitInventory(); focusRoom(); return; // does NOT open settings
       case "refocus-room": focusRoom(); return;
+      case "skip-tutorial": dialogue.end(); return;       // the player's way out of teaching
       case "open-settings": settings.open();              // open() drops room focus first
     }
   }
@@ -594,30 +596,29 @@ export function mountRoom(
   // small bounce. The class only swaps the body animation; position math is untouched.
   slime.classList.add("arriving");
   const arriveTimer = window.setTimeout(() => slime.classList.remove("arriving"), 600);
-  // First-ever visit to this room: on_enter (story, if any) + the guided tutorial, played
-  // as ONE unskippable sequence, then marked seen (see codex.ts). Every later visit just
-  // gets the normal on_enter greeting. Entering a room NEVER auto-opens the menu — the
-  // auto-menu is a solve-time reward (see ctx.onSolved), so the first room plays normally.
-  // First-encounter teaching, WHOLE-UNIT (always the same, never partial): play each unseen
-  // SHARED tutorial the level references (in order), then the room's own guided_tutorial if the
-  // room itself is unseen. Each is keyed by its own id; a played sequence marks them all seen.
-  // "Replay tutorials" (settings) clears the flags so they play in full again.
-  const firstVisit: DialogueBeat[] = [];
-  const toMarkSeen: string[] = [];
+  // Entering a room: on_enter (story, if any) + the guided tutorial, as ONE sequence.
+  // Entering a room NEVER auto-opens the menu — the auto-menu is a solve-time reward
+  // (see ctx.onSolved), so the first room plays normally.
+  //
+  // Teaching plays EVERY time the room is entered — a tutorial is a standing offer, not a
+  // one-shot you can miss. Coming back to a room you half-remember should re-teach it, and
+  // the player who does remember spends one keypress (Escape) to skip past. That is why
+  // there is no "seen" flag here: the skip IS the memory.
+  //
+  // WHOLE-UNIT (always the same, never partial): each SHARED tutorial the level references
+  // (in order), then the room's own guided_tutorial.
+  //
+  // `guarded` (not `skippable: false`) is what protects the run: an interjection — an error
+  // beat, a blocked door, a hint — stashes over it and the tutorial resumes at the same step,
+  // while Escape still belongs to the player.
+  const teaching: DialogueBeat[] = [];
   for (const refId of puzzle.tutorial_refs ?? []) {
-    if (hasCompletedTutorial(refId)) continue;
     const block = callbacks.tutorialFor?.(refId);
-    if (block?.dialogue?.length) { firstVisit.push(...block.dialogue); toMarkSeen.push(refId); }
+    if (block?.dialogue?.length) teaching.push(...block.dialogue);
   }
-  if (guidedTutorialBeats.length && !hasCompletedTutorial(puzzle.id)) {
-    firstVisit.push(...guidedTutorialBeats);
-    toMarkSeen.push(puzzle.id);
-  }
-  if (firstVisit.length) {
-    dialogue.play([...onEnterBeats, ...firstVisit], {
-      onComplete: () => { for (const id of toMarkSeen) completeTutorial(id); },
-      skippable: false,
-    });
+  teaching.push(...guidedTutorialBeats);
+  if (teaching.length) {
+    dialogue.play([...onEnterBeats, ...teaching], { guarded: true, skippable: true });
   } else if (onEnterBeats.length) {
     dialogue.play(onEnterBeats); // greeting slides in on enter
   }

@@ -75,9 +75,10 @@
         {
           "id": "t-mixed-1",
           "speaker": "narrator",
-          "text": "New tier — MIXED. Some punctuation is already placed for you (the faded tiles). You supply the rest, in order, around it.",
+          "text": "Some tiles come already placed. Build the rest around them, in order.",
           "trigger": "guided_tutorial",
-          "autoAdvance": false
+          "autoAdvance": false,
+          "demo": "prefilled"
         }
       ]
     },
@@ -86,16 +87,18 @@
         {
           "id": "t-loops-1",
           "speaker": "narrator",
-          "text": "New idea — a LOOP repeats work. 'for i in range(3)' runs the line below it three times.",
+          "text": "A LOOP repeats the line below it. 'for i in range(3)' runs that line three times.",
           "trigger": "guided_tutorial",
-          "autoAdvance": false
+          "autoAdvance": false,
+          "demo": "loop"
         },
         {
           "id": "t-loops-2",
           "speaker": "narrator",
-          "text": "The repeated line is the loop's BODY. Place it one tile to the RIGHT — that indent is how Python knows it lives inside the loop.",
+          "text": "Place the repeated line one tile RIGHT. That indent is what puts it inside the loop.",
           "trigger": "guided_tutorial",
-          "autoAdvance": false
+          "autoAdvance": false,
+          "demo": "indent"
         }
       ]
     },
@@ -104,14 +107,15 @@
         {
           "id": "t-func-1",
           "speaker": "narrator",
-          "text": "New idea — a FUNCTION is a named, reusable block. 'def greet' names it; the indented lines below are its body.",
+          "text": "A FUNCTION is a named block. 'def greet' names it; the indented lines below are its body.",
           "trigger": "guided_tutorial",
-          "autoAdvance": false
+          "autoAdvance": false,
+          "demo": "function"
         },
         {
           "id": "t-func-2",
           "speaker": "narrator",
-          "text": "Defining it doesn't run it. To run it, write its name on its own line (back at indent 0) BELOW the definition.",
+          "text": "Defining it doesn't run it. Write its name on its own line below, back at the left wall.",
           "trigger": "guided_tutorial",
           "autoAdvance": false
         }
@@ -124,7 +128,8 @@
           "speaker": "narrator",
           "text": "A function can take an ARGUMENT — a value you hand it. 'def greet(name)' declares a slot called name.",
           "trigger": "guided_tutorial",
-          "autoAdvance": false
+          "autoAdvance": false,
+          "demo": "argument"
         },
         {
           "id": "t-args-2",
@@ -132,6 +137,18 @@
           "text": "Calling greet(\"Sam\") fills that slot with \"Sam\". Inside the body, use the slot's name — not a quoted word.",
           "trigger": "guided_tutorial",
           "autoAdvance": false
+        }
+      ]
+    },
+    "tier:explicit": {
+      "dialogue": [
+        {
+          "id": "t-explicit-1",
+          "speaker": "narrator",
+          "text": "Nothing is placed for you now. Every bracket and quote is yours to collect and put in order.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false,
+          "demo": "place"
         }
       ]
     }
@@ -967,43 +984,6 @@
               "text": "Order: print ( \"hello world\" )",
               "tag": "after:wrong-order"
             }
-          ],
-          "guided_tutorial": [
-            {
-              "id": "punct-tut-intro",
-              "speaker": "narrator",
-              "text": "New rule: print needs parentheses around its words. You'll collect the ( and ) yourself and place them in order.",
-              "trigger": "guided_tutorial",
-              "autoAdvance": false
-            },
-            {
-              "id": "punct-tut-pickup",
-              "speaker": "narrator",
-              "text": "Walk up to a word on the floor and press I to pick it up.",
-              "trigger": "guided_tutorial",
-              "waitFor": "pickup"
-            },
-            {
-              "id": "punct-tut-place",
-              "speaker": "narrator",
-              "text": "Walk to an empty tile and press P to place it down.",
-              "trigger": "guided_tutorial",
-              "waitFor": "place"
-            },
-            {
-              "id": "punct-tut-build",
-              "speaker": "narrator",
-              "text": "Stand on Build and press Enter to compile your line.",
-              "trigger": "guided_tutorial",
-              "waitFor": "build"
-            },
-            {
-              "id": "punct-tut-run",
-              "speaker": "narrator",
-              "text": "Stand on Run and press Enter to see what your line does.",
-              "trigger": "guided_tutorial",
-              "waitFor": "run"
-            }
           ]
         }
       },
@@ -1127,7 +1107,10 @@
         },
         "grants_unlock": "coding.explicit.cleared",
         "theme": "tech"
-      }
+      },
+      "tutorial_refs": [
+        "tier:explicit"
+      ]
     },
     {
       "id": "py-code-loops-001",

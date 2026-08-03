@@ -83,7 +83,6 @@ export interface SettingsPanelDeps {
   relayout: () => void;       // Display "Room size" change re-tiles
   applyTermFont: () => void;  // push the terminal font size onto the terminal
   resetCodex: () => void;     // "Reset all progress"
-  resetTutorials: () => void; // "Replay tutorials" — only clears the guided-tutorial flags
   onBeforeOpen: () => void;   // drop inventory/terminal focus before opening
   onClose: () => void;        // return focus to the room on close
   onEscape: () => void;       // the esc ladder (handles esc while the panel is open)
@@ -243,14 +242,8 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
       if (ok) deps.resetCodex();
     };
     settingsCard.appendChild(reset);
-
-    const replay = document.createElement("button");
-    replay.type = "button";
-    replay.className = "room-settings-reset";
-    replay.textContent = "🔁 Replay tutorials";
-    replay.title = "See the guided walkthroughs again the next time you visit those rooms";
-    replay.onclick = () => deps.resetTutorials();
-    settingsCard.appendChild(replay);
+    // (No "Replay tutorials" button: tutorials replay on every room entry by themselves,
+    //  so a control promising to make them replay would have nothing to do.)
   }
 
   function buildDisplay() {

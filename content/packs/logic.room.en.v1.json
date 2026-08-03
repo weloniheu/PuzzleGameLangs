@@ -909,7 +909,10 @@
         "goalSpec": {
           "description": "A rock plugs the only gap in the wall. Read what the rules say the rock is. Everything loose starts somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "logic-rules-001-shrouded",
@@ -1000,7 +1003,10 @@
         "goalSpec": {
           "description": "A rock plugs the only gap in the wall. Read what the rules say the rock is. Rearranged, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     },
     {
       "id": "logic-rules-002-shuffled",
@@ -1090,7 +1096,10 @@
         "goalSpec": {
           "description": "Reach the flag. Shoving the rock straight down the corridor will jam it. Everything loose starts somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "logic-rules-002-shrouded",
@@ -1181,7 +1190,10 @@
         "goalSpec": {
           "description": "Reach the flag. Shoving the rock straight down the corridor will jam it. Rearranged, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     },
     {
       "id": "logic-rules-003-shuffled",
@@ -1273,7 +1285,10 @@
         "goalSpec": {
           "description": "The wall runs floor to ceiling. Change what the wall IS. Everything loose starts somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "logic-rules-003-shrouded",
@@ -1366,7 +1381,10 @@
         "goalSpec": {
           "description": "The wall runs floor to ceiling. Change what the wall IS. Rearranged, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     },
     {
       "id": "logic-rules-004-shuffled",
@@ -1458,7 +1476,10 @@
         "goalSpec": {
           "description": "FLAG IS … nothing. Complete the sentence before the flag can mean anything. Everything loose starts somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "logic-rules-004-shrouded",
@@ -1551,7 +1572,10 @@
         "goalSpec": {
           "description": "FLAG IS … nothing. Complete the sentence before the flag can mean anything. Rearranged, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     },
     {
       "id": "logic-rules-005-shuffled",
@@ -1643,7 +1667,10 @@
         "goalSpec": {
           "description": "There is no flag in this room. Make one. Everything loose starts somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "logic-rules-005-shrouded",
@@ -1736,7 +1763,10 @@
         "goalSpec": {
           "description": "There is no flag in this room. Make one. Rearranged, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     },
     {
       "id": "logic-rules-006-shuffled",
@@ -1828,7 +1858,10 @@
         "goalSpec": {
           "description": "Break the rule that blocks you, then finish the rule that wins — the second one waits on the far side. Everything loose starts somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "logic-rules-006-shrouded",
@@ -1921,7 +1954,10 @@
         "goalSpec": {
           "description": "Break the rule that blocks you, then finish the rule that wins — the second one waits on the far side. Rearranged, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     },
     {
       "id": "logic-rules-007-shuffled",
@@ -2013,7 +2049,10 @@
         "goalSpec": {
           "description": "The flag is sealed in on every side. Something else in this room can be made to win. Everything loose starts somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "logic-rules-007-shrouded",
@@ -2106,7 +2145,10 @@
         "goalSpec": {
           "description": "The flag is sealed in on every side. Something else in this room can be made to win. Rearranged, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     },
     {
       "id": "logic-rules-008-shuffled",
@@ -2198,7 +2240,10 @@
         "goalSpec": {
           "description": "Two locks: something stops you, and nothing wins yet. Order matters. Everything loose starts somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "logic-rules-008-shrouded",
@@ -2291,7 +2336,10 @@
         "goalSpec": {
           "description": "Two locks: something stops you, and nothing wins yet. Order matters. Rearranged, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     }
   ],
   "progression": [
@@ -2424,5 +2472,31 @@
         }
       ]
     }
-  ]
+  ],
+  "tutorials": {
+    "tier:shuffled": {
+      "dialogue": [
+        {
+          "id": "t-shuffled-1",
+          "speaker": "narrator",
+          "text": "The tiles are dealt to new spots every time you enter. Same puzzle — only the layout moved.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false,
+          "demo": "shuffle"
+        }
+      ]
+    },
+    "tier:shrouded": {
+      "dialogue": [
+        {
+          "id": "t-shrouded-1",
+          "speaker": "narrator",
+          "text": "Now the room is dark: you only see what is near you. Walk around to reveal the rest.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false,
+          "demo": "lowlight"
+        }
+      ]
+    }
+  }
 }

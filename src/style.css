@@ -926,6 +926,13 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
 .tutorial-card-dots { display: flex; gap: 5px; }
 .tutorial-card-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, 0.25); }
 .tutorial-card-dot.active { background: var(--amber); }
+/* The skip cue sits on EVERY step (tutorials replay on every entry, so the exit has to be
+   as visible as the advance). Quiet by design — present, never competing with the pill. */
+.tutorial-card-skip {
+  font-family: "IBM Plex Mono", monospace; font-size: 0.66rem; font-weight: 600;
+  letter-spacing: 0.04em; color: rgba(255, 246, 230, 0.45);
+  border: 1px solid rgba(255, 246, 230, 0.18); border-radius: 6px; padding: 4px 8px;
+}
 /* The pill is a VISUAL cue, not a click target (Rule 4: gameplay is keyboard-only) —
    Enter is what actually advances (see roomHost's dialogueBlocks → advance() wiring). */
 .tutorial-card-pill {
@@ -1069,6 +1076,104 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
 @keyframes tdemo-push-slide {
   0%, 20% { transform: translateX(0); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.18); }
   55%, 100% { transform: translateX(42px); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.18), 0 0 0 2px var(--amber); }
+}
+
+/* --- CONCEPT demos: pictures for INFORMATIONAL steps that introduce a new IDEA rather
+   than a new control (see TutorialDemo in schema/types.ts). Same closed-set, engine-owned
+   rule as the mechanic demos above; content only names which one it wants. These share a
+   "code line" vocabulary — a row of segments — so indentation reads as a real offset. */
+.tdemo-stack { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.tdemo-row { display: flex; gap: 3px; }
+.tdemo-seg {
+  width: 15px; height: 8px; border-radius: 2px;
+  background: linear-gradient(rgba(255, 246, 230, 0.5), rgba(255, 246, 230, 0.3));
+}
+.tdemo-row-head .tdemo-seg { background: linear-gradient(#f2c66b, var(--amber)); }
+.tdemo-row-call .tdemo-seg { background: linear-gradient(#8f7ff0, #6b5bdb); }
+
+/* prefilled: a row of slots where some tiles are already down for you (faded), the rest empty. */
+.tdemo-slotrow { display: flex; gap: 6px; }
+.tdemo-slot-filled {
+  background: linear-gradient(#a7d98f, #78b85e); border-color: #4f8a3a; opacity: 0.45;
+  animation: tdemo-prefill-pulse 2.4s ease-in-out infinite;
+}
+@keyframes tdemo-prefill-pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.75; } }
+
+/* loop: one line runs again and again — the counter ticks 1▸2▸3 under it, then resets. */
+.tdemo-row-loop { animation: tdemo-loop-flash 2.4s ease-in-out infinite; }
+@keyframes tdemo-loop-flash { 0%, 100% { opacity: 0.55; } 12%, 45%, 78% { opacity: 1; } }
+.tdemo-loopcount { display: flex; gap: 8px; font-family: "IBM Plex Mono", monospace; font-size: 0.7rem; font-weight: 700; }
+.tdemo-loopcount-tick { color: var(--amber); opacity: 0; animation: tdemo-tick 2.4s ease-in-out infinite; }
+.tdemo-loopcount-tick:nth-child(1) { animation-delay: 0.1s; }
+.tdemo-loopcount-tick:nth-child(2) { animation-delay: 0.9s; }
+.tdemo-loopcount-tick:nth-child(3) { animation-delay: 1.7s; }
+@keyframes tdemo-tick { 0% { opacity: 0; } 8%, 92% { opacity: 1; } 100% { opacity: 0; } }
+
+/* indent: the body line slides one tile RIGHT of its header — the offset IS the lesson. */
+.tdemo-indentbody { display: flex; align-items: center; gap: 4px; }
+.tdemo-indentarrow {
+  font-size: 0.7rem; color: var(--amber);
+  animation: tdemo-indent-nudge 2.4s ease-in-out infinite;
+}
+@keyframes tdemo-indent-nudge { 0%, 100% { opacity: 0.3; transform: translateX(0); } 45% { opacity: 1; transform: translateX(3px); } }
+.tdemo-row-body { animation: tdemo-indent-step 2.4s ease-in-out infinite; }
+@keyframes tdemo-indent-step {
+  0%, 15% { transform: translateX(-14px); }
+  50%, 100% { transform: translateX(0); }
+}
+
+/* function: a named block (header + body) sits apart from the line that calls it. */
+.tdemo-funcblock {
+  display: flex; flex-direction: column; gap: 5px; padding: 5px 8px 5px 6px;
+  border-left: 2px solid var(--amber); border-radius: 0 6px 6px 0;
+  background: rgba(242, 198, 107, 0.08);
+}
+.tdemo-row-call { margin-top: 3px; animation: tdemo-call-flash 2.4s ease-in-out infinite; }
+@keyframes tdemo-call-flash { 0%, 55%, 100% { opacity: 0.4; } 72% { opacity: 1; } }
+
+/* argument: a value travels up into the named slot in the header. */
+.tdemo-arghead { display: flex; align-items: center; gap: 5px; }
+.tdemo-argslot { width: 18px; height: 12px; border-radius: 3px; }
+.tdemo-argvalue {
+  width: 18px; height: 12px; border-radius: 3px; align-self: flex-end; margin-left: 34px;
+  animation: tdemo-arg-fly 2.4s ease-in-out infinite;
+}
+@keyframes tdemo-arg-fly {
+  0%, 20% { transform: translate(0, 0); opacity: 1; }
+  65% { transform: translate(0, -19px); opacity: 1; }
+  80%, 100% { transform: translate(0, -19px); opacity: 0; }
+}
+
+/* shuffle: three tiles trade places — the layout is re-dealt every run, the puzzle isn't. */
+.tdemo-shufflerow { display: flex; gap: 10px; }
+.tdemo-shufflerow .tdemo-chip { animation-duration: 2.6s; animation-iteration-count: infinite; animation-timing-function: ease-in-out; }
+.tdemo-shuffle-a { animation-name: tdemo-shuffle-a; }
+.tdemo-shuffle-c { animation-name: tdemo-shuffle-c; }
+@keyframes tdemo-shuffle-a {
+  0%, 18% { transform: translate(0, 0); }
+  50%, 68% { transform: translate(72px, -13px); }
+  92%, 100% { transform: translate(0, 0); }
+}
+@keyframes tdemo-shuffle-c {
+  0%, 18% { transform: translate(0, 0); }
+  50%, 68% { transform: translate(-72px, 13px); }
+  92%, 100% { transform: translate(0, 0); }
+}
+
+/* lowlight: the room is dark except a circle that travels with the player. */
+.tdemo-dark {
+  position: relative; width: 116px; height: 56px; border-radius: 6px;
+  background: #0d0a12; overflow: hidden;
+}
+.tdemo-darkglow {
+  position: absolute; top: 50%; left: 0; width: 46px; height: 46px; margin-top: -23px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle, rgba(242, 198, 107, 0.34) 0%, rgba(242, 198, 107, 0) 70%);
+  animation: tdemo-dark-travel 3.4s ease-in-out infinite;
+}
+@keyframes tdemo-dark-travel {
+  0%, 100% { transform: translateX(6px); }
+  50% { transform: translateX(64px); }
 }
 
 /* Debug readout (toggle with `). */

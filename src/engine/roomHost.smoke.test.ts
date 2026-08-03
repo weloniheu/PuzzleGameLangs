@@ -18,7 +18,7 @@ import { join } from "node:path";
 import type { Pack, Puzzle, PuzzleType, TutorialBlock } from "../schema/types";
 import { createRoomManager, type RoomManager, type TypeLadder } from "./roomManager";
 import { resolveMechanic, type LadderLevel } from "./core/ladder";
-import { addUnlock, completeTutorial } from "./core/codex";
+import { addUnlock } from "./core/codex";
 import { roomSettings } from "./systems/settingsPanel";
 
 const ROOT = join(__dirname, "..", "..");
@@ -130,8 +130,11 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     const before = slimeAt(c);
     press(c, "ArrowLeft"); // (6,4) → (5,4): satisfies waitFor "move"
     expect(slimeAt(c)).not.toBe(before);
-    expect(speech(c)).toContain("Settings");
-    press(c, "Enter"); // → final step: waits for enter_door
+    // → straight to the FINAL step, which waits for enter_door. (The old Settings beat sat
+    //   here; it front-loaded a menu the player had no reason to want yet, so it's gone.)
+    expect(speech(c)).toContain("Walk up to the Coding door");
+    // The card badges the room it is actually in — the hub's own "✦ Hub", not a module.
+    expect(text(c, ".tutorial-card-module")).toBe("Hub");
 
     // (Every hub portal is open now, so the old coming_soon interjection probe is
     //  gone with the last blocked door.)
@@ -231,11 +234,15 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "ArrowDown", 4);      // Python → … → ⌂ Return to hub (always the last row)
     press(c, "Enter");             // select ⌂ → teleport away
 
-    // --- BACK IN THE HUB: fresh mount, tutorial done (completed → no beats) ---
+    // --- BACK IN THE HUB: fresh mount, and the tutorial GREETS AGAIN (no seen-flag —
+    // teaching is a standing offer on every entry), so the returning player skips it. ---
     expect(c.querySelectorAll(".room-world")).toHaveLength(1); // no stacked rooms
     expect(c.querySelectorAll(".room-door-layer .tile-portal")).toHaveLength(4);
     expect(c.querySelector(".room-terminal")).toBeNull(); // hub declares no terminal
     expect((c.querySelector(".room-narrator") as HTMLElement).hidden).toBe(true);
+    expect(speech(c)).toContain("Welcome to Puzzle Patch");
+    press(c, "Escape");
+    expect(c.querySelector(".tutorial-card")).toBeNull();
 
     // Movement still single-fires after two transitions (no leaked listeners).
     const back = slimeAt(c);
@@ -501,17 +508,15 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
   });
 
   // The punctuation TIER, driven through the real mount (proves the module threads
-  // requirePunctuation into doRun — not just the pure checker). The guided tutorial is
-  // pre-satisfied (every concept marked taught) so these drive the mechanic directly.
-  // Mark tutorials seen so these tests drive the mechanic directly (whole-unit model: a tutorial
-  // is skipped by marking its id — the room id for a guided_tutorial, or the shared tutorial id).
-  const skipTutorial = (...ids: string[]) => { for (const id of ids) completeTutorial(id); };
+  // requirePunctuation into doRun — not just the pure checker).
+  // Teaching now plays on EVERY entry, so these tests dismiss it the way a player does:
+  // one Escape ends the whole opening sequence (greeting + tutorial), leaving the mechanic.
+  const skipTeaching = (c: HTMLElement) => press(c, "Escape");
 
   it("punctuation level: collecting and placing the parens yourself solves it", () => {
     const { container: c, manager } = world;
-    skipTutorial("py-code-explicit-000");
     manager.enter("py-code-explicit-000");
-    press(c, "Enter"); // dismiss the snake on_enter greeting (guided tutorial is skipped)
+    skipTeaching(c); // one Escape past the greeting + tutorial
 
     // Collect print / ( / "hello world" / ) — in the order they'll be placed (FIFO).
     press(c, "ArrowUp");           // (6,6)
@@ -548,9 +553,8 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
 
   it("punctuation level: omitting the parens does NOT solve it (the tier is enforced in-mount)", () => {
     const { container: c, manager } = world;
-    skipTutorial("py-code-explicit-000");
     manager.enter("py-code-explicit-000");
-    press(c, "Enter"); // dismiss on_enter
+    skipTeaching(c);
 
     // Collect only print and "hello world" — skip the parens.
     press(c, "ArrowUp");           // (6,6)
@@ -578,9 +582,8 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
 
   it("base 'Variables' level: a two-line program (define x, then print it) solves it", () => {
     const { container: c, manager } = world;
-    skipTutorial("py-code-base-001");
     manager.enter("py-code-base-001");
-    press(c, "Enter"); // dismiss on_enter (guided tutorial skipped)
+    skipTeaching(c);
 
     // The goal chip shows the desired output/description — never the target code.
     expect(text(c, ".room-hud-goal")).toContain("Store 5 in x");
@@ -628,9 +631,8 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
 
   it("mixed 'Assisted parens': the scaffolded ) is prefilled and locked; you build the rest", () => {
     const { container: c, manager } = world;
-    skipTutorial("py-code-mixed-000", "tier:mixed");
     manager.enter("py-code-mixed-000");
-    press(c, "Enter"); // dismiss on_enter (guided tutorial skipped)
+    skipTeaching(c);
 
     // The closing paren is already on the board (scaffolded) — one placed tile at mount.
     expect(c.querySelectorAll(".tile-placed")).toHaveLength(1);
@@ -674,9 +676,8 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
 
   it("base 'Loops II': a for-loop with an INDENTED body prints the counter (indent-as-placement)", () => {
     const { container: c, manager } = world;
-    skipTutorial("concept:loops");
     manager.enter("py-code-loops-002");
-    press(c, "Enter"); // dismiss on_enter
+    skipTeaching(c);
 
     // Header batch: collect for i in range 3 (row 6), then lay it at row 1, indent 0.
     press(c, "ArrowUp");           // (6,6)
@@ -754,19 +755,46 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     manager.teardown();
   });
 
-  it("shared tutorial: a level's tutorial_refs play in full on first entry, not on the next", () => {
+  it("shared tutorial: a level's tutorial_refs play on EVERY entry, and Escape skips them", () => {
     const { container: c, manager } = world;
-    // First visit: the shared "tier:mixed" tutorial plays after the snake greeting.
     manager.enter("py-code-mixed-000");
     press(c, "Enter"); // past the snake on_enter greeting → into the shared tier tutorial
-    expect(speech(c)).toContain("New tier");
-    press(c, "Enter"); // finish the tutorial → the whole sequence completes → marked seen
+    expect(speech(c)).toContain("Some tiles come already placed");
+    // A CONCEPT step is informational (no waitFor) but still gets a picture — that is how a
+    // new idea is SHOWN rather than only described (see TutorialDemo / beat.demo).
+    expect(c.querySelector(".tdemo-prefilled")).toBeTruthy();
+    // Every step advertises the way out, on the card itself.
+    expect(text(c, ".tutorial-card-skip")).toBe("Esc — skip");
+    press(c, "Enter"); // finish it the long way
     manager.teardown();
 
-    // Second visit: tier:mixed already seen → greeting only, the tutorial does not replay.
+    // Second visit: it plays AGAIN. A tutorial is a standing offer, not a one-shot — there
+    // is no seen-flag, so returning to a room you half-remember re-teaches it.
     manager.enter("py-code-mixed-000");
-    press(c, "Enter"); // greeting; nothing follows
-    expect(speech(c)).not.toContain("New tier");
+    press(c, "Enter");
+    expect(speech(c)).toContain("Some tiles come already placed");
+    // ...and the player who does remember pays exactly one keypress to leave.
+    press(c, "Escape");
+    expect(speech(c)).not.toContain("Some tiles come already placed");
+    expect(c.querySelector(".tutorial-card")).toBeNull();
+    manager.teardown();
+  });
+
+  it("Escape skips a tutorial from a waitFor step, where gameplay is still live", () => {
+    const { container: c, manager } = world;
+    // The hub's step 2 waits for a real move: gameplay is NOT suppressed there, so Escape
+    // has to be routed to the tutorial explicitly rather than falling through to the room's
+    // esc ladder (see inputDispatch's dialogueActive branch).
+    manager.enter("hub");
+    press(c, "Enter");
+    expect(speech(c)).toContain("Move around");
+    press(c, "Escape");
+    expect(c.querySelector(".tutorial-card")).toBeNull();
+    // The room is live and the slime still moves — skipping the tutorial ended the sequence,
+    // it did not leave the room in a dialogue-suppressed state.
+    const before = slimeAt(c);
+    press(c, "ArrowLeft");
+    expect(slimeAt(c)).not.toBe(before);
     manager.teardown();
   });
 
