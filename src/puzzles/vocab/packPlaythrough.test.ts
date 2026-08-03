@@ -60,6 +60,7 @@ function playVocab(pz: Puzzle, moves: Dir[]) {
   };
   const matched = new Set<string>();
   const guesses = new Set<string>();
+  const confirmed = new Set<string>(); // signs whose LABEL truly took the presented word
   const isWordTile = (e: { noun?: string }) => e.noun === "tile" || e.noun === "locked";
   const placed = () => board.entities
     .filter(isWordTile)
@@ -90,9 +91,10 @@ function playVocab(pz: Puzzle, moves: Dir[]) {
       if (b && !movedIds.has(b)) guesses.add([e.id, b].sort().join("|"));
       const sign = propPresented(props, placed().find((t) => t.id === e.id), dir);
       if (sign && sign.accepts !== e.id) guesses.add(`prop:${sign.id}|${e.id}`);
+      else if (sign) confirmed.add(sign.id);
     }
   }
-  return { won: isWon(placed(), pairs), moves: count, guesses: guesses.size };
+  return { won: isWon(placed(), pairs), moves: count, guesses: guesses.size, confirmed };
 }
 
 /** The intended solution must win, fit par, and test ZERO wrong combinations. */
@@ -208,6 +210,55 @@ describe("english synonym pack (Lexicon — the high tier)", () => {
     ]);
     expect(r.won).toBe(false);
     expect(r.guesses).toBe(1); // scarce ⇄ plentiful was tested — priced once
+  });
+
+  // The Lexicon tier used to escalate only in QUANTITY — more pairs, fewer looks, same
+  // single verb. These pin the mechanics that now make each rung different in KIND.
+  it("Lexicon II: the strays are not junk — each one files on a shelf for a free look", () => {
+    // furtive travels its own row into the "secretive" shelf on the right rim.
+    const r = playVocab(puzzleIn(en, "vocab-en-001"), [L, ...rep(U, 4), ...rep(R, 4)]);
+    expect(r.confirmed.has("shelf-secretive")).toBe(true);
+    expect(r.guesses).toBe(0); // filing correctly is knowledge shown, never priced
+  });
+
+  it("Lexicon II: shelving the WRONG word is a priced guess", () => {
+    // Drop `thrifty` down to row 4 and shove it at the "extravagant" shelf, which takes lavish.
+    const r = playVocab(puzzleIn(en, "vocab-en-001"), [
+      R, R, ...rep(U, 4), R, D, L, D, R,
+    ]);
+    expect(r.confirmed.has("shelf-extravagant")).toBe(false);
+    expect(r.guesses).toBeGreaterThan(0);
+  });
+
+  it("Lexicon III: the glittering shelf reads 'drab' — the word takes dull, not the picture", () => {
+    // dull shoved along its own row into the liar on the right rim: the LABEL accepts it.
+    const r = playVocab(puzzleIn(en, "vocab-en-002"), [L, U, U, ...rep(R, 4)]);
+    expect(r.confirmed.has("shelf-drab")).toBe(true);
+    expect(r.guesses).toBe(0);
+  });
+
+  it("Lexicon III: shoving the SHINY word at the shiny-looking shelf costs a guess", () => {
+    // brilliant is what the ✨ picture suggests; the card says drab, so it is wrong.
+    const pz = puzzleIn(en, "vocab-en-002");
+    const payload = pz.payload as VocabMatchPayload;
+    const liar = payload.props!.find((p) => p.id === "shelf-drab")!;
+    expect(liar.honest).toBe(false);      // look and label disagree — accusable
+    expect(liar.accepts).toBe("dull");    // the WORD is the truth
+    expect(liar.wrong).toBeTruthy();      // and a wrong shove explains why
+  });
+
+  it("every shelf accepts a tile that exists and can be reached by a push", () => {
+    for (const id of ["vocab-en-001", "vocab-en-002"]) {
+      const payload = puzzleIn(en, id).payload as VocabMatchPayload;
+      for (const prop of payload.props ?? []) {
+        const target = payload.tiles.find((t) => t.id === prop.accepts);
+        expect(target, `${id}/${prop.id} accepts a tile that does not exist`).toBeTruthy();
+        // A tile already flush against its shelf can never be PRESENTED to it: presenting
+        // requires the tile to MOVE into the adjacent cell with the shelf ahead.
+        const dist = Math.abs(target!.pos.x - prop.pos.x) + Math.abs(target!.pos.y - prop.pos.y);
+        expect(dist, `${id}/${prop.id} sits flush against ${prop.accepts}`).toBeGreaterThan(1);
+      }
+    }
   });
 
   it("decoys never lock: bumping mundane counts a guess and stays unmatched", () => {

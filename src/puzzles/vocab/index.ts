@@ -85,9 +85,12 @@ const ROOM_STYLE = `
   border-radius: 10px; background: rgba(90, 64, 32, 0.28);
   box-shadow: inset 0 0 0 2px rgba(90, 64, 32, 0.5); }
 .vocab-prop-glyph { line-height: 1; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4)); }
-.vocab-prop-sign { font-weight: 800; line-height: 1; color: #fff6e6;
-  background: #4a3016; border-radius: 4px; padding: 2px 6px; max-width: 94%;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+/* The plaque must stay READABLE at any label length — reading the word IS the mechanic,
+   and an ellipsised "secreti…" hides the very thing the player is asked to judge. Longer
+   labels wrap and shrink instead of truncating. */
+.vocab-prop-sign { font-weight: 800; line-height: 1.05; color: #fff6e6;
+  background: #4a3016; border-radius: 4px; padding: 2px 4px; max-width: 100%;
+  overflow-wrap: anywhere; hyphens: auto; text-align: center;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4); }
 .vocab-prop.confirmed { box-shadow: inset 0 0 0 2px rgba(120, 184, 94, 0.9), 0 0 12px rgba(120, 184, 94, 0.6); }
 .vocab-prop.exposed { opacity: 0.75; }
@@ -255,7 +258,10 @@ export const vocabModule: RoomPuzzleModule = {
         const sign = document.createElement("span");
         sign.className = "vocab-prop-sign";
         sign.textContent = p.label;
-        sign.style.fontSize = `${Math.round(tile * 0.17)}px`;
+        // Scale the plaque down for longer words so the whole label still fits the cell —
+        // an English shelf reads "extravagant" where a Hawaiian one reads "ua".
+        const fit = p.label.length > 6 ? Math.max(0.1, 0.17 - (p.label.length - 6) * 0.012) : 0.17;
+        sign.style.fontSize = `${Math.max(8, Math.round(tile * fit))}px`;
         el.append(glyph, sign);
         box.appendChild(el);
         tileLayer.appendChild(box);

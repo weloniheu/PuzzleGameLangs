@@ -4,6 +4,7 @@ import type {
   CodeBuildPayload, CodeBuildSolution, LogicRulesPayload, GrammarBuildPayload, VocabMatchPayload,
   MechanicTier, CodeMode, Modifier,
 } from "../schema/types";
+import { MAX_DIFFICULTY } from "../schema/types";
 import { hasRenderer } from "../engine/renderers";
 import { hasValidator } from "../engine/validators";
 import { moduleFor } from "../puzzles";
@@ -37,7 +38,9 @@ export function validatePuzzle(p: unknown): { ok: boolean; errors: string[] } {
   }
   if (!o.puzzle_type || !PUZZLE_TYPES.includes(o.puzzle_type)) errors.push(`bad puzzle_type "${o.puzzle_type}"`);
   if (!o.validator_type || !VALIDATOR_TYPES.includes(o.validator_type)) errors.push(`bad validator_type "${o.validator_type}"`);
-  if (typeof o.difficulty !== "number" || o.difficulty < 1 || o.difficulty > 5) errors.push(`bad difficulty`);
+  if (typeof o.difficulty !== "number" || o.difficulty < 1 || o.difficulty > MAX_DIFFICULTY) {
+    errors.push(`bad difficulty ${o.difficulty} (expected 1-${MAX_DIFFICULTY})`);
+  }
   if (!Array.isArray(o.hints)) errors.push(`hints must be an array`);
   if (!o.metadata || typeof o.metadata.reviewed !== "boolean") errors.push(`metadata.reviewed (bool) required`);
 
