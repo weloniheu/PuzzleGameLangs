@@ -18,8 +18,8 @@ import { doorReaction, effectiveDoorState } from "../core/doors";
 import { portalFlashColor } from "../core/portalColors";
 import { HUB_ID } from "../core/progression";
 import {
-  languageRung, mechanicRung, levelRung,
-  type LadderData, type LadderRow, type LadderRung,
+  languageRung, mechanicRung, levelRung, ladderPath,
+  type LadderData, type LadderRow, type LadderRung, type LadderStep,
 } from "../core/ladder";
 import type { Dialogue } from "./dialogue";
 
@@ -28,6 +28,16 @@ const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v
 /** The destination chooser's cursor move, clamped to the option list. PURE. */
 export function moveSelection(sel: number, delta: number, count: number): number {
   return clamp(sel + delta, 0, count - 1);
+}
+
+/** Where the cursor LANDS when a rung is (re)rendered: on the row the player is
+ *  actually in (CURRENT), else the first real choice — never on the trailing
+ *  ← Back / ⌂ Return to hub nav rows. PURE. */
+export function focusRow(rows: LadderRow[]): number {
+  const current = rows.findIndex((r) => r.current);
+  if (current >= 0) return current;
+  const first = rows.findIndex((r) => r.kind !== "back" && r.kind !== "hub");
+  return first >= 0 ? first : 0;
 }
 
 /** The TELEPORT-AWAY ordering contract: flash first; only when it completes,
@@ -116,7 +126,7 @@ export function createPortals(deps: PortalsDeps): Portals {
   let ladderTitle = "Where to?";
   // The drill-down position: [{}] = language rung; a chosen lang adds the mechanic
   // rung; a chosen mech adds the level rung. Rows recompute from this each render.
-  let rungStack: Array<{ lang?: string; mech?: string }> = [{}];
+  let rungStack: LadderStep[] = [{}];
   let currentRows: LadderRow[] = [];
   // Who opened the chooser: the level MENU PORTAL, or a hub DOOR (a door-sourced
   // selection is the actual door transition, so it fires the enter_door signal).
@@ -253,10 +263,12 @@ export function createPortals(deps: PortalsDeps): Portals {
     ladder = data;
     ladderTitle = title;
     destSource = source;
-    rungStack = [{}]; // open at the LANGUAGE rung (rung 1, puzzle type, is the hub itself)
-    destSel = 1;      // the cursor starts on the first CHOICE (row 0 is ← Back)
+    // Open where the player LEFT OFF: the rung holding the level they're standing in
+    // (language → mechanic → level), so re-entering the portal shows that list with
+    // the level highlighted. No current level (e.g. a hub door) → the language rung.
+    rungStack = ladderPath(data);
     destMenuOpen = true;
-    renderDestMenu();
+    renderDestMenu(true);
     destMenuEl.hidden = false;
   }
   function openDestinationMenu() {
@@ -269,21 +281,23 @@ export function createPortals(deps: PortalsDeps): Portals {
     destMenuEl.hidden = true;
     deps.focusRoom();
   }
-  /** Esc / the ← Back row: pop one rung; at the top there is nothing above — close. */
+  /** Esc / the ← Back row: pop one rung (level → mechanic → language); at the top
+   *  there is nothing above — close (⌂ Return to hub is the way out from there). */
   function escBack() {
     if (rungStack.length > 1) {
       rungStack.pop();
-      destSel = 1; // back onto the first choice (row 0 is ← Back)
-      renderDestMenu();
+      renderDestMenu(true); // land on the group we came from
       return;
     }
     closeDestinationMenu();
   }
-  function renderDestMenu() {
+  /** `refocus` = a rung CHANGE: put the cursor on the current/first choice.
+   *  Otherwise keep the cursor where it is (a plain re-render after a move). */
+  function renderDestMenu(refocus = false) {
     if (!ladder) return;
     const rung = currentRung();
     currentRows = rung.rows;
-    destSel = moveSelection(destSel, 0, currentRows.length); // clamp after a rung change
+    destSel = refocus ? focusRow(currentRows) : moveSelection(destSel, 0, currentRows.length);
     destMenuCard.innerHTML = "";
     const title = document.createElement("p");
     title.className = "room-destmenu-title";
@@ -349,8 +363,7 @@ export function createPortals(deps: PortalsDeps): Portals {
       case "enter": {
         const top = rungStack[rungStack.length - 1];
         rungStack.push(top.lang === undefined ? { lang: row.key } : { lang: top.lang, mech: row.key });
-        destSel = 1; // onto the first choice of the next rung (row 0 is ← Back)
-        renderDestMenu();
+        renderDestMenu(true); // onto the next rung's current/first choice
         return;
       }
       case "locked":

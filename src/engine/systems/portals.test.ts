@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { moveSelection, awaySequence } from "./portals";
+import { moveSelection, focusRow, awaySequence } from "./portals";
+import type { LadderRow } from "../core/ladder";
 
 describe("moveSelection — the destination chooser's cursor", () => {
   it("moves within the option list", () => {
@@ -10,6 +11,26 @@ describe("moveSelection — the destination chooser's cursor", () => {
   it("clamps at both ends", () => {
     expect(moveSelection(0, -1, 3)).toBe(0);
     expect(moveSelection(2, 1, 3)).toBe(2);
+  });
+});
+
+describe("focusRow — where the cursor lands on a rung change", () => {
+  const rows = (...r: LadderRow[]): LadderRow[] =>
+    [...r, { kind: "back", label: "← Back" }, { kind: "hub", label: "⌂ Return to hub" }];
+
+  it("lands on the CURRENT row when the player is in this rung", () => {
+    expect(focusRow(rows(
+      { kind: "level", label: "Tutorial" },
+      { kind: "level", label: "Logic I", current: true },
+    ))).toBe(1);
+  });
+
+  it("otherwise lands on the first choice, never on the nav rows", () => {
+    expect(focusRow(rows({ kind: "enter", label: "English" }))).toBe(0);
+  });
+
+  it("falls back to row 0 when a rung has nothing but nav rows", () => {
+    expect(focusRow(rows())).toBe(0);
   });
 });
 

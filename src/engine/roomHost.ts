@@ -249,6 +249,8 @@ export function mountRoom(
     hudGap: HUD_GAP,
     onEnd: focusRoom,
     firstTimeBeat: (trigger) => mounted?.firstTimeBeat?.(trigger) ?? null,
+    puzzleType: "match",
+    puzzleId: ""
   });
 
   // --- portals & transitions (system): doors, menu portal, chooser, flash ----

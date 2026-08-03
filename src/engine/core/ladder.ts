@@ -94,6 +94,22 @@ const available = (lv: LevelEntry, unlocks: ReadonlySet<string>) =>
 
 const BACK_ROW: LadderRow = { kind: "back", label: "← Back" };
 const hubRow = (): LadderRow => ({ kind: "hub", label: "⌂ Return to hub", id: HUB_ID });
+/** Every rung ends with the same two NAV rows: ← Back (one rung up) then the
+ *  always-available ⌂ Return to hub. Choices come first so the cursor opens on one. */
+const navRows = (): LadderRow[] => [BACK_ROW, hubRow()];
+
+/** One position in the drill-down (no keys = the language rung). */
+export interface LadderStep { lang?: string; mech?: string }
+
+/** Where the chooser OPENS: the rung stack that lands on the level the player is
+ *  already in (language → mechanic → level), so re-opening the portal shows the
+ *  menu they left rather than restarting at the top. Unknown/absent current level
+ *  → the language rung alone. PURE. */
+export function ladderPath(data: LadderData): LadderStep[] {
+  const lv = data.levels.find((l) => l.id === data.currentId);
+  if (!lv) return [{}];
+  return [{}, { lang: lv.language }, { lang: lv.language, mech: lv.mechanic }];
+}
 
 /** Distinct values of `key` over `levels`, in first-appearance order. */
 function distinct(levels: LadderLevel[], key: (lv: LadderLevel) => string): string[] {
@@ -106,9 +122,9 @@ function distinct(levels: LadderLevel[], key: (lv: LadderLevel) => string): stri
 }
 
 /** Rung 2 — LANGUAGE: one row per language present in the level list (pack order),
- *  plus the greyed coming-soon siblings, framed by ← Back / ⌂ Return to hub. */
+ *  plus the greyed coming-soon siblings, then the ← Back / ⌂ Return to hub nav rows. */
 export function languageRung(data: LadderData, title: string): LadderRung {
-  const rows: LadderRow[] = [BACK_ROW];
+  const rows: LadderRow[] = [];
   for (const lang of distinct(data.levels, (lv) => lv.language)) {
     const group = data.levels.filter((lv) => lv.language === lang);
     const anyAvailable = group.some((lv) => available(lv, data.unlocks));
@@ -122,7 +138,7 @@ export function languageRung(data: LadderData, title: string): LadderRung {
   for (const locked of data.lockedLanguages) {
     rows.push({ kind: "locked", label: locked.label, beat: locked.beat });
   }
-  rows.push(hubRow());
+  rows.push(...navRows());
   return { title, rows };
 }
 
@@ -135,7 +151,7 @@ export function mechanicRung(data: LadderData, lang: string): LadderRung {
     const ib = MECHANIC_ORDER.indexOf(b);
     return (ia === -1 ? MECHANIC_ORDER.length : ia) - (ib === -1 ? MECHANIC_ORDER.length : ib);
   });
-  const rows: LadderRow[] = [BACK_ROW];
+  const rows: LadderRow[] = [];
   for (const mech of keys) {
     const group = inLang.filter((lv) => lv.mechanic === mech);
     const anyAvailable = group.some((lv) => available(lv, data.unlocks));
@@ -146,7 +162,7 @@ export function mechanicRung(data: LadderData, lang: string): LadderRung {
       current: group.some((lv) => lv.id === data.currentId),
     });
   }
-  rows.push(hubRow());
+  rows.push(...navRows());
   const langLabel = inLang.find((lv) => lv.languageLabel)?.languageLabel ?? capitalize(lang);
   return { title: `${langLabel} — mechanic`, rows };
 }
@@ -154,7 +170,7 @@ export function mechanicRung(data: LadderData, lang: string): LadderRung {
 /** Rung 4 — DIFFICULTY (the level list): only AVAILABLE levels appear, in pack
  *  order (no skip-ahead — same rule the flat menu enforced). */
 export function levelRung(data: LadderData, lang: string, mechanic: string): LadderRung {
-  const rows: LadderRow[] = [BACK_ROW];
+  const rows: LadderRow[] = [];
   for (const lv of data.levels) {
     if (lv.language !== lang || lv.mechanic !== mechanic) continue;
     if (!available(lv, data.unlocks)) continue;
@@ -166,6 +182,6 @@ export function levelRung(data: LadderData, lang: string, mechanic: string): Lad
       flashColor: lv.flashColor,
     });
   }
-  rows.push(hubRow());
+  rows.push(...navRows());
   return { title: `${mechanicLabel(mechanic)} — level`, rows };
 }
