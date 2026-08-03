@@ -111,6 +111,31 @@ describe("english logic pack", () => {
   });
 });
 
+// A tile flush against the border can never be pushed OFF that border — the pusher
+// would have to stand outside the board. That is survivable in an authored layout
+// (the author knows it never has to move) but fatal under the `randomized` modifier,
+// which permutes the loose words among these same cells: a required word landing on
+// the rim makes the level unwinnable. Every board therefore keeps a one-cell margin
+// of free floor, and only WALLS (which are scenery, or a rule away from scenery) may
+// sit on it.
+describe("padding lint — no pushable tile starts flush against the border", () => {
+  for (const [label, pack] of [["english", en], ["hawaiian", haw]] as const) {
+    it(`${label} pack: words and non-wall objects keep a one-cell margin`, () => {
+      for (const p of pack.puzzles) {
+        const onRim = (x: number, y: number) =>
+          x === 0 || y === 0 || x === p.width - 1 || y === p.height - 1;
+        const rim = [
+          ...p.words.filter((w) => onRim(w.x, w.y)).map((w) => `${p.id}: ${w.text}`),
+          ...p.objects
+            .filter((o) => o.noun !== "wall" && onRim(o.x, o.y))
+            .map((o) => `${p.id}: ${o.noun}`),
+        ];
+        expect(rim).toEqual([]);
+      }
+    });
+  }
+});
+
 // The Hawaiian pack: SAME engine, a PREDICATE-FIRST pattern ([predicate] KA [subject],
 // e.g. ʻO ʻOE KA LIMU / PAʻA KA PĀ) — proving the rule grammar really is pack data.
 describe("typology lint — the label may not contradict the declared pattern", () => {
