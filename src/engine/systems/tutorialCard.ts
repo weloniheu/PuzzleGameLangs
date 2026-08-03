@@ -15,7 +15,7 @@
 // state and swallows no input.
 // ---------------------------------------------------------------------------
 
-import type { DialogueBeat, PuzzleType, TutorialWaitFor } from "../../schema/types";
+import type { DialogueBeat, PuzzleType, TutorialDemo } from "../../schema/types";
 
 export interface TutorialModuleMeta {
   label: string;
@@ -90,10 +90,14 @@ export function paintTutorialCard(container: HTMLElement, opts: TutorialCardOpti
   head.append(badge, label);
   card.appendChild(head);
 
-  if (beat.waitFor) {
+  // An interactive step draws the action it waits on; an informational step draws whatever
+  // picture it asked for (that is how a new CONCEPT gets SHOWN, not just described). A step
+  // that asks for neither stays text-only.
+  const demoKind = beat.demo ?? beat.waitFor;
+  if (demoKind) {
     const demo = document.createElement("div");
     demo.className = "tutorial-card-demo";
-    demo.appendChild(buildDemo(beat.waitFor));
+    demo.appendChild(buildDemo(demoKind));
     card.appendChild(demo);
   }
 
@@ -112,6 +116,13 @@ export function paintTutorialCard(container: HTMLElement, opts: TutorialCardOpti
     dots.appendChild(dot);
   }
   foot.appendChild(dots);
+  // The skip cue is always present, on every step. Tutorials replay on every entry now, so
+  // the way out has to be as discoverable as the way forward — a player who already knows
+  // the mechanic must not have to guess that Escape works.
+  const skip = document.createElement("div");
+  skip.className = "tutorial-card-skip";
+  skip.textContent = "Esc — skip";
+  foot.appendChild(skip);
   if (!beat.waitFor) {
     const pill = document.createElement("div");
     pill.className = "tutorial-card-pill";
@@ -137,7 +148,20 @@ function chip(text: string, cls = ""): HTMLDivElement {
   return el;
 }
 
-function buildDemo(kind: TutorialWaitFor): HTMLElement {
+/** A code-ish line of the given width, optionally stepped `indent` tiles to the right. */
+function codeRow(width: number, indent = 0, cls = ""): HTMLDivElement {
+  const row = document.createElement("div");
+  row.className = `tdemo-row ${cls}`.trim();
+  row.style.marginLeft = `${indent * 14}px`;
+  for (let i = 0; i < width; i++) {
+    const seg = document.createElement("span");
+    seg.className = "tdemo-seg";
+    row.appendChild(seg);
+  }
+  return row;
+}
+
+function buildDemo(kind: TutorialDemo): HTMLElement {
   const el = document.createElement("div");
   el.className = `tdemo tdemo-${kind}`;
 
@@ -212,6 +236,100 @@ function buildDemo(kind: TutorialWaitFor): HTMLElement {
       slot.className = "tdemo-slot";
       const tile = chip("", "tdemo-push-chip");
       el.append(tile, slot);
+      break;
+    }
+    // --- CONCEPT demos: informational steps that introduce a new IDEA (see TutorialDemo).
+    // Each one draws the shape of the idea so the caption can stay short.
+    case "prefilled": {
+      // A row of slots where some tiles are already down (faded) and the rest are empty.
+      const row = document.createElement("div");
+      row.className = "tdemo-slotrow";
+      for (const filled of [false, true, false, false, true]) {
+        const s = document.createElement("div");
+        s.className = filled ? "tdemo-slot tdemo-slot-filled" : "tdemo-slot";
+        row.appendChild(s);
+      }
+      el.appendChild(row);
+      break;
+    }
+    case "loop": {
+      // One line, running again and again — a counter ticks 1▸2▸3 beside it.
+      const stack = document.createElement("div");
+      stack.className = "tdemo-stack";
+      stack.appendChild(codeRow(4, 0, "tdemo-row-loop"));
+      const count = document.createElement("div");
+      count.className = "tdemo-loopcount";
+      for (const n of ["1", "2", "3"]) {
+        const tick = document.createElement("span");
+        tick.className = "tdemo-loopcount-tick";
+        tick.textContent = n;
+        count.appendChild(tick);
+      }
+      stack.appendChild(count);
+      el.appendChild(stack);
+      break;
+    }
+    case "indent": {
+      // The whole point: the body line sits one tile RIGHT of the header, and a bracket
+      // sweeps in to show that the offset is what puts it "inside".
+      const stack = document.createElement("div");
+      stack.className = "tdemo-stack";
+      stack.appendChild(codeRow(4, 0, "tdemo-row-head"));
+      const body = document.createElement("div");
+      body.className = "tdemo-indentbody";
+      const arrow = document.createElement("span");
+      arrow.className = "tdemo-indentarrow";
+      arrow.textContent = "→";
+      body.append(arrow, codeRow(3, 1, "tdemo-row-body"));
+      stack.appendChild(body);
+      el.appendChild(stack);
+      break;
+    }
+    case "function": {
+      // A named block (header + indented body) sitting apart from the line that calls it.
+      const stack = document.createElement("div");
+      stack.className = "tdemo-stack";
+      const block = document.createElement("div");
+      block.className = "tdemo-funcblock";
+      block.append(codeRow(4, 0, "tdemo-row-head"), codeRow(3, 1, "tdemo-row-body"));
+      stack.append(block, codeRow(2, 0, "tdemo-row-call"));
+      el.appendChild(stack);
+      break;
+    }
+    case "argument": {
+      // A value travels into the named slot in the header.
+      const stack = document.createElement("div");
+      stack.className = "tdemo-stack";
+      const head = document.createElement("div");
+      head.className = "tdemo-arghead";
+      head.append(codeRow(2, 0, "tdemo-row-head"));
+      const slot = document.createElement("div");
+      slot.className = "tdemo-slot tdemo-argslot";
+      head.appendChild(slot);
+      const val = chip("", "tdemo-argvalue");
+      stack.append(head, val);
+      el.appendChild(stack);
+      break;
+    }
+    case "shuffle": {
+      // Three tiles trade places — the layout is re-dealt, the puzzle is not.
+      const row = document.createElement("div");
+      row.className = "tdemo-shufflerow";
+      for (const n of ["a", "b", "c"]) row.appendChild(chip("", `tdemo-shuffle-${n}`));
+      el.appendChild(row);
+      break;
+    }
+    case "lowlight": {
+      // The room goes dark except a circle that travels with the player.
+      const scene = document.createElement("div");
+      scene.className = "tdemo-dark";
+      const glow = document.createElement("div");
+      glow.className = "tdemo-darkglow";
+      const dot = document.createElement("div");
+      dot.className = "tdemo-dot tdemo-darkslime";
+      glow.appendChild(dot);
+      scene.appendChild(glow);
+      el.appendChild(scene);
       break;
     }
     case "interact":

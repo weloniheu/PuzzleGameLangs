@@ -76,8 +76,14 @@ export interface DialogueDeps {
 export interface PlayOptions {
   /** Called once, when this sequence reaches its natural end (not on a mid-queue Escape). */
   onComplete?: () => void;
-  /** false → Escape cannot cut this sequence short (GUIDED TUTORIALS). Default true. */
+  /** false → Escape cannot cut this sequence short. Default true. */
   skippable?: boolean;
+  /** true → an INTERJECTION (error beat, blocked door, hint) that arrives mid-sequence is
+   *  stashed over rather than clobbering this queue, and this queue resumes at the same step
+   *  afterwards. GUIDED TUTORIALS set this. It is deliberately INDEPENDENT of `skippable`:
+   *  a tutorial is protected from being talked over by the game, but the PLAYER may still
+   *  choose to skip it (Escape). Default false. */
+  guarded?: boolean;
 }
 
 export interface Dialogue {
@@ -147,10 +153,11 @@ export function createDialogue(deps: DialogueDeps): Dialogue {
   const firedFirstTimes = new Set<string>();
   let queueOnComplete: (() => void) | null = null;
   let queueSkippable = true;
+  let queueGuarded = false;
   // A GUIDED TUTORIAL paused mid-queue while an INTERJECTION (error beat, blocked door,
   // hint) plays — restored, at the same step, when the interjection ends. One level deep:
   // interjections themselves are ordinary skippable beats and simply replace each other.
-  let stashed: { state: QueueState; onComplete: (() => void) | null } | null = null;
+  let stashed: { state: QueueState; onComplete: (() => void) | null; skippable: boolean } | null = null;
 
   function isActive(): boolean {
     return queueActive(state);
@@ -179,19 +186,21 @@ export function createDialogue(deps: DialogueDeps): Dialogue {
 
   function play(seq: DialogueBeat[], opts: PlayOptions = {}) {
     if (!seq.length) return;
-    // A play() while an UNSKIPPABLE queue (guided tutorial) is in flight would clobber it —
-    // its remaining steps and onComplete would be lost. Instead, STASH the tutorial, play
-    // the newcomer as an interjection, and resume the tutorial where it left off (see end()).
-    if (queueActive(state) && !queueSkippable && (opts.skippable ?? true)) {
-      stashed = { state, onComplete: queueOnComplete };
+    // A play() while a GUARDED queue (guided tutorial) is in flight would clobber it — its
+    // remaining steps and onComplete would be lost. Instead, STASH the tutorial, play the
+    // newcomer as an interjection, and resume the tutorial where it left off (see end()).
+    if (queueActive(state) && queueGuarded && !(opts.guarded ?? false)) {
+      stashed = { state, onComplete: queueOnComplete, skippable: queueSkippable };
       queueOnComplete = opts.onComplete ?? null;
-      queueSkippable = true;
+      queueSkippable = opts.skippable ?? true;
+      queueGuarded = false;
       state = startQueue(seq);
       showBeat();
       return;
     }
     queueOnComplete = opts.onComplete ?? null;
     queueSkippable = opts.skippable ?? true;
+    queueGuarded = opts.guarded ?? false;
     state = startQueue(seq);
     showBeat();
   }
@@ -350,6 +359,7 @@ export function createDialogue(deps: DialogueDeps): Dialogue {
     const onComplete = queueOnComplete;
     queueOnComplete = null;
     queueSkippable = true;
+    queueGuarded = false;
     onComplete?.();
     // An interjection just finished over a stashed GUIDED TUTORIAL → resume it at the
     // same step (re-show the beat the player was on). See play() for the stash.
@@ -358,7 +368,8 @@ export function createDialogue(deps: DialogueDeps): Dialogue {
       stashed = null;
       state = s.state;
       queueOnComplete = s.onComplete;
-      queueSkippable = false;
+      queueSkippable = s.skippable;
+      queueGuarded = true;
       showBeat();
     }
   }

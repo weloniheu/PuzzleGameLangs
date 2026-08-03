@@ -1145,7 +1145,10 @@
         "goalSpec": {
           "description": "Two Hawaiian words, two English meanings. Pair them up. The words start somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "vocab-match-001-shrouded",
@@ -1287,7 +1290,10 @@
         "goalSpec": {
           "description": "Two Hawaiian words, two English meanings. Pair them up. New arrangement, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     },
     {
       "id": "vocab-match-002-shuffled",
@@ -1450,7 +1456,10 @@
         "goalSpec": {
           "description": "Three pairs: two animals, and the place they both live. The words start somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "vocab-match-002-shrouded",
@@ -1614,7 +1623,10 @@
         "goalSpec": {
           "description": "Three pairs: two animals, and the place they both live. New arrangement, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     },
     {
       "id": "vocab-match-003-shuffled",
@@ -1812,7 +1824,10 @@
         "goalSpec": {
           "description": "Four sky words to pair. One word on this floor belongs to nobody. The words start somewhere different every visit. Three looks only."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "vocab-match-003-shrouded",
@@ -2011,7 +2026,10 @@
         "goalSpec": {
           "description": "Four sky words to pair. One word on this floor belongs to nobody. New arrangement, and you can only see what is close. Three looks only."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     },
     {
       "id": "vocab-match-004-shuffled",
@@ -2179,7 +2197,10 @@
         "goalSpec": {
           "description": "The signs name the word that belongs to them. Shove a word into a sign to test it. The words start somewhere different every visit. Two looks — but a confirmed sign gives one back."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "vocab-match-004-shrouded",
@@ -2348,7 +2369,10 @@
         "goalSpec": {
           "description": "The signs name the word that belongs to them. Shove a word into a sign to test it. New arrangement, and you can only see what is close. Two looks — but a confirmed sign gives one back."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     },
     {
       "id": "vocab-match-005-shuffled",
@@ -2555,7 +2579,10 @@
         "goalSpec": {
           "description": "Trust the WORD on a sign, never the picture. Two free looks only. The words start somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "vocab-match-005-shrouded",
@@ -2763,7 +2790,10 @@
         "goalSpec": {
           "description": "Trust the WORD on a sign, never the picture. Two free looks only. New arrangement, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     }
   ],
   "progression": [
@@ -2851,5 +2881,31 @@
         }
       ]
     }
-  ]
+  ],
+  "tutorials": {
+    "tier:shuffled": {
+      "dialogue": [
+        {
+          "id": "t-shuffled-1",
+          "speaker": "narrator",
+          "text": "The tiles are dealt to new spots every time you enter. Same puzzle — only the layout moved.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false,
+          "demo": "shuffle"
+        }
+      ]
+    },
+    "tier:shrouded": {
+      "dialogue": [
+        {
+          "id": "t-shrouded-1",
+          "speaker": "narrator",
+          "text": "Now the room is dark: you only see what is near you. Walk around to reveal the rest.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false,
+          "demo": "lowlight"
+        }
+      ]
+    }
+  }
 }

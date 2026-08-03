@@ -104,55 +104,15 @@ export function addUnlock(key: string): boolean {
   return true;
 }
 
-/** Wipe ALL saved progress — discovered commands, room unlocks, AND tutorial "seen" flags. */
+/** Wipe ALL saved progress — discovered commands and room unlocks. */
 export function resetCodex(): void {
   write([]);
   writeUnlocks([]);
-  writeTutorials([]);
 }
 
-// --- tutorial "seen" flags (persisted alongside the Codex) --------------------
-// A tutorial plays ONCE ever, keyed by a stable id: a room id (guided_tutorial) or a shared
-// tutorial id (Pack.tutorials, referenced via tutorial_refs). It always plays in full — there
-// is no partial replay. Settings offers a lightweight "replay" that only clears this list —
-// it does NOT touch discovered commands or unlocks.
-
-const TUTORIAL_KEY = "codex.tutorials.v1";
-
-function readTutorials(): string[] {
-  try {
-    const raw = localStorage.getItem(TUTORIAL_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as string[]).filter((k) => typeof k === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeTutorials(ids: string[]): void {
-  try {
-    localStorage.setItem(TUTORIAL_KEY, JSON.stringify(ids));
-  } catch {
-    /* storage unavailable (private mode / tests) — degrade silently */
-  }
-}
-
-/** Has this tutorial (room id or shared tutorial id) already played (ever)? */
-export function hasCompletedTutorial(id: string): boolean {
-  return readTutorials().includes(id);
-}
-
-/** Mark a tutorial (room id or shared tutorial id) as seen — it won't auto-play again until replayed. */
-export function completeTutorial(id: string): void {
-  const current = readTutorials();
-  if (!current.includes(id)) writeTutorials([...current, id]);
-}
-
-/** Clear every "seen" flag — the next encounter plays each tutorial (room or shared) again. */
-export function resetTutorials(): void {
-  writeTutorials([]);
-}
+// NOTE: tutorials have no persisted "seen" flags. They play on EVERY entry and the player
+// skips with Escape (see systems/tutorialOverlay.ts + roomHost's teaching block), so there
+// is nothing to remember and nothing for a "replay" control to clear.
 
 /** Renders (or re-renders) the Codex panel into `el`. */
 export function renderCodexPanel(el: HTMLElement): void {

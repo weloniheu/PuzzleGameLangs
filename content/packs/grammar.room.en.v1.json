@@ -820,7 +820,10 @@
         "goalSpec": {
           "description": "Two slots, four words. Any subject plus any verb is a sentence. Everything loose starts somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "grammar-build-001-shrouded",
@@ -967,7 +970,10 @@
         "goalSpec": {
           "description": "Two slots, four words. Any subject plus any verb is a sentence. Rearranged, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     },
     {
       "id": "grammar-build-002-shuffled",
@@ -1142,7 +1148,10 @@
         "goalSpec": {
           "description": "Three slots: who, does what, to what. One word on this floor fits nowhere. Everything loose starts somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "grammar-build-002-shrouded",
@@ -1318,7 +1327,10 @@
         "goalSpec": {
           "description": "Three slots: who, does what, to what. One word on this floor fits nowhere. Rearranged, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     },
     {
       "id": "grammar-build-003-shuffled",
@@ -1522,7 +1534,10 @@
         "goalSpec": {
           "description": "Four slots: who, does what, to what, how. Two words on this floor fit nowhere. Everything loose starts somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "grammar-build-003-shrouded",
@@ -1727,7 +1742,10 @@
         "goalSpec": {
           "description": "Four slots: who, does what, to what, how. Two words on this floor fit nowhere. Rearranged, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     }
   ],
   "progression": [
@@ -1785,5 +1803,31 @@
         }
       ]
     }
-  ]
+  ],
+  "tutorials": {
+    "tier:shuffled": {
+      "dialogue": [
+        {
+          "id": "t-shuffled-1",
+          "speaker": "narrator",
+          "text": "The tiles are dealt to new spots every time you enter. Same puzzle — only the layout moved.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false,
+          "demo": "shuffle"
+        }
+      ]
+    },
+    "tier:shrouded": {
+      "dialogue": [
+        {
+          "id": "t-shrouded-1",
+          "speaker": "narrator",
+          "text": "Now the room is dark: you only see what is near you. Walk around to reveal the rest.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false,
+          "demo": "lowlight"
+        }
+      ]
+    }
+  }
 }

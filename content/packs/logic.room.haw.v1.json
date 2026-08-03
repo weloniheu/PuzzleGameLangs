@@ -450,7 +450,10 @@
         "goalSpec": {
           "description": "ʻO ʻOE KA LIMU. LANAKILA KA HAE. Walk to the hae. Everything loose starts somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "logic-haw-000-shrouded",
@@ -541,7 +544,10 @@
         "goalSpec": {
           "description": "ʻO ʻOE KA LIMU. LANAKILA KA HAE. Walk to the hae. Rearranged, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     },
     {
       "id": "logic-haw-001-shuffled",
@@ -633,7 +639,10 @@
         "goalSpec": {
           "description": "PAHU KA PŌHAKU — the rock can be shoved. Straight at the hae, it jams. Everything loose starts somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "logic-haw-001-shrouded",
@@ -726,7 +735,10 @@
         "goalSpec": {
           "description": "PAHU KA PŌHAKU — the rock can be shoved. Straight at the hae, it jams. Rearranged, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     },
     {
       "id": "logic-haw-002-shuffled",
@@ -820,7 +832,10 @@
         "goalSpec": {
           "description": "PAʻA KA PĀ seals the room. Take the sentence apart. Everything loose starts somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "logic-haw-002-shrouded",
@@ -915,7 +930,10 @@
         "goalSpec": {
           "description": "PAʻA KA PĀ seals the room. Take the sentence apart. Rearranged, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     },
     {
       "id": "logic-haw-003-shuffled",
@@ -1009,7 +1027,10 @@
         "goalSpec": {
           "description": "___ KA HAE. The rule about the flag is missing its first word. Everything loose starts somewhere different every visit."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
     },
     {
       "id": "logic-haw-003-shrouded",
@@ -1104,7 +1125,10 @@
         "goalSpec": {
           "description": "___ KA HAE. The rule about the flag is missing its first word. Rearranged, and you can only see what is close."
         }
-      }
+      },
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     }
   ],
   "progression": [
@@ -1173,5 +1197,31 @@
         }
       ]
     }
-  ]
+  ],
+  "tutorials": {
+    "tier:shuffled": {
+      "dialogue": [
+        {
+          "id": "t-shuffled-1",
+          "speaker": "narrator",
+          "text": "The tiles are dealt to new spots every time you enter. Same puzzle — only the layout moved.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false,
+          "demo": "shuffle"
+        }
+      ]
+    },
+    "tier:shrouded": {
+      "dialogue": [
+        {
+          "id": "t-shrouded-1",
+          "speaker": "narrator",
+          "text": "Now the room is dark: you only see what is near you. Walk around to reveal the rest.",
+          "trigger": "guided_tutorial",
+          "autoAdvance": false,
+          "demo": "lowlight"
+        }
+      ]
+    }
+  }
 }

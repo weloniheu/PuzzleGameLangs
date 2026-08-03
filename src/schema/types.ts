@@ -88,7 +88,8 @@ export interface MechanicsConfig {
  *  registry (validated at load); defaults to [] for every level.
  *  - randomized: pile spawn positions shuffled per run (seed is RUNTIME — random at mount,
  *    injected fixed in tests; not stored in pack data).
- *  - lowlight: limited vision radius (gameplay hook only for now; no visual rendering). */
+ *  - lowlight: limited vision radius — a radial falloff pinned to the player's screen cell
+ *    (rendered by roomHost; see the `.room-lowlight` rules in style.css). */
 export type Modifier = "randomized" | "lowlight";
 
 // --- Type-specific payload / solution shapes (discriminated by puzzle_type) ---
@@ -335,6 +336,28 @@ export type TutorialWaitFor =
   | "push"
   /** ran a Mix with at least two things in the bowl (combine mechanic) */
   | "combine";
+/** Closed set of pictures a GUIDED TUTORIAL step can illustrate itself with (see
+ *  systems/tutorialCard.ts). Every `TutorialWaitFor` doubles as a demo — an interactive
+ *  step draws the action it is waiting on, for free. The extra kinds below exist for
+ *  INFORMATIONAL steps, which have no action to draw but still need a picture: they are
+ *  the CONCEPT demos, used when a level introduces a new idea rather than a new control.
+ *  Content only picks from this set; the engine owns what each one draws. */
+export type TutorialDemo =
+  | TutorialWaitFor
+  /** a row of slots with one tile already filled in — the "some is done for you" tier */
+  | "prefilled"
+  /** one line running over and over — what a loop IS */
+  | "loop"
+  /** a header line with its body stepped one tile to the right — what an INDENT means */
+  | "indent"
+  /** a named block (header + indented body) sitting apart from the line that calls it */
+  | "function"
+  /** a value travelling into a named slot in a header — what an ARGUMENT does */
+  | "argument"
+  /** tiles swapping places — the `randomized` modifier's "shuffled" tier */
+  | "shuffle"
+  /** the room dark except a circle around the player — the `lowlight` modifier */
+  | "lowlight";
 /** One spoken beat. `speaker` selects the avatar; `trigger` selects when it fires. */
 export interface DialogueBeat {
   id: string;
@@ -348,6 +371,11 @@ export interface DialogueBeat {
   /** GUIDED TUTORIAL ONLY: if set, this beat does NOT auto-advance on a timer — it stays
    *  until the player actually performs this action, then advances. Omit for normal beats. */
   waitFor?: TutorialWaitFor;
+  /** GUIDED TUTORIAL ONLY: which picture to draw on the card. Defaults to `waitFor`, so an
+   *  interactive step illustrates its own action without saying anything. Set it explicitly
+   *  to give an INFORMATIONAL step (one with no `waitFor`) a picture — that is how a new
+   *  CONCEPT gets shown instead of only described. See TutorialDemo. */
+  demo?: TutorialDemo;
 }
 /** A speaker's portrait config (placeholder art is fine; portrait2 = optional talk frame). */
 export interface DialogueSpeaker {

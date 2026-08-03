@@ -12,13 +12,11 @@
 //   • A step without `waitFor` is informational: it waits for Enter (visible
 //     Enter-gated pill) and SUPPRESSES gameplay keys while showing — same
 //     "dialogue blocks input" rule the room world uses. No reading-speed timers.
-//   • The sequence is unskippable (Escape is swallowed) and plays ONCE EVER.
+//   • Escape ends the run from any step; the card shows that cue.
 //
-// Persistence is per puzzle TYPE (not per puzzle id): "learn match once" — the
-// same mechanic tutorial shouldn't replay because a different pack also opens
-// with a match puzzle. Both entry puzzles can carry the content; whichever the
-// player meets first plays, and the type is then marked done (same save list as
-// the room tutorials; Settings → "Replay tutorials" clears it all).
+// The sequence plays EVERY time the puzzle is mounted — there is no "seen" flag. A
+// tutorial is a standing offer rather than a one-shot you can miss, and the player who
+// already knows the mechanic pays one keypress to leave. See roomHost's equivalent note.
 //
 // Content stays in the pack (`payload.guided_tutorial`, the same DialogueBeat
 // shape the room world uses — `speaker` is ignored here); the enum of waitFor
@@ -26,7 +24,6 @@
 // ---------------------------------------------------------------------------
 
 import type { DialogueBeat, Puzzle, TutorialWaitFor } from "../../schema/types";
-import { hasCompletedTutorial, completeTutorial } from "../core/codex";
 import { paintTutorialCard, removeTutorialCard, tutorialModuleMeta } from "./tutorialCard";
 
 export interface TutorialOverlay {
@@ -57,8 +54,7 @@ export function mountGuidedTutorial(container: HTMLElement, puzzle: Puzzle): Tut
   }
 
   const beats: DialogueBeat[] = (puzzle.payload as { guided_tutorial?: DialogueBeat[] }).guided_tutorial ?? [];
-  const saveKey = puzzle.puzzle_type; // per-TYPE persistence (see header comment)
-  if (!beats.length || hasCompletedTutorial(saveKey)) return NOOP;
+  if (!beats.length) return NOOP;
 
   const module = tutorialModuleMeta(puzzle.puzzle_type, puzzle.id);
 
@@ -83,18 +79,26 @@ export function mountGuidedTutorial(container: HTMLElement, puzzle: Puzzle): Tut
 
   function finish() {
     done = true;
-    completeTutorial(saveKey);
     removeTutorialCard(container);
     container.removeEventListener("keydown", onKeydown, true);
     if (activeTeardown === teardown) activeTeardown = null;
   }
 
-  // Info steps behave like room dialogue: gameplay keys are suppressed, Enter
-  // advances, Escape does nothing (unskippable). waitFor steps let everything
-  // through — the player's real action reaches the board and comes back as notify().
+  // Escape ends the whole run from ANY step — including a waitFor step, where it is the
+  // only way out for a player who already knows the mechanic and doesn't want to perform
+  // it again. Info steps otherwise behave like room dialogue: gameplay keys suppressed,
+  // Enter advances. waitFor steps let everything else through — the player's real action
+  // reaches the board and comes back as notify().
   function onKeydown(e: KeyboardEvent) {
     const beat = current();
-    if (!beat || beat.waitFor) return;
+    if (!beat) return;
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      finish();
+      return;
+    }
+    if (beat.waitFor) return;
     e.preventDefault();
     e.stopPropagation();
     if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") advance();

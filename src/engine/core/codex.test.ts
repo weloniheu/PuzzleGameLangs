@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
   getUnlocks, hasUnlock, addUnlock, resetCodex, discover, getCodex,
-  hasCompletedTutorial, completeTutorial, resetTutorials,
 } from "./codex";
 
 // codex.ts reads/writes localStorage lazily inside its functions, so a tiny in-memory
@@ -44,26 +43,8 @@ describe("Codex unlocks — persistence round-trip", () => {
   });
 });
 
-describe("tutorial seen-flags — whole-unit, keyed by any id (room or shared tutorial)", () => {
-  it("starts unseen, then persists a seen tutorial id", () => {
-    expect(hasCompletedTutorial("tier:mixed")).toBe(false);
-    completeTutorial("tier:mixed");
-    expect(hasCompletedTutorial("tier:mixed")).toBe(true);
-  });
-
-  it("is idempotent and tracks ids independently", () => {
-    completeTutorial("py-code-tutorial-000");
-    completeTutorial("py-code-tutorial-000");
-    expect(hasCompletedTutorial("py-code-tutorial-000")).toBe(true);
-    expect(hasCompletedTutorial("concept:loops")).toBe(false);
-  });
-
-  it("resetTutorials clears every seen flag", () => {
-    completeTutorial("concept:loops");
-    resetTutorials();
-    expect(hasCompletedTutorial("concept:loops")).toBe(false);
-  });
-});
+// (Tutorials have no persisted seen-flags: they play on every entry and the player skips
+//  with Escape, so the codex has nothing to remember about them.)
 
 describe("resetCodex — wipes ALL progress (commands AND unlocks)", () => {
   it("clears both the discovered commands and the earned unlocks", () => {

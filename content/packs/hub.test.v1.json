@@ -41,13 +41,6 @@
             {
               "id": "tut-3",
               "speaker": "narrator",
-              "text": "You can open Settings anytime — click the ⚙ icon in the corner — to change your controls or replay this tutorial.",
-              "trigger": "guided_tutorial",
-              "autoAdvance": false
-            },
-            {
-              "id": "tut-4",
-              "speaker": "narrator",
               "text": "Now try interacting. Walk up to the Coding door and press Enter.",
               "trigger": "guided_tutorial",
               "waitFor": "enter_door"
