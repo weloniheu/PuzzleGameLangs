@@ -84,51 +84,51 @@
       "id": "en-00-tutorial",
       "title": "First Steps",
       "difficulty": 1,
-      "width": 9,
-      "height": 5,
+      "width": 11,
+      "height": 7,
       "hint": "SLIME IS YOU — you are the slime. FLAG IS WIN — touch the flag.",
       "objects": [
         {
           "noun": "slime",
-          "x": 2,
-          "y": 2
+          "x": 3,
+          "y": 3
         },
         {
           "noun": "flag",
-          "x": 6,
-          "y": 2
+          "x": 7,
+          "y": 3
         }
       ],
       "words": [
         {
           "text": "SLIME",
-          "x": 1,
-          "y": 0
+          "x": 2,
+          "y": 1
         },
         {
           "text": "IS",
-          "x": 2,
-          "y": 0
+          "x": 3,
+          "y": 1
         },
         {
           "text": "YOU",
-          "x": 3,
-          "y": 0
+          "x": 4,
+          "y": 1
         },
         {
           "text": "FLAG",
-          "x": 5,
-          "y": 0
+          "x": 6,
+          "y": 1
         },
         {
           "text": "IS",
-          "x": 6,
-          "y": 0
+          "x": 7,
+          "y": 1
         },
         {
           "text": "WIN",
-          "x": 7,
-          "y": 0
+          "x": 8,
+          "y": 1
         }
       ],
       "par": 4
@@ -137,36 +137,454 @@
       "id": "en-01-welcome",
       "title": "Just Walk",
       "difficulty": 1,
-      "width": 11,
-      "height": 7,
+      "width": 13,
+      "height": 9,
       "hint": "Read the rules, then walk onto the flag.",
       "objects": [
         {
           "noun": "slime",
-          "x": 2,
-          "y": 3
+          "x": 3,
+          "y": 4
         },
         {
           "noun": "flag",
-          "x": 8,
-          "y": 3
+          "x": 9,
+          "y": 4
         }
       ],
       "words": [
         {
           "text": "SLIME",
-          "x": 1,
-          "y": 1
+          "x": 2,
+          "y": 2
         },
         {
           "text": "IS",
+          "x": 3,
+          "y": 2
+        },
+        {
+          "text": "YOU",
+          "x": 4,
+          "y": 2
+        },
+        {
+          "text": "FLAG",
+          "x": 8,
+          "y": 2
+        },
+        {
+          "text": "IS",
+          "x": 9,
+          "y": 2
+        },
+        {
+          "text": "WIN",
+          "x": 10,
+          "y": 2
+        }
+      ],
+      "par": 6
+    },
+    {
+      "id": "en-02-push",
+      "title": "Out of the Way",
+      "difficulty": 2,
+      "width": 13,
+      "height": 9,
+      "par": 11,
+      "hint": "Shoving the rock straight at the flag jams it. Is there another way around?",
+      "objects": [
+        {
+          "noun": "slime",
+          "x": 3,
+          "y": 4
+        },
+        {
+          "noun": "rock",
+          "x": 7,
+          "y": 4
+        },
+        {
+          "noun": "flag",
+          "x": 10,
+          "y": 4
+        },
+        {
+          "noun": "wall",
+          "x": 5,
+          "y": 3
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 3
+        },
+        {
+          "noun": "wall",
+          "x": 8,
+          "y": 3
+        },
+        {
+          "noun": "wall",
+          "x": 9,
+          "y": 3
+        },
+        {
+          "noun": "wall",
+          "x": 10,
+          "y": 3
+        },
+        {
+          "noun": "wall",
+          "x": 5,
+          "y": 5
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 5
+        },
+        {
+          "noun": "wall",
+          "x": 8,
+          "y": 5
+        },
+        {
+          "noun": "wall",
+          "x": 9,
+          "y": 5
+        },
+        {
+          "noun": "wall",
+          "x": 10,
+          "y": 5
+        },
+        {
+          "noun": "wall",
+          "x": 11,
+          "y": 4
+        },
+        {
+          "noun": "wall",
+          "x": 12,
+          "y": 4
+        }
+      ],
+      "words": [
+        {
+          "text": "SLIME",
           "x": 2,
           "y": 1
         },
         {
-          "text": "YOU",
+          "text": "IS",
           "x": 3,
           "y": 1
+        },
+        {
+          "text": "YOU",
+          "x": 4,
+          "y": 1
+        },
+        {
+          "text": "WALL",
+          "x": 6,
+          "y": 1
+        },
+        {
+          "text": "IS",
+          "x": 7,
+          "y": 1
+        },
+        {
+          "text": "STOP",
+          "x": 8,
+          "y": 1
+        },
+        {
+          "text": "ROCK",
+          "x": 2,
+          "y": 7
+        },
+        {
+          "text": "IS",
+          "x": 3,
+          "y": 7
+        },
+        {
+          "text": "PUSH",
+          "x": 4,
+          "y": 7
+        },
+        {
+          "text": "FLAG",
+          "x": 6,
+          "y": 7
+        },
+        {
+          "text": "IS",
+          "x": 7,
+          "y": 7
+        },
+        {
+          "text": "WIN",
+          "x": 8,
+          "y": 7
+        }
+      ]
+    },
+    {
+      "id": "en-03-break-wall",
+      "title": "Break the Rule",
+      "difficulty": 3,
+      "width": 13,
+      "height": 11,
+      "par": 11,
+      "hint": "The wall blocks everything. Rules are made of words — and words can be pushed apart.",
+      "objects": [
+        {
+          "noun": "slime",
+          "x": 3,
+          "y": 5
+        },
+        {
+          "noun": "flag",
+          "x": 10,
+          "y": 5
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 1
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 2
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 3
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 4
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 5
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 6
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 7
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 8
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 9
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 0
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 10
+        }
+      ],
+      "words": [
+        {
+          "text": "SLIME",
+          "x": 2,
+          "y": 9
+        },
+        {
+          "text": "IS",
+          "x": 3,
+          "y": 9
+        },
+        {
+          "text": "YOU",
+          "x": 4,
+          "y": 9
+        },
+        {
+          "text": "FLAG",
+          "x": 8,
+          "y": 1
+        },
+        {
+          "text": "IS",
+          "x": 9,
+          "y": 1
+        },
+        {
+          "text": "WIN",
+          "x": 10,
+          "y": 1
+        },
+        {
+          "text": "WALL",
+          "x": 4,
+          "y": 3
+        },
+        {
+          "text": "IS",
+          "x": 5,
+          "y": 3
+        },
+        {
+          "text": "STOP",
+          "x": 6,
+          "y": 3
+        }
+      ]
+    },
+    {
+      "id": "en-04-make-win",
+      "title": "Make It Win",
+      "difficulty": 4,
+      "width": 13,
+      "height": 11,
+      "par": 19,
+      "hint": "FLAG IS ... what? A rule is finished by the word that lands at its end.",
+      "objects": [
+        {
+          "noun": "slime",
+          "x": 3,
+          "y": 7
+        },
+        {
+          "noun": "flag",
+          "x": 9,
+          "y": 6
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 4
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 5
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 6
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 7
+        }
+      ],
+      "words": [
+        {
+          "text": "SLIME",
+          "x": 2,
+          "y": 9
+        },
+        {
+          "text": "IS",
+          "x": 3,
+          "y": 9
+        },
+        {
+          "text": "YOU",
+          "x": 4,
+          "y": 9
+        },
+        {
+          "text": "WALL",
+          "x": 6,
+          "y": 9
+        },
+        {
+          "text": "IS",
+          "x": 7,
+          "y": 9
+        },
+        {
+          "text": "STOP",
+          "x": 8,
+          "y": 9
+        },
+        {
+          "text": "FLAG",
+          "x": 7,
+          "y": 1
+        },
+        {
+          "text": "IS",
+          "x": 8,
+          "y": 1
+        },
+        {
+          "text": "WIN",
+          "x": 4,
+          "y": 6
+        },
+        {
+          "text": "ROCK",
+          "x": 9,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "en-05-become",
+      "title": "Turn to Gold",
+      "difficulty": 5,
+      "width": 13,
+      "height": 11,
+      "par": 20,
+      "hint": "There is no flag to reach — but a flag would win. What could the rock become?",
+      "objects": [
+        {
+          "noun": "slime",
+          "x": 3,
+          "y": 7
+        },
+        {
+          "noun": "rock",
+          "x": 8,
+          "y": 4
+        }
+      ],
+      "words": [
+        {
+          "text": "SLIME",
+          "x": 2,
+          "y": 9
+        },
+        {
+          "text": "IS",
+          "x": 3,
+          "y": 9
+        },
+        {
+          "text": "YOU",
+          "x": 4,
+          "y": 9
         },
         {
           "text": "FLAG",
@@ -182,27 +600,159 @@
           "text": "WIN",
           "x": 9,
           "y": 1
+        },
+        {
+          "text": "ROCK",
+          "x": 3,
+          "y": 5
+        },
+        {
+          "text": "IS",
+          "x": 4,
+          "y": 5
+        },
+        {
+          "text": "FLAG",
+          "x": 8,
+          "y": 7
         }
-      ],
-      "par": 6
+      ]
     },
     {
-      "id": "en-02-push",
-      "title": "Out of the Way",
-      "difficulty": 2,
-      "width": 11,
-      "height": 7,
-      "par": 11,
-      "hint": "Shoving the rock straight at the flag jams it. Is there another way around?",
+      "id": "en-06-through",
+      "title": "Through the Wall",
+      "difficulty": 6,
+      "width": 13,
+      "height": 11,
+      "par": 24,
+      "hint": "The rule you need to finish is on the far side. First make the wall just a wall.",
+      "objects": [
+        {
+          "noun": "slime",
+          "x": 3,
+          "y": 5
+        },
+        {
+          "noun": "flag",
+          "x": 9,
+          "y": 5
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 1
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 2
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 3
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 4
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 5
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 6
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 7
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 8
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 9
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 0
+        },
+        {
+          "noun": "wall",
+          "x": 7,
+          "y": 10
+        }
+      ],
+      "words": [
+        {
+          "text": "SLIME",
+          "x": 2,
+          "y": 9
+        },
+        {
+          "text": "IS",
+          "x": 3,
+          "y": 9
+        },
+        {
+          "text": "YOU",
+          "x": 4,
+          "y": 9
+        },
+        {
+          "text": "FLAG",
+          "x": 8,
+          "y": 1
+        },
+        {
+          "text": "IS",
+          "x": 9,
+          "y": 1
+        },
+        {
+          "text": "WALL",
+          "x": 2,
+          "y": 7
+        },
+        {
+          "text": "IS",
+          "x": 3,
+          "y": 7
+        },
+        {
+          "text": "STOP",
+          "x": 4,
+          "y": 7
+        },
+        {
+          "text": "WIN",
+          "x": 3,
+          "y": 3
+        }
+      ]
+    },
+    {
+      "id": "en-07-which-rule",
+      "title": "Which Rule?",
+      "difficulty": 7,
+      "width": 13,
+      "height": 11,
+      "par": 23,
+      "hint": "You cannot reach the flag. So what CAN you reach — and what could make it win?",
       "objects": [
         {
           "noun": "slime",
           "x": 2,
-          "y": 3
-        },
-        {
-          "noun": "rock",
-          "x": 6,
           "y": 3
         },
         {
@@ -211,19 +761,9 @@
           "y": 3
         },
         {
-          "noun": "wall",
-          "x": 4,
-          "y": 2
-        },
-        {
-          "noun": "wall",
-          "x": 5,
-          "y": 2
-        },
-        {
-          "noun": "wall",
+          "noun": "rock",
           "x": 7,
-          "y": 2
+          "y": 7
         },
         {
           "noun": "wall",
@@ -237,18 +777,18 @@
         },
         {
           "noun": "wall",
-          "x": 4,
-          "y": 4
+          "x": 10,
+          "y": 2
         },
         {
           "noun": "wall",
-          "x": 5,
-          "y": 4
+          "x": 8,
+          "y": 3
         },
         {
           "noun": "wall",
-          "x": 7,
-          "y": 4
+          "x": 10,
+          "y": 3
         },
         {
           "noun": "wall",
@@ -263,579 +803,64 @@
         {
           "noun": "wall",
           "x": 10,
-          "y": 3
+          "y": 4
         }
       ],
       "words": [
         {
-          "text": "SLIME",
-          "x": 1,
-          "y": 0
-        },
-        {
-          "text": "IS",
-          "x": 2,
-          "y": 0
-        },
-        {
-          "text": "YOU",
-          "x": 3,
-          "y": 0
-        },
-        {
           "text": "WALL",
-          "x": 5,
-          "y": 0
+          "x": 6,
+          "y": 1
         },
         {
           "text": "IS",
-          "x": 6,
-          "y": 0
+          "x": 7,
+          "y": 1
         },
         {
           "text": "STOP",
-          "x": 7,
-          "y": 0
+          "x": 8,
+          "y": 1
         },
         {
-          "text": "ROCK",
-          "x": 1,
-          "y": 6
+          "text": "SLIME",
+          "x": 2,
+          "y": 9
         },
         {
           "text": "IS",
+          "x": 3,
+          "y": 9
+        },
+        {
+          "text": "YOU",
+          "x": 4,
+          "y": 9
+        },
+        {
+          "text": "ROCK",
+          "x": 3,
+          "y": 4
+        },
+        {
+          "text": "IS",
+          "x": 5,
+          "y": 6
+        },
+        {
+          "text": "WIN",
+          "x": 9,
+          "y": 7
+        },
+        {
+          "text": "FLAG",
           "x": 2,
           "y": 6
         },
         {
           "text": "PUSH",
-          "x": 3,
-          "y": 6
-        },
-        {
-          "text": "FLAG",
-          "x": 5,
-          "y": 6
-        },
-        {
-          "text": "IS",
-          "x": 6,
-          "y": 6
-        },
-        {
-          "text": "WIN",
-          "x": 7,
-          "y": 6
-        }
-      ]
-    },
-    {
-      "id": "en-03-break-wall",
-      "title": "Break the Rule",
-      "difficulty": 3,
-      "width": 11,
-      "height": 9,
-      "par": 11,
-      "hint": "The wall blocks everything. Rules are made of words — and words can be pushed apart.",
-      "objects": [
-        {
-          "noun": "slime",
-          "x": 2,
-          "y": 4
-        },
-        {
-          "noun": "flag",
-          "x": 9,
-          "y": 4
-        },
-        {
-          "noun": "wall",
-          "x": 6,
-          "y": 0
-        },
-        {
-          "noun": "wall",
-          "x": 6,
-          "y": 1
-        },
-        {
-          "noun": "wall",
-          "x": 6,
-          "y": 2
-        },
-        {
-          "noun": "wall",
-          "x": 6,
-          "y": 3
-        },
-        {
-          "noun": "wall",
-          "x": 6,
-          "y": 4
-        },
-        {
-          "noun": "wall",
-          "x": 6,
-          "y": 5
-        },
-        {
-          "noun": "wall",
-          "x": 6,
-          "y": 6
-        },
-        {
-          "noun": "wall",
-          "x": 6,
-          "y": 7
-        },
-        {
-          "noun": "wall",
           "x": 6,
           "y": 8
-        }
-      ],
-      "words": [
-        {
-          "text": "SLIME",
-          "x": 1,
-          "y": 8
-        },
-        {
-          "text": "IS",
-          "x": 2,
-          "y": 8
-        },
-        {
-          "text": "YOU",
-          "x": 3,
-          "y": 8
-        },
-        {
-          "text": "FLAG",
-          "x": 7,
-          "y": 0
-        },
-        {
-          "text": "IS",
-          "x": 8,
-          "y": 0
-        },
-        {
-          "text": "WIN",
-          "x": 9,
-          "y": 0
-        },
-        {
-          "text": "WALL",
-          "x": 3,
-          "y": 2
-        },
-        {
-          "text": "IS",
-          "x": 4,
-          "y": 2
-        },
-        {
-          "text": "STOP",
-          "x": 5,
-          "y": 2
-        }
-      ]
-    },
-    {
-      "id": "en-04-make-win",
-      "title": "Make It Win",
-      "difficulty": 4,
-      "width": 11,
-      "height": 9,
-      "par": 19,
-      "hint": "FLAG IS ... what? A rule is finished by the word that lands at its end.",
-      "objects": [
-        {
-          "noun": "slime",
-          "x": 2,
-          "y": 6
-        },
-        {
-          "noun": "flag",
-          "x": 8,
-          "y": 5
-        },
-        {
-          "noun": "wall",
-          "x": 5,
-          "y": 3
-        },
-        {
-          "noun": "wall",
-          "x": 5,
-          "y": 4
-        },
-        {
-          "noun": "wall",
-          "x": 5,
-          "y": 5
-        },
-        {
-          "noun": "wall",
-          "x": 5,
-          "y": 6
-        }
-      ],
-      "words": [
-        {
-          "text": "SLIME",
-          "x": 1,
-          "y": 8
-        },
-        {
-          "text": "IS",
-          "x": 2,
-          "y": 8
-        },
-        {
-          "text": "YOU",
-          "x": 3,
-          "y": 8
-        },
-        {
-          "text": "WALL",
-          "x": 5,
-          "y": 8
-        },
-        {
-          "text": "IS",
-          "x": 6,
-          "y": 8
-        },
-        {
-          "text": "STOP",
-          "x": 7,
-          "y": 8
-        },
-        {
-          "text": "FLAG",
-          "x": 6,
-          "y": 0
-        },
-        {
-          "text": "IS",
-          "x": 7,
-          "y": 0
-        },
-        {
-          "text": "WIN",
-          "x": 3,
-          "y": 5
-        },
-        {
-          "text": "ROCK",
-          "x": 8,
-          "y": 3
-        }
-      ]
-    },
-    {
-      "id": "en-05-become",
-      "title": "Turn to Gold",
-      "difficulty": 5,
-      "width": 11,
-      "height": 9,
-      "par": 20,
-      "hint": "There is no flag to reach — but a flag would win. What could the rock become?",
-      "objects": [
-        {
-          "noun": "slime",
-          "x": 2,
-          "y": 6
-        },
-        {
-          "noun": "rock",
-          "x": 7,
-          "y": 3
-        }
-      ],
-      "words": [
-        {
-          "text": "SLIME",
-          "x": 1,
-          "y": 8
-        },
-        {
-          "text": "IS",
-          "x": 2,
-          "y": 8
-        },
-        {
-          "text": "YOU",
-          "x": 3,
-          "y": 8
-        },
-        {
-          "text": "FLAG",
-          "x": 6,
-          "y": 0
-        },
-        {
-          "text": "IS",
-          "x": 7,
-          "y": 0
-        },
-        {
-          "text": "WIN",
-          "x": 8,
-          "y": 0
-        },
-        {
-          "text": "ROCK",
-          "x": 2,
-          "y": 4
-        },
-        {
-          "text": "IS",
-          "x": 3,
-          "y": 4
-        },
-        {
-          "text": "FLAG",
-          "x": 7,
-          "y": 6
-        }
-      ]
-    },
-    {
-      "id": "en-06-through",
-      "title": "Through the Wall",
-      "difficulty": 6,
-      "width": 11,
-      "height": 9,
-      "par": 24,
-      "hint": "The rule you need to finish is on the far side. First make the wall just a wall.",
-      "objects": [
-        {
-          "noun": "slime",
-          "x": 2,
-          "y": 4
-        },
-        {
-          "noun": "flag",
-          "x": 8,
-          "y": 4
-        },
-        {
-          "noun": "wall",
-          "x": 6,
-          "y": 0
-        },
-        {
-          "noun": "wall",
-          "x": 6,
-          "y": 1
-        },
-        {
-          "noun": "wall",
-          "x": 6,
-          "y": 2
-        },
-        {
-          "noun": "wall",
-          "x": 6,
-          "y": 3
-        },
-        {
-          "noun": "wall",
-          "x": 6,
-          "y": 4
-        },
-        {
-          "noun": "wall",
-          "x": 6,
-          "y": 5
-        },
-        {
-          "noun": "wall",
-          "x": 6,
-          "y": 6
-        },
-        {
-          "noun": "wall",
-          "x": 6,
-          "y": 7
-        },
-        {
-          "noun": "wall",
-          "x": 6,
-          "y": 8
-        }
-      ],
-      "words": [
-        {
-          "text": "SLIME",
-          "x": 1,
-          "y": 8
-        },
-        {
-          "text": "IS",
-          "x": 2,
-          "y": 8
-        },
-        {
-          "text": "YOU",
-          "x": 3,
-          "y": 8
-        },
-        {
-          "text": "FLAG",
-          "x": 7,
-          "y": 0
-        },
-        {
-          "text": "IS",
-          "x": 8,
-          "y": 0
-        },
-        {
-          "text": "WALL",
-          "x": 1,
-          "y": 6
-        },
-        {
-          "text": "IS",
-          "x": 2,
-          "y": 6
-        },
-        {
-          "text": "STOP",
-          "x": 3,
-          "y": 6
-        },
-        {
-          "text": "WIN",
-          "x": 2,
-          "y": 2
-        }
-      ]
-    },
-    {
-      "id": "en-07-which-rule",
-      "title": "Which Rule?",
-      "difficulty": 7,
-      "width": 11,
-      "height": 9,
-      "par": 23,
-      "hint": "You cannot reach the flag. So what CAN you reach — and what could make it win?",
-      "objects": [
-        {
-          "noun": "slime",
-          "x": 1,
-          "y": 2
-        },
-        {
-          "noun": "flag",
-          "x": 8,
-          "y": 2
-        },
-        {
-          "noun": "rock",
-          "x": 6,
-          "y": 6
-        },
-        {
-          "noun": "wall",
-          "x": 7,
-          "y": 1
-        },
-        {
-          "noun": "wall",
-          "x": 8,
-          "y": 1
-        },
-        {
-          "noun": "wall",
-          "x": 9,
-          "y": 1
-        },
-        {
-          "noun": "wall",
-          "x": 7,
-          "y": 2
-        },
-        {
-          "noun": "wall",
-          "x": 9,
-          "y": 2
-        },
-        {
-          "noun": "wall",
-          "x": 7,
-          "y": 3
-        },
-        {
-          "noun": "wall",
-          "x": 8,
-          "y": 3
-        },
-        {
-          "noun": "wall",
-          "x": 9,
-          "y": 3
-        }
-      ],
-      "words": [
-        {
-          "text": "WALL",
-          "x": 5,
-          "y": 0
-        },
-        {
-          "text": "IS",
-          "x": 6,
-          "y": 0
-        },
-        {
-          "text": "STOP",
-          "x": 7,
-          "y": 0
-        },
-        {
-          "text": "SLIME",
-          "x": 1,
-          "y": 8
-        },
-        {
-          "text": "IS",
-          "x": 2,
-          "y": 8
-        },
-        {
-          "text": "YOU",
-          "x": 3,
-          "y": 8
-        },
-        {
-          "text": "ROCK",
-          "x": 2,
-          "y": 3
-        },
-        {
-          "text": "IS",
-          "x": 4,
-          "y": 5
-        },
-        {
-          "text": "WIN",
-          "x": 8,
-          "y": 6
-        },
-        {
-          "text": "FLAG",
-          "x": 1,
-          "y": 5
-        },
-        {
-          "text": "PUSH",
-          "x": 5,
-          "y": 7
         }
       ]
     },
@@ -843,127 +868,137 @@
       "id": "en-08-two-locks",
       "title": "Two Locks",
       "difficulty": 8,
-      "width": 11,
-      "height": 9,
+      "width": 13,
+      "height": 11,
       "par": 27,
       "hint": "The rock guards the only gap. The rule that will win is waiting, unfinished, at the bottom.",
       "objects": [
         {
           "noun": "slime",
-          "x": 1,
-          "y": 5
-        },
-        {
-          "noun": "flag",
-          "x": 7,
-          "y": 4
-        },
-        {
-          "noun": "rock",
-          "x": 4,
+          "x": 2,
           "y": 6
         },
         {
-          "noun": "wall",
-          "x": 4,
-          "y": 0
-        },
-        {
-          "noun": "wall",
-          "x": 4,
-          "y": 1
-        },
-        {
-          "noun": "wall",
-          "x": 4,
-          "y": 2
-        },
-        {
-          "noun": "wall",
-          "x": 4,
-          "y": 3
-        },
-        {
-          "noun": "wall",
-          "x": 4,
-          "y": 4
-        },
-        {
-          "noun": "wall",
-          "x": 4,
+          "noun": "flag",
+          "x": 8,
           "y": 5
         },
         {
-          "noun": "wall",
-          "x": 4,
+          "noun": "rock",
+          "x": 5,
           "y": 7
         },
         {
           "noun": "wall",
-          "x": 4,
+          "x": 5,
+          "y": 1
+        },
+        {
+          "noun": "wall",
+          "x": 5,
+          "y": 2
+        },
+        {
+          "noun": "wall",
+          "x": 5,
+          "y": 3
+        },
+        {
+          "noun": "wall",
+          "x": 5,
+          "y": 4
+        },
+        {
+          "noun": "wall",
+          "x": 5,
+          "y": 5
+        },
+        {
+          "noun": "wall",
+          "x": 5,
+          "y": 6
+        },
+        {
+          "noun": "wall",
+          "x": 5,
           "y": 8
+        },
+        {
+          "noun": "wall",
+          "x": 5,
+          "y": 9
+        },
+        {
+          "noun": "wall",
+          "x": 5,
+          "y": 0
+        },
+        {
+          "noun": "wall",
+          "x": 5,
+          "y": 10
         }
       ],
       "words": [
         {
           "text": "WALL",
-          "x": 5,
-          "y": 0
+          "x": 6,
+          "y": 1
         },
         {
           "text": "IS",
-          "x": 6,
-          "y": 0
+          "x": 7,
+          "y": 1
         },
         {
           "text": "STOP",
-          "x": 7,
-          "y": 0
+          "x": 8,
+          "y": 1
         },
         {
           "text": "SLIME",
-          "x": 1,
-          "y": 8
+          "x": 2,
+          "y": 9
         },
         {
           "text": "IS",
-          "x": 2,
-          "y": 8
+          "x": 3,
+          "y": 9
         },
         {
           "text": "YOU",
-          "x": 3,
-          "y": 8
+          "x": 4,
+          "y": 9
         },
         {
           "text": "ROCK",
-          "x": 1,
-          "y": 2
+          "x": 2,
+          "y": 3
         },
         {
           "text": "IS",
-          "x": 2,
-          "y": 2
+          "x": 3,
+          "y": 3
         },
         {
           "text": "STOP",
-          "x": 3,
-          "y": 2
+          "x": 4,
+          "y": 3
         },
         {
           "text": "FLAG",
-          "x": 6,
-          "y": 8
+          "x": 7,
+          "y": 9
         },
         {
           "text": "IS",
-          "x": 7,
-          "y": 8
+          "x": 8,
+          "y": 9
         },
         {
           "text": "WIN",
-          "x": 8,
-          "y": 3
+          "x": 9,
+          "y": 4
         }
       ]
     }

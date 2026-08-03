@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  languageRung, mechanicRung, levelRung, resolveMechanic,
+  languageRung, mechanicRung, levelRung, resolveMechanic, ladderPath,
   type LadderData, type LadderLevel, type LadderRow,
 } from "./ladder";
 import { HUB_ID } from "./progression";
@@ -24,25 +24,26 @@ const labels = (rows: LadderRow[]) => rows.map((r) => r.label);
 const kinds = (rows: LadderRow[]) => rows.map((r) => r.kind);
 
 describe("languageRung — one row per language + coming-soon siblings, framed by nav", () => {
-  it("frames the list with ← Back first and ⌂ Return to hub last", () => {
+  it("ends every rung with ← Back then ⌂ Return to hub (choices first)", () => {
     const rung = languageRung(data(), "Coding portal");
     expect(rung.title).toBe("Coding portal");
-    expect(rung.rows[0].kind).toBe("back");
+    expect(rung.rows.at(-2)!.kind).toBe("back");
     expect(rung.rows.at(-1)).toMatchObject({ kind: "hub", id: HUB_ID });
+    expect(rung.rows[0].kind).not.toBe("back");
   });
 
   it("groups by language in pack order, using the pack's display label", () => {
     const rung = languageRung(data(), "t");
-    expect(labels(rung.rows)).toEqual(["← Back", "English", "ʻŌlelo Hawaiʻi", "JavaScript", "⌂ Return to hub"]);
+    expect(labels(rung.rows)).toEqual(["English", "ʻŌlelo Hawaiʻi", "JavaScript", "← Back", "⌂ Return to hub"]);
   });
 
   it("a language with no available level is greyed (locked), not hidden", () => {
     // haw1 needs en1.cleared — not earned yet.
     const rung = languageRung(data(), "t");
-    expect(kinds(rung.rows)).toEqual(["back", "enter", "locked", "locked", "hub"]);
+    expect(kinds(rung.rows)).toEqual(["enter", "locked", "locked", "back", "hub"]);
     // earning the key opens it
     const open = languageRung(data(["en1.cleared"]), "t");
-    expect(kinds(open.rows)).toEqual(["back", "enter", "enter", "locked", "hub"]);
+    expect(kinds(open.rows)).toEqual(["enter", "enter", "locked", "back", "hub"]);
   });
 
   it("locked_languages rows carry their beat and never an enter key", () => {
@@ -62,7 +63,7 @@ describe("mechanicRung — the chosen language's mechanics in canonical order", 
   it("lists mechanics in canonical order with display labels", () => {
     const rung = mechanicRung(data(["en1.cleared"]), "en");
     expect(rung.title).toBe("English — mechanic");
-    expect(labels(rung.rows)).toEqual(["← Back", "Base", "Shuffled", "⌂ Return to hub"]);
+    expect(labels(rung.rows)).toEqual(["Base", "Shuffled", "← Back", "⌂ Return to hub"]);
   });
 
   it("greys a mechanic whose levels are all locked", () => {
@@ -80,7 +81,7 @@ describe("mechanicRung — the chosen language's mechanics in canonical order", 
 describe("levelRung — only AVAILABLE levels, in pack order (no skip-ahead)", () => {
   it("hides levels whose unlock is not earned", () => {
     const rung = levelRung(data(), "en", "base");
-    expect(labels(rung.rows)).toEqual(["← Back", "First", "⌂ Return to hub"]);
+    expect(labels(rung.rows)).toEqual(["First", "← Back", "⌂ Return to hub"]);
   });
 
   it("an earned unlock reveals its level, keeping pack order", () => {
@@ -95,6 +96,20 @@ describe("levelRung — only AVAILABLE levels, in pack order (no skip-ahead)", (
     const row = rung.rows.find((r) => r.kind === "level")!;
     expect(row).toMatchObject({ id: "en1", current: true, flashColor: "#123456" });
     expect(rung.title).toBe("Base — level");
+  });
+});
+
+describe("ladderPath — the chooser opens on the rung the player is standing in", () => {
+  it("drills to the current level's language → mechanic rung", () => {
+    expect(ladderPath(data([], "en1-shuffled"))).toEqual([{}, { lang: "en" }, { lang: "en", mech: "shuffled" }]);
+  });
+
+  it("no current level (a hub door) opens at the language rung", () => {
+    expect(ladderPath(data())).toEqual([{}]);
+  });
+
+  it("an unknown current id falls back to the language rung", () => {
+    expect(ladderPath(data([], "nope"))).toEqual([{}]);
   });
 });
 

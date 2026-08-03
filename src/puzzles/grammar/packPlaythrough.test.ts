@@ -7,7 +7,7 @@ import enPack from "../../../content/packs/grammar.room.en.v1.json";
 import { validatePuzzle } from "../../generation/validateRepair";
 import { tryMove, DIRECTIONS, type Direction } from "../logic/ruleEngine";
 import { checkSentence } from "./grammarCheck";
-import { buildGrammarBoard, filledSlots, PUSH_RULES } from "./grammarBoard";
+import { buildGrammarBoard, filledSlots, slotCell, PUSH_RULES } from "./grammarBoard";
 import type { GrammarBuildPayload } from "../../schema/types";
 import type { Puzzle } from "../../schema/types";
 
@@ -61,6 +61,23 @@ describe("english grammar pack (push format)", () => {
 
   it("grammar-build-003: four slots, two decoys", () => {
     expect(play(byId("grammar-build-003"), seq("LLUUUUDDDRUUUDDDRUUUDDDRUUU"))).toBe(true);
+  });
+
+  // Same rim rule as the logic pack: a word flush against a wall can't be pushed off
+  // it (no cell to stand on), and `randomized` shuffles the words among these very
+  // cells — a rimmed spawn cell would hand out unwinnable rooms. Frame slots keep the
+  // margin too, so a word can always be pushed INTO a slot from either side.
+  it("no word spawn or frame slot is flush against a wall", () => {
+    for (const p of enPack.puzzles as unknown as Puzzle[]) {
+      const payload = p.payload as GrammarBuildPayload;
+      const w = p.room!.width - OX * 2, h = p.room!.height - OY * 2;
+      const onRim = (x: number, y: number) => x === 0 || y === 0 || x === w - 1 || y === h - 1;
+      const cells = [
+        ...payload.words.map((wd) => wd.pos),
+        ...payload.structure.map((_, i) => slotCell(payload, i)),
+      ];
+      expect(cells.filter((c) => onRim(c.x, c.y))).toEqual([]);
+    }
   });
 
   it("a wrong arrangement does NOT win (push the object into the subject slot)", () => {

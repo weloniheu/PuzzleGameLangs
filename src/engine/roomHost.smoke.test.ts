@@ -125,16 +125,16 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "ArrowUp", 2);   // (1,4) → (1,2) Coding door
     press(c, "Enter");
     expect(text(c, ".room-destmenu-title")).toBe("Coding portal");
-    expect(ladderLabels(c)).toEqual(["← Back", "Python", "JavaScript", "SQL", "⌂ Return to hub"]);
+    expect(ladderLabels(c)).toEqual(["Python", "JavaScript", "SQL", "← Back", "⌂ Return to hub"]);
     press(c, "Enter"); // the cursor starts on Python → the MECHANIC rung
     expect(text(c, ".room-destmenu-title")).toBe("Python — mechanic");
     // Only Base has anything unlocked yet — Mixed/Explicit grey out (locked).
-    expect(ladderLabels(c)).toEqual(["← Back", "Base", "Mixed", "Explicit", "⌂ Return to hub"]);
+    expect(ladderLabels(c)).toEqual(["Base", "Mixed", "Explicit", "← Back", "⌂ Return to hub"]);
     expect([...c.querySelectorAll(".room-destmenu-option")].filter((b) => b.classList.contains("locked")))
       .toHaveLength(2);
     press(c, "Enter"); // Base → the LEVEL rung
     expect(text(c, ".room-destmenu-title")).toBe("Base — level");
-    expect(ladderLabels(c)).toEqual(["← Back", "Tutorial", "⌂ Return to hub"]); // no skip-ahead
+    expect(ladderLabels(c)).toEqual(["Tutorial", "← Back", "⌂ Return to hub"]); // no skip-ahead
     press(c, "Enter"); // select Tutorial → the actual door transition (satisfies enter_door)
 
     // --- CODING TUTORIAL: terminal + piles + menu portal; snake on_enter plays ---
@@ -193,20 +193,26 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "Escape");
     expect((c.querySelector(".room-settings-panel") as HTMLElement).hidden).toBe(true);
 
-    // Menu portal at spawn → the SAME ladder scoped to this type, with the CURRENT
-    // tag on the rung the player is in and the JUST-UNLOCKED tiers now enterable.
+    // Menu portal at spawn → the SAME ladder scoped to this type, opened ON THE RUNG
+    // THE PLAYER IS IN (Python → Base → the level list) with this level highlighted,
+    // and the JUST-UNLOCKED siblings showing.
     press(c, "ArrowRight");        // (5,7) → (6,7) spawn / menu portal
     press(c, "Enter");
-    expect(text(c, ".room-destmenu-title")).toBe("Where to?");
-    expect(ladderLabels(c)).toEqual(["← Back", "Python", "JavaScript", "SQL", "⌂ Return to hub"]);
-    expect(text(c, ".room-destmenu-tag")).toBe("CURRENT"); // Python holds the current level
-    press(c, "Enter"); // Python → mechanic rung: Explicit just unlocked, Mixed still locked
+    expect(text(c, ".room-destmenu-title")).toBe("Base — level");
+    expect(ladderLabels(c)).toEqual(["Tutorial", "Variables", "← Back", "⌂ Return to hub"]);
+    expect(text(c, ".room-destmenu-tag")).toBe("CURRENT"); // Tutorial is where we are
+    expect([...c.querySelectorAll(".room-destmenu-option")][0].classList.contains("selected")).toBe(true);
+    // ← Back climbs one rung at a time, landing on the group we came from.
+    press(c, "Escape");            // → mechanic rung: Explicit just unlocked, Mixed still locked
+    expect(text(c, ".room-destmenu-title")).toBe("Python — mechanic");
     const mechRows = [...c.querySelectorAll(".room-destmenu-option")];
     expect(mechRows.find((b) => b.textContent!.includes("Explicit"))!.classList.contains("locked")).toBe(false);
     expect(mechRows.find((b) => b.textContent!.includes("Mixed"))!.classList.contains("locked")).toBe(true);
-    press(c, "Enter"); // Base → level rung: Tutorial (CURRENT) + the just-unlocked Variables
-    expect(ladderLabels(c)).toEqual(["← Back", "Tutorial", "Variables", "⌂ Return to hub"]);
-    press(c, "ArrowDown", 2);      // Tutorial → Variables → ⌂ Return to hub
+    press(c, "Escape");            // → language rung
+    expect(text(c, ".room-destmenu-title")).toBe("Where to?");
+    expect(ladderLabels(c)).toEqual(["Python", "JavaScript", "SQL", "← Back", "⌂ Return to hub"]);
+    expect(text(c, ".room-destmenu-tag")).toBe("CURRENT"); // Python holds the current level
+    press(c, "ArrowDown", 4);      // Python → … → ⌂ Return to hub (always the last row)
     press(c, "Enter");             // select ⌂ → teleport away
 
     // --- BACK IN THE HUB: fresh mount, tutorial done (completed → no beats) ---
@@ -239,15 +245,15 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "Enter");      // Base → level rung (only the Tutorial unlocked)
     press(c, "Enter");      // select it → the logic tutorial (module fetches its pack)
 
-    // The board IS the room: the ENGINE's tile grid is the board floor (11×7 =
-    // a 9×5 board plus the wall ring) — no floating panel, no nested room.
+    // The board IS the room: the ENGINE's tile grid is the board floor (13×9 =
+    // an 11×7 board plus the wall ring) — no floating panel, no nested room.
     // 7 entity boxes = 6 word tiles + the flag; the SLIME entity has NO glyph
     // because the engine's slime IS it ("SLIME IS YOU" controls the player).
     await vi.waitFor(() =>
       expect(c.querySelectorAll(".logic-board-layer .logic-cell-box")).toHaveLength(7),
     );
     expect(c.querySelector(".logic-game")).toBeNull(); // the standalone panel never mounts in-room
-    expect(c.querySelectorAll(".room-tile-layer .tile-room")).toHaveLength(11 * 7);
+    expect(c.querySelectorAll(".room-tile-layer .tile-room")).toHaveLength(13 * 9);
     expect(c.querySelectorAll(".room-world")).toHaveLength(1); // ONE room
     expect(c.querySelectorAll(".slime")).toHaveLength(1);      // ONE player
     expect(c.querySelector(".room-inventory")).toBeNull();     // no HUD (feature not declared)
@@ -271,10 +277,14 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     expect(slimeAt(c)).toBe(slime0); // undo pulls the player back too
 
     // Enter while NOT won falls through to the engine's menu portal (under the
-    // slime's start cell) → the ladder opens at the LANGUAGE rung. The Hawaiian
-    // track's first level needs logic1.cleared → its language row greys out.
+    // slime's start cell) → the ladder opens on THIS level's rung; two Escapes climb
+    // to the LANGUAGE rung. The Hawaiian track's first level needs logic1.cleared →
+    // its language row greys out.
     press(c, "Enter");
-    expect(ladderLabels(c)).toEqual(["← Back", "English", "ʻŌlelo Hawaiʻi", "⌂ Return to hub"]);
+    expect(text(c, ".room-destmenu-title")).toBe("Base — level");
+    press(c, "Escape"); // → mechanic rung
+    press(c, "Escape"); // → language rung
+    expect(ladderLabels(c)).toEqual(["English", "ʻŌlelo Hawaiʻi", "← Back", "⌂ Return to hub"]);
     expect([...c.querySelectorAll(".room-destmenu-option")]
       .find((b) => b.textContent!.includes("Hawai"))!.classList.contains("locked")).toBe(true);
     press(c, "Escape"); // esc at the top rung closes the chooser
@@ -285,11 +295,9 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "ArrowRight", 4);
     expect(text(c, ".logic-room-banner")).toContain("Solved");
     press(c, "ArrowLeft", 4); // engine movement now (board frozen)
-    press(c, "Enter");        // on the menu portal → the ladder
-    press(c, "Enter");        // English → mechanic rung
-    press(c, "Enter");        // Base → level rung, with Logic I just unlocked
-    expect(ladderLabels(c)).toEqual(["← Back", "Tutorial", "Logic I", "⌂ Return to hub"]);
-    press(c, "ArrowDown", 2); // Tutorial → Logic I → ⌂ Return to hub
+    press(c, "Enter");        // on the menu portal → the ladder, on THIS level's rung
+    expect(ladderLabels(c)).toEqual(["Tutorial", "Logic I", "← Back", "⌂ Return to hub"]);
+    press(c, "ArrowDown", 3); // Tutorial → Logic I → ← Back → ⌂ Return to hub
     press(c, "Enter"); // select ⌂ → back through the portal system
     expect(c.querySelectorAll(".room-door-layer .tile-portal")).toHaveLength(4);
     expect(c.querySelector(".logic-board-layer")).toBeNull(); // board fully torn down
@@ -347,11 +355,9 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // The solved board releases movement; walk to the menu portal (spawn) → exit.
     // grammar.tutorial.cleared is earned, so the chooser now offers Grammar I.
     press(c, "ArrowDown", 3); // board (5,2) → (5,5) = the spawn / menu portal
-    press(c, "Enter");        // the ladder → English
-    press(c, "Enter");        // → Base
-    press(c, "Enter");        // → level rung, Grammar I just unlocked
-    expect(ladderLabels(c)).toEqual(["← Back", "Tutorial", "Grammar I", "⌂ Return to hub"]);
-    press(c, "ArrowDown", 2); // Tutorial → Grammar I → ⌂ Return to hub
+    press(c, "Enter");        // the ladder, opened on THIS level's rung
+    expect(ladderLabels(c)).toEqual(["Tutorial", "Grammar I", "← Back", "⌂ Return to hub"]);
+    press(c, "ArrowDown", 3); // Tutorial → Grammar I → ← Back → ⌂ Return to hub
     press(c, "Enter"); // ⌂ → hub
     expect(c.querySelectorAll(".room-door-layer .tile-portal")).toHaveLength(4);
     expect(c.querySelector(".grammar-slot-layer")).toBeNull(); // torn down clean
@@ -384,7 +390,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "Enter"); // dismiss the on_enter greeting
     for (const k of solution) press(c, k);
     expect((c.querySelector(".room-destmenu") as HTMLElement).hidden).toBe(false);
-    expect(text(c, ".room-destmenu-title")).toBe("Where to?");
+    expect(text(c, ".room-destmenu-title")).toBe("Base — level"); // opens on this level's rung
     manager.teardown();
 
     roomSettings.autoMenuOnSolve = false; // restore the default
@@ -451,11 +457,9 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
 
     // The finished board releases movement; the earned unlock shows in the chooser.
     press(c, "ArrowDown", 2);  // engine movement now — board (4,3) → (4,5) the portal
-    press(c, "Enter");         // the ladder → ʻŌlelo Hawaiʻi
-    press(c, "Enter");         // → Base
-    press(c, "Enter");         // → level rung, Vocab I just unlocked
-    expect(ladderLabels(c)).toEqual(["← Back", "Tutorial", "Vocab I", "⌂ Return to hub"]);
-    press(c, "ArrowDown", 2);  // Tutorial → Vocab I → ⌂ Return to hub
+    press(c, "Enter");         // the ladder, opened on THIS level's rung
+    expect(ladderLabels(c)).toEqual(["Tutorial", "Vocab I", "← Back", "⌂ Return to hub"]);
+    press(c, "ArrowDown", 3);  // Tutorial → Vocab I → ← Back → ⌂ Return to hub
     press(c, "Enter"); // ⌂ → hub
     expect(c.querySelectorAll(".room-door-layer .tile-portal")).toHaveLength(4);
     expect(c.querySelector(".vocab-tile-layer")).toBeNull(); // torn down clean

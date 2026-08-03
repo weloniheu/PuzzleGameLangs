@@ -207,3 +207,22 @@ describe("english synonym pack (Lexicon — the high tier)", () => {
     expect(payload.pairs.flat()).not.toContain("mundane"); // structurally a decoy
   });
 });
+
+// Same rim rule the logic and grammar packs hold to: a tile flush against a wall
+// can't be pushed off it (no cell to stand on), and `randomized` deals the tiles out
+// among these very cells — a rimmed spawn cell risks an unmatchable room. PROPS are
+// exempt: signs are wall furniture, never pushed.
+describe("padding lint — no word tile starts flush against a wall", () => {
+  for (const [label, pack] of [["hawaiian", haw], ["english", en]] as const) {
+    it(`${label} pack: every word tile keeps a one-cell margin`, () => {
+      for (const pz of pack.puzzles) {
+        const payload = pz.payload as VocabMatchPayload;
+        const w = pz.room!.width - 2, h = pz.room!.height - 2;
+        const rimmed = payload.tiles.filter(
+          (t) => t.pos.x === 0 || t.pos.y === 0 || t.pos.x === w - 1 || t.pos.y === h - 1,
+        );
+        expect(rimmed.map((t) => `${pz.id}: ${t.id}`)).toEqual([]);
+      }
+    });
+  }
+});
