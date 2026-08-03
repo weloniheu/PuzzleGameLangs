@@ -157,7 +157,7 @@
       "puzzle_type": "vocab_match",
       "validator_type": "set_match",
       "difficulty": 6,
-      "prompt": "Three synonym pairs — and two words that match nothing.",
+      "prompt": "Three synonym pairs. The two strays are not junk — they belong on the shelves.",
       "payload": {
         "tiles": [
           {
@@ -248,12 +248,13 @@
           ]
         ],
         "par": 42,
-        "reveal_charges": 3,
+        "reveal_charges": 2,
         "feedback": {
           "solved": "✦ Sharp vocabulary! Walk back to the portal ✦",
           "help_none": "Stand beside a word tile and press ? to see what it means.",
           "mismatch": "Not a pair. Every wrong combination you test is counted (✗) — read before you shove.",
-          "reveal_spent": "No reveal charges left — you'll have to reason it out from the words themselves."
+          "reveal_spent": "No looks left — file a stray word on its shelf to earn one back.",
+          "shelf_hint": "Shelves take ONE word each. File a stray correctly for a free look."
         },
         "dialogue": {
           "speakers": {},
@@ -261,25 +262,67 @@
             {
               "id": "vocab-en-001-enter",
               "speaker": "narrator",
-              "text": "Eight words, three pairs. Two of them are here to waste your looks.",
+              "text": "Eight words, three pairs — and two that pair with nothing. Those two have shelves.",
               "trigger": "on_enter"
             }
           ],
           "hints": [
             {
-              "text": "Three ? looks and no more. Read the words you already know first, then spend a look on the ones you don't.",
+              "text": "Only two ? looks to start. File a stray on its shelf to earn another.",
               "tag": "step:1"
             },
             {
-              "text": "'furtive' and 'lavish' have no partner in this room. Ignore them both.",
+              "text": "furtive and lavish pair with nothing — but one shelf reads secretive and the other extravagant.",
               "tag": "step:2"
             },
             {
               "text": "candid = honest · frugal = thrifty · obsolete = outdated.",
               "tag": "step:3"
             }
+          ],
+          "guided_tutorial": [
+            {
+              "id": "vocab-en-001-tut-1",
+              "speaker": "narrator",
+              "text": "New here: the SHELVES on the walls. Each card names a meaning, and takes the one word that matches it.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false,
+              "demo": "push"
+            },
+            {
+              "id": "vocab-en-001-tut-2",
+              "speaker": "narrator",
+              "text": "Shove a word along its row into a shelf. File it right and you earn back a look (?).",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false,
+              "demo": "push"
+            }
           ]
-        }
+        },
+        "props": [
+          {
+            "id": "shelf-secretive",
+            "glyph": "🤫",
+            "label": "secretive",
+            "accepts": "furtive",
+            "honest": true,
+            "pos": {
+              "x": 10,
+              "y": 2
+            }
+          },
+          {
+            "id": "shelf-extravagant",
+            "glyph": "💸",
+            "label": "extravagant",
+            "accepts": "lavish",
+            "honest": true,
+            "pos": {
+              "x": 10,
+              "y": 4
+            }
+          }
+        ]
       },
       "solution": {
         "note": "the pairings are the solution"
@@ -287,7 +330,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "synonyms — three pairs, two strays",
+        "concept": "synonyms — pair the six, shelve the two strays",
         "tags": [
           "vocab",
           "synonyms",
@@ -325,7 +368,7 @@
       },
       "mechanics": {
         "goalSpec": {
-          "description": "Three pairs among eight tiles. Only 3 looks — spend them on the words you can't reason out."
+          "description": "Lock all three pairs. Shelving a stray buys back a look."
         }
       }
     },
@@ -336,7 +379,7 @@
       "puzzle_type": "vocab_match",
       "validator_type": "set_match",
       "difficulty": 7,
-      "prompt": "Beware: the closest word may be the OPPOSITE.",
+      "prompt": "The closest word may be the OPPOSITE — and one shelf is mislabelled.",
       "payload": {
         "tiles": [
           {
@@ -419,7 +462,8 @@
           "solved": "✦ You saw through the traps! Walk back to the portal ✦",
           "help_none": "Stand beside a word tile and press ? to see what it means.",
           "mismatch": "Opposites attract careless matchers — that pair is wrong (✗).",
-          "reveal_spent": "No reveal charges left — you'll have to reason it out from the words themselves."
+          "reveal_spent": "No looks left. Expose a mislabelled shelf to earn one back.",
+          "false_accuse": "That card was honest — abundant IS plentiful. The bad call counts (✗)."
         },
         "dialogue": {
           "speakers": {},
@@ -427,25 +471,69 @@
             {
               "id": "vocab-en-002-enter",
               "speaker": "narrator",
-              "text": "Careful here. The obvious partner is sometimes the exact opposite.",
+              "text": "Two pairs hide among their own opposites. And one shelf card does not match its picture.",
               "trigger": "on_enter"
             }
           ],
           "hints": [
             {
-              "text": "'plentiful' and 'dull' aren't synonyms of anything here — they are antonyms, planted to catch a careless shove.",
+              "text": "Read every card before you shove. The closest word is often the OPPOSITE, not the match.",
               "tag": "step:1"
             },
             {
-              "text": "scarce means 'hard to find'. Which word means 'seldom seen'?",
+              "text": "One shelf glitters but reads drab. Trust the card, not the sparkle — and call it out.",
               "tag": "step:2"
             },
             {
-              "text": "scarce = rare · vivid = brilliant. plentiful, dull and mundane all match nothing.",
+              "text": "scarce = rare · vivid = brilliant. plentiful, dull and mundane pair with nothing.",
               "tag": "step:3"
             }
+          ],
+          "guided_tutorial": [
+            {
+              "id": "vocab-en-002-tut-1",
+              "speaker": "narrator",
+              "text": "A shelf can LIE: the picture and the card may disagree. The written word is always the truth.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false,
+              "demo": "push"
+            },
+            {
+              "id": "vocab-en-002-tut-2",
+              "speaker": "narrator",
+              "text": "Think a shelf is mislabelled? Stand beside it and press Enter to call it out. Right = a free look; wrong = a cost.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false,
+              "demo": "interact"
+            }
           ]
-        }
+        },
+        "props": [
+          {
+            "id": "shelf-drab",
+            "glyph": "✨",
+            "label": "drab",
+            "accepts": "dull",
+            "honest": false,
+            "pos": {
+              "x": 10,
+              "y": 6
+            },
+            "wrong": "That shelf GLITTERS — but the card reads drab, and drab means dull (✗).",
+            "exposed": "Caught it. The card reads drab; the sparkle was a lie. (+1 look)"
+          },
+          {
+            "id": "shelf-abundant",
+            "glyph": "🧺",
+            "label": "abundant",
+            "accepts": "plentiful",
+            "honest": true,
+            "pos": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ]
       },
       "solution": {
         "note": "the pairings are the solution"
@@ -453,7 +541,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "the trap — opposites look like partners",
+        "concept": "the trap — opposites, and a shelf that lies",
         "tags": [
           "vocab",
           "synonyms",
@@ -493,7 +581,7 @@
       },
       "mechanics": {
         "goalSpec": {
-          "description": "The nearest word may be the OPPOSITE. Two looks only."
+          "description": "Lock both pairs. Trust the written word, never the picture."
         }
       }
     },
@@ -809,7 +897,7 @@
       "puzzle_type": "vocab_match",
       "validator_type": "set_match",
       "difficulty": 6,
-      "prompt": "Three synonym pairs — and two words that match nothing.",
+      "prompt": "Three synonym pairs. The two strays are not junk — they belong on the shelves.",
       "payload": {
         "tiles": [
           {
@@ -900,12 +988,13 @@
           ]
         ],
         "par": 42,
-        "reveal_charges": 3,
+        "reveal_charges": 2,
         "feedback": {
           "solved": "✦ Sharp vocabulary! Walk back to the portal ✦",
           "help_none": "Stand beside a word tile and press ? to see what it means.",
           "mismatch": "Not a pair. Every wrong combination you test is counted (✗) — read before you shove.",
-          "reveal_spent": "No reveal charges left — you'll have to reason it out from the words themselves."
+          "reveal_spent": "No looks left — file a stray word on its shelf to earn one back.",
+          "shelf_hint": "Shelves take ONE word each. File a stray correctly for a free look."
         },
         "dialogue": {
           "speakers": {},
@@ -913,25 +1002,67 @@
             {
               "id": "vocab-en-001-shuffled-enter",
               "speaker": "narrator",
-              "text": "Same room, new layout. Nothing is where you left it.",
+              "text": "Eight words, three pairs — and two that pair with nothing. Those two have shelves.",
               "trigger": "on_enter"
             }
           ],
           "hints": [
             {
-              "text": "Three ? looks and no more. Read the words you already know first, then spend a look on the ones you don't.",
+              "text": "Only two ? looks to start. File a stray on its shelf to earn another.",
               "tag": "step:1"
             },
             {
-              "text": "'furtive' and 'lavish' have no partner in this room. Ignore them both.",
+              "text": "furtive and lavish pair with nothing — but one shelf reads secretive and the other extravagant.",
               "tag": "step:2"
             },
             {
               "text": "candid = honest · frugal = thrifty · obsolete = outdated.",
               "tag": "step:3"
             }
+          ],
+          "guided_tutorial": [
+            {
+              "id": "vocab-en-001-shuffled-tut-1",
+              "speaker": "narrator",
+              "text": "New here: the SHELVES on the walls. Each card names a meaning, and takes the one word that matches it.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false,
+              "demo": "push"
+            },
+            {
+              "id": "vocab-en-001-shuffled-tut-2",
+              "speaker": "narrator",
+              "text": "Shove a word along its row into a shelf. File it right and you earn back a look (?).",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false,
+              "demo": "push"
+            }
           ]
-        }
+        },
+        "props": [
+          {
+            "id": "shelf-secretive",
+            "glyph": "🤫",
+            "label": "secretive",
+            "accepts": "furtive",
+            "honest": true,
+            "pos": {
+              "x": 10,
+              "y": 2
+            }
+          },
+          {
+            "id": "shelf-extravagant",
+            "glyph": "💸",
+            "label": "extravagant",
+            "accepts": "lavish",
+            "honest": true,
+            "pos": {
+              "x": 10,
+              "y": 4
+            }
+          }
+        ]
       },
       "solution": {
         "note": "the pairings are the solution"
@@ -939,7 +1070,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "synonyms — three pairs, two strays · shuffled",
+        "concept": "synonyms — pair the six, shelve the two strays · shuffled",
         "tags": [
           "vocab",
           "synonyms",
@@ -980,7 +1111,7 @@
       ],
       "mechanics": {
         "goalSpec": {
-          "description": "Three pairs among eight tiles. Only 3 looks — spend them on the words you can't reason out. Everything loose starts somewhere different every visit."
+          "description": "Lock all three pairs. Shelving a stray buys back a look."
         }
       },
       "tutorial_refs": [
@@ -994,7 +1125,7 @@
       "puzzle_type": "vocab_match",
       "validator_type": "set_match",
       "difficulty": 6,
-      "prompt": "Three synonym pairs — and two words that match nothing.",
+      "prompt": "Three synonym pairs. The two strays are not junk — they belong on the shelves.",
       "payload": {
         "tiles": [
           {
@@ -1085,12 +1216,13 @@
           ]
         ],
         "par": 42,
-        "reveal_charges": 3,
+        "reveal_charges": 2,
         "feedback": {
           "solved": "✦ Sharp vocabulary! Walk back to the portal ✦",
           "help_none": "Stand beside a word tile and press ? to see what it means.",
           "mismatch": "Not a pair. Every wrong combination you test is counted (✗) — read before you shove.",
-          "reveal_spent": "No reveal charges left — you'll have to reason it out from the words themselves."
+          "reveal_spent": "No looks left — file a stray word on its shelf to earn one back.",
+          "shelf_hint": "Shelves take ONE word each. File a stray correctly for a free look."
         },
         "dialogue": {
           "speakers": {},
@@ -1098,25 +1230,67 @@
             {
               "id": "vocab-en-001-shrouded-enter",
               "speaker": "narrator",
-              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "text": "Eight words, three pairs — and two that pair with nothing. Those two have shelves.",
               "trigger": "on_enter"
             }
           ],
           "hints": [
             {
-              "text": "Three ? looks and no more. Read the words you already know first, then spend a look on the ones you don't.",
+              "text": "Only two ? looks to start. File a stray on its shelf to earn another.",
               "tag": "step:1"
             },
             {
-              "text": "'furtive' and 'lavish' have no partner in this room. Ignore them both.",
+              "text": "furtive and lavish pair with nothing — but one shelf reads secretive and the other extravagant.",
               "tag": "step:2"
             },
             {
               "text": "candid = honest · frugal = thrifty · obsolete = outdated.",
               "tag": "step:3"
             }
+          ],
+          "guided_tutorial": [
+            {
+              "id": "vocab-en-001-shrouded-tut-1",
+              "speaker": "narrator",
+              "text": "New here: the SHELVES on the walls. Each card names a meaning, and takes the one word that matches it.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false,
+              "demo": "push"
+            },
+            {
+              "id": "vocab-en-001-shrouded-tut-2",
+              "speaker": "narrator",
+              "text": "Shove a word along its row into a shelf. File it right and you earn back a look (?).",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false,
+              "demo": "push"
+            }
           ]
-        }
+        },
+        "props": [
+          {
+            "id": "shelf-secretive",
+            "glyph": "🤫",
+            "label": "secretive",
+            "accepts": "furtive",
+            "honest": true,
+            "pos": {
+              "x": 10,
+              "y": 2
+            }
+          },
+          {
+            "id": "shelf-extravagant",
+            "glyph": "💸",
+            "label": "extravagant",
+            "accepts": "lavish",
+            "honest": true,
+            "pos": {
+              "x": 10,
+              "y": 4
+            }
+          }
+        ]
       },
       "solution": {
         "note": "the pairings are the solution"
@@ -1124,7 +1298,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "synonyms — three pairs, two strays · shrouded",
+        "concept": "synonyms — pair the six, shelve the two strays · shrouded",
         "tags": [
           "vocab",
           "synonyms",
@@ -1166,7 +1340,7 @@
       ],
       "mechanics": {
         "goalSpec": {
-          "description": "Three pairs among eight tiles. Only 3 looks — spend them on the words you can't reason out. Rearranged, and you can only see what is close."
+          "description": "Lock all three pairs. Shelving a stray buys back a look."
         }
       },
       "tutorial_refs": [
@@ -1180,7 +1354,7 @@
       "puzzle_type": "vocab_match",
       "validator_type": "set_match",
       "difficulty": 7,
-      "prompt": "Beware: the closest word may be the OPPOSITE.",
+      "prompt": "The closest word may be the OPPOSITE — and one shelf is mislabelled.",
       "payload": {
         "tiles": [
           {
@@ -1263,7 +1437,8 @@
           "solved": "✦ You saw through the traps! Walk back to the portal ✦",
           "help_none": "Stand beside a word tile and press ? to see what it means.",
           "mismatch": "Opposites attract careless matchers — that pair is wrong (✗).",
-          "reveal_spent": "No reveal charges left — you'll have to reason it out from the words themselves."
+          "reveal_spent": "No looks left. Expose a mislabelled shelf to earn one back.",
+          "false_accuse": "That card was honest — abundant IS plentiful. The bad call counts (✗)."
         },
         "dialogue": {
           "speakers": {},
@@ -1271,25 +1446,69 @@
             {
               "id": "vocab-en-002-shuffled-enter",
               "speaker": "narrator",
-              "text": "Same room, new layout. Nothing is where you left it.",
+              "text": "Two pairs hide among their own opposites. And one shelf card does not match its picture.",
               "trigger": "on_enter"
             }
           ],
           "hints": [
             {
-              "text": "'plentiful' and 'dull' aren't synonyms of anything here — they are antonyms, planted to catch a careless shove.",
+              "text": "Read every card before you shove. The closest word is often the OPPOSITE, not the match.",
               "tag": "step:1"
             },
             {
-              "text": "scarce means 'hard to find'. Which word means 'seldom seen'?",
+              "text": "One shelf glitters but reads drab. Trust the card, not the sparkle — and call it out.",
               "tag": "step:2"
             },
             {
-              "text": "scarce = rare · vivid = brilliant. plentiful, dull and mundane all match nothing.",
+              "text": "scarce = rare · vivid = brilliant. plentiful, dull and mundane pair with nothing.",
               "tag": "step:3"
             }
+          ],
+          "guided_tutorial": [
+            {
+              "id": "vocab-en-002-shuffled-tut-1",
+              "speaker": "narrator",
+              "text": "A shelf can LIE: the picture and the card may disagree. The written word is always the truth.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false,
+              "demo": "push"
+            },
+            {
+              "id": "vocab-en-002-shuffled-tut-2",
+              "speaker": "narrator",
+              "text": "Think a shelf is mislabelled? Stand beside it and press Enter to call it out. Right = a free look; wrong = a cost.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false,
+              "demo": "interact"
+            }
           ]
-        }
+        },
+        "props": [
+          {
+            "id": "shelf-drab",
+            "glyph": "✨",
+            "label": "drab",
+            "accepts": "dull",
+            "honest": false,
+            "pos": {
+              "x": 10,
+              "y": 6
+            },
+            "wrong": "That shelf GLITTERS — but the card reads drab, and drab means dull (✗).",
+            "exposed": "Caught it. The card reads drab; the sparkle was a lie. (+1 look)"
+          },
+          {
+            "id": "shelf-abundant",
+            "glyph": "🧺",
+            "label": "abundant",
+            "accepts": "plentiful",
+            "honest": true,
+            "pos": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ]
       },
       "solution": {
         "note": "the pairings are the solution"
@@ -1297,7 +1516,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "the trap — opposites look like partners · shuffled",
+        "concept": "the trap — opposites, and a shelf that lies · shuffled",
         "tags": [
           "vocab",
           "synonyms",
@@ -1340,7 +1559,7 @@
       ],
       "mechanics": {
         "goalSpec": {
-          "description": "The nearest word may be the OPPOSITE. Two looks only. Everything loose starts somewhere different every visit."
+          "description": "Lock both pairs. Trust the written word, never the picture."
         }
       },
       "tutorial_refs": [
@@ -1354,7 +1573,7 @@
       "puzzle_type": "vocab_match",
       "validator_type": "set_match",
       "difficulty": 7,
-      "prompt": "Beware: the closest word may be the OPPOSITE.",
+      "prompt": "The closest word may be the OPPOSITE — and one shelf is mislabelled.",
       "payload": {
         "tiles": [
           {
@@ -1437,7 +1656,8 @@
           "solved": "✦ You saw through the traps! Walk back to the portal ✦",
           "help_none": "Stand beside a word tile and press ? to see what it means.",
           "mismatch": "Opposites attract careless matchers — that pair is wrong (✗).",
-          "reveal_spent": "No reveal charges left — you'll have to reason it out from the words themselves."
+          "reveal_spent": "No looks left. Expose a mislabelled shelf to earn one back.",
+          "false_accuse": "That card was honest — abundant IS plentiful. The bad call counts (✗)."
         },
         "dialogue": {
           "speakers": {},
@@ -1445,25 +1665,69 @@
             {
               "id": "vocab-en-002-shrouded-enter",
               "speaker": "narrator",
-              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "text": "Two pairs hide among their own opposites. And one shelf card does not match its picture.",
               "trigger": "on_enter"
             }
           ],
           "hints": [
             {
-              "text": "'plentiful' and 'dull' aren't synonyms of anything here — they are antonyms, planted to catch a careless shove.",
+              "text": "Read every card before you shove. The closest word is often the OPPOSITE, not the match.",
               "tag": "step:1"
             },
             {
-              "text": "scarce means 'hard to find'. Which word means 'seldom seen'?",
+              "text": "One shelf glitters but reads drab. Trust the card, not the sparkle — and call it out.",
               "tag": "step:2"
             },
             {
-              "text": "scarce = rare · vivid = brilliant. plentiful, dull and mundane all match nothing.",
+              "text": "scarce = rare · vivid = brilliant. plentiful, dull and mundane pair with nothing.",
               "tag": "step:3"
             }
+          ],
+          "guided_tutorial": [
+            {
+              "id": "vocab-en-002-shrouded-tut-1",
+              "speaker": "narrator",
+              "text": "A shelf can LIE: the picture and the card may disagree. The written word is always the truth.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false,
+              "demo": "push"
+            },
+            {
+              "id": "vocab-en-002-shrouded-tut-2",
+              "speaker": "narrator",
+              "text": "Think a shelf is mislabelled? Stand beside it and press Enter to call it out. Right = a free look; wrong = a cost.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false,
+              "demo": "interact"
+            }
           ]
-        }
+        },
+        "props": [
+          {
+            "id": "shelf-drab",
+            "glyph": "✨",
+            "label": "drab",
+            "accepts": "dull",
+            "honest": false,
+            "pos": {
+              "x": 10,
+              "y": 6
+            },
+            "wrong": "That shelf GLITTERS — but the card reads drab, and drab means dull (✗).",
+            "exposed": "Caught it. The card reads drab; the sparkle was a lie. (+1 look)"
+          },
+          {
+            "id": "shelf-abundant",
+            "glyph": "🧺",
+            "label": "abundant",
+            "accepts": "plentiful",
+            "honest": true,
+            "pos": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ]
       },
       "solution": {
         "note": "the pairings are the solution"
@@ -1471,7 +1735,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "the trap — opposites look like partners · shrouded",
+        "concept": "the trap — opposites, and a shelf that lies · shrouded",
         "tags": [
           "vocab",
           "synonyms",
@@ -1515,7 +1779,7 @@
       ],
       "mechanics": {
         "goalSpec": {
-          "description": "The nearest word may be the OPPOSITE. Two looks only. Rearranged, and you can only see what is close."
+          "description": "Lock both pairs. Trust the written word, never the picture."
         }
       },
       "tutorial_refs": [

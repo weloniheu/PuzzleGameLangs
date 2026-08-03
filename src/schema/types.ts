@@ -35,7 +35,13 @@ export type ValidatorType =
   | "mc_index"
   | "execution_match"; // heavy tier — not registered until the sandbox exists
 
-export type Difficulty = 1 | 2 | 3 | 4 | 5;
+/** Authored difficulty rank, used for ORDERING within a pack (the ladder drives actual
+ *  progression). The ceiling is 10, not 5: three packs already ramp past 5 — the English
+ *  Lexicon tier, the late logic boards, and Hoʻopunipuni — and a tighter cap silently
+ *  DROPPED them at load (validateRepair rejects, packLoader discards), so those levels
+ *  existed in the JSON but never appeared in the game. */
+export type Difficulty = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+export const MAX_DIFFICULTY = 10;
 
 // --- Difficulty axes 2 & 3 (CLOSED sets — new engine dispatch axes, siblings of
 //     `difficulty`). The engine reads these like it reads `puzzle_type`; it still never
