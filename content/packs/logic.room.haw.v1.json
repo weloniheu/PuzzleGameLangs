@@ -19,11 +19,24 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "haw-intro",
+              "id": "logic-haw-000-enter",
               "speaker": "narrator",
-              "text": "Here the rules speak ʻōlelo Hawaiʻi — and they read differently: the describing word comes FIRST. ʻO ʻOE KA LIMU — the slime is you.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "The rules here are ʻōlelo Hawaiʻi — and they name the state before the thing.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "These sentences put the STATE first and the THING second — the reverse of the English rooms.",
+              "tag": "step:1"
+            },
+            {
+              "text": "ʻO ʻOE KA LIMU = 'you are the slime'. LANAKILA KA HAE = 'the flag wins'.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Walk right onto the hae (the flag).",
+              "tag": "step:3"
             }
           ]
         }
@@ -34,7 +47,7 @@
       "hints": [],
       "metadata": {
         "reviewed": false,
-        "concept": "rule manipulation, ʻōlelo Hawaiʻi",
+        "concept": "nā kānāwai — the rules read state-first",
         "tags": [
           "logic",
           "baba",
@@ -63,7 +76,19 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "haw0.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "ʻO ʻOE KA LIMU. LANAKILA KA HAE. Walk to the hae."
+        }
       }
     },
     {
@@ -76,7 +101,32 @@
       "prompt": "PAHU KA PŌHAKU — but a careless push jams it.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.haw.v1.json",
-        "board_id": "haw-01-ke-ala"
+        "board_id": "haw-01-ke-ala",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-haw-001-enter",
+              "speaker": "narrator",
+              "text": "PAHU KA PŌHAKU. It moves — but only where you aim it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "PAHU KA PŌHAKU means 'the rock is push'. PAʻA KA PĀ means 'the wall is solid'.",
+              "tag": "step:1"
+            },
+            {
+              "text": "Drive the pōhaku straight down the corridor and it wedges on the hae. Aim it somewhere else.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Come at it from below and shove it UP into the pocket, then take the corridor clean.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -84,7 +134,7 @@
       "hints": [],
       "metadata": {
         "reviewed": false,
-        "concept": "rule manipulation, ʻōlelo Hawaiʻi",
+        "concept": "pahu — the rock that moves",
         "tags": [
           "logic",
           "baba",
@@ -115,7 +165,19 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "haw1.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "PAHU KA PŌHAKU — the rock can be shoved. Straight at the hae, it jams."
+        }
       }
     },
     {
@@ -128,7 +190,32 @@
       "prompt": "PAʻA KA PĀ — unless the words come apart.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.haw.v1.json",
-        "board_id": "haw-02-wawahi"
+        "board_id": "haw-02-wawahi",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-haw-002-enter",
+              "speaker": "narrator",
+              "text": "PAʻA KA PĀ. Solid — for exactly as long as those words stay in a row.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "There is no gap in the pā (wall). Walking will not solve this one.",
+              "tag": "step:1"
+            },
+            {
+              "text": "PAʻA KA PĀ is written on the floor, and written words are objects you can shove.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Push any one of the three words out of its line. The pā stops being paʻa; then walk to the hae.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -136,7 +223,7 @@
       "hints": [],
       "metadata": {
         "reviewed": false,
-        "concept": "rule manipulation, ʻōlelo Hawaiʻi",
+        "concept": "wāwahi — unmaking a rule",
         "tags": [
           "logic",
           "baba",
@@ -169,7 +256,19 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "haw2.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 1,
+            "y": 11
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "PAʻA KA PĀ seals the room. Take the sentence apart."
+        }
       }
     },
     {
@@ -182,7 +281,32 @@
       "prompt": "___ KA HAE — finish the rule that wins.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.haw.v1.json",
-        "board_id": "haw-03-lanakila"
+        "board_id": "haw-03-lanakila",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-haw-003-enter",
+              "speaker": "narrator",
+              "text": "KA HAE is written down — but nothing yet says what it does.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Touching the hae does nothing: no rule says it wins.",
+              "tag": "step:1"
+            },
+            {
+              "text": "Hawaiian rules name the STATE first, so the missing word goes IN FRONT of ka hae, not after it.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Push LANAKILA into the empty cell before KA HAE, then go touch the flag.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -190,7 +314,7 @@
       "hints": [],
       "metadata": {
         "reviewed": false,
-        "concept": "rule manipulation, ʻōlelo Hawaiʻi",
+        "concept": "lanakila — finishing the winning rule",
         "tags": [
           "logic",
           "baba",
@@ -223,7 +347,19 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "haw3.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 11
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "___ KA HAE. The rule about the flag is missing its first word."
+        }
       }
     },
     {
@@ -241,11 +377,24 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "haw-intro",
+              "id": "logic-haw-000-shuffled-enter",
               "speaker": "narrator",
-              "text": "Here the rules speak ʻōlelo Hawaiʻi — and they read differently: the describing word comes FIRST. ʻO ʻOE KA LIMU — the slime is you.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Same room, new layout. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "These sentences put the STATE first and the THING second — the reverse of the English rooms.",
+              "tag": "step:1"
+            },
+            {
+              "text": "ʻO ʻOE KA LIMU = 'you are the slime'. LANAKILA KA HAE = 'the flag wins'.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Walk right onto the hae (the flag).",
+              "tag": "step:3"
             }
           ]
         }
@@ -256,7 +405,7 @@
       "hints": [],
       "metadata": {
         "reviewed": false,
-        "concept": "rule manipulation, ʻōlelo Hawaiʻi",
+        "concept": "nā kānāwai — the rules read state-first · shuffled",
         "tags": [
           "logic",
           "baba",
@@ -285,11 +434,23 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "haw0.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "ʻO ʻOE KA LIMU. LANAKILA KA HAE. Walk to the hae. Everything loose starts somewhere different every visit."
+        }
+      }
     },
     {
       "id": "logic-haw-000-shrouded",
@@ -306,11 +467,24 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "haw-intro",
+              "id": "logic-haw-000-shrouded-enter",
               "speaker": "narrator",
-              "text": "Here the rules speak ʻōlelo Hawaiʻi — and they read differently: the describing word comes FIRST. ʻO ʻOE KA LIMU — the slime is you.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "These sentences put the STATE first and the THING second — the reverse of the English rooms.",
+              "tag": "step:1"
+            },
+            {
+              "text": "ʻO ʻOE KA LIMU = 'you are the slime'. LANAKILA KA HAE = 'the flag wins'.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Walk right onto the hae (the flag).",
+              "tag": "step:3"
             }
           ]
         }
@@ -321,7 +495,7 @@
       "hints": [],
       "metadata": {
         "reviewed": false,
-        "concept": "rule manipulation, ʻōlelo Hawaiʻi",
+        "concept": "nā kānāwai — the rules read state-first · shrouded",
         "tags": [
           "logic",
           "baba",
@@ -350,12 +524,24 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "haw0.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "ʻO ʻOE KA LIMU. LANAKILA KA HAE. Walk to the hae. Rearranged, and you can only see what is close."
+        }
+      }
     },
     {
       "id": "logic-haw-001-shuffled",
@@ -367,7 +553,32 @@
       "prompt": "PAHU KA PŌHAKU — but a careless push jams it.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.haw.v1.json",
-        "board_id": "haw-01-ke-ala"
+        "board_id": "haw-01-ke-ala",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-haw-001-shuffled-enter",
+              "speaker": "narrator",
+              "text": "Same room, new layout. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "PAHU KA PŌHAKU means 'the rock is push'. PAʻA KA PĀ means 'the wall is solid'.",
+              "tag": "step:1"
+            },
+            {
+              "text": "Drive the pōhaku straight down the corridor and it wedges on the hae. Aim it somewhere else.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Come at it from below and shove it UP into the pocket, then take the corridor clean.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -375,7 +586,7 @@
       "hints": [],
       "metadata": {
         "reviewed": false,
-        "concept": "rule manipulation, ʻōlelo Hawaiʻi",
+        "concept": "pahu — the rock that moves · shuffled",
         "tags": [
           "logic",
           "baba",
@@ -406,11 +617,23 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "haw1.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "PAHU KA PŌHAKU — the rock can be shoved. Straight at the hae, it jams. Everything loose starts somewhere different every visit."
+        }
+      }
     },
     {
       "id": "logic-haw-001-shrouded",
@@ -422,7 +645,32 @@
       "prompt": "PAHU KA PŌHAKU — but a careless push jams it.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.haw.v1.json",
-        "board_id": "haw-01-ke-ala"
+        "board_id": "haw-01-ke-ala",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-haw-001-shrouded-enter",
+              "speaker": "narrator",
+              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "PAHU KA PŌHAKU means 'the rock is push'. PAʻA KA PĀ means 'the wall is solid'.",
+              "tag": "step:1"
+            },
+            {
+              "text": "Drive the pōhaku straight down the corridor and it wedges on the hae. Aim it somewhere else.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Come at it from below and shove it UP into the pocket, then take the corridor clean.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -430,7 +678,7 @@
       "hints": [],
       "metadata": {
         "reviewed": false,
-        "concept": "rule manipulation, ʻōlelo Hawaiʻi",
+        "concept": "pahu — the rock that moves · shrouded",
         "tags": [
           "logic",
           "baba",
@@ -461,12 +709,24 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "haw1.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "PAHU KA PŌHAKU — the rock can be shoved. Straight at the hae, it jams. Rearranged, and you can only see what is close."
+        }
+      }
     },
     {
       "id": "logic-haw-002-shuffled",
@@ -478,7 +738,32 @@
       "prompt": "PAʻA KA PĀ — unless the words come apart.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.haw.v1.json",
-        "board_id": "haw-02-wawahi"
+        "board_id": "haw-02-wawahi",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-haw-002-shuffled-enter",
+              "speaker": "narrator",
+              "text": "Same room, new layout. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "There is no gap in the pā (wall). Walking will not solve this one.",
+              "tag": "step:1"
+            },
+            {
+              "text": "PAʻA KA PĀ is written on the floor, and written words are objects you can shove.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Push any one of the three words out of its line. The pā stops being paʻa; then walk to the hae.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -486,7 +771,7 @@
       "hints": [],
       "metadata": {
         "reviewed": false,
-        "concept": "rule manipulation, ʻōlelo Hawaiʻi",
+        "concept": "wāwahi — unmaking a rule · shuffled",
         "tags": [
           "logic",
           "baba",
@@ -519,11 +804,23 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "haw2.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 1,
+            "y": 11
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "PAʻA KA PĀ seals the room. Take the sentence apart. Everything loose starts somewhere different every visit."
+        }
+      }
     },
     {
       "id": "logic-haw-002-shrouded",
@@ -535,7 +832,32 @@
       "prompt": "PAʻA KA PĀ — unless the words come apart.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.haw.v1.json",
-        "board_id": "haw-02-wawahi"
+        "board_id": "haw-02-wawahi",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-haw-002-shrouded-enter",
+              "speaker": "narrator",
+              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "There is no gap in the pā (wall). Walking will not solve this one.",
+              "tag": "step:1"
+            },
+            {
+              "text": "PAʻA KA PĀ is written on the floor, and written words are objects you can shove.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Push any one of the three words out of its line. The pā stops being paʻa; then walk to the hae.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -543,7 +865,7 @@
       "hints": [],
       "metadata": {
         "reviewed": false,
-        "concept": "rule manipulation, ʻōlelo Hawaiʻi",
+        "concept": "wāwahi — unmaking a rule · shrouded",
         "tags": [
           "logic",
           "baba",
@@ -576,12 +898,24 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "haw2.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 1,
+            "y": 11
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "PAʻA KA PĀ seals the room. Take the sentence apart. Rearranged, and you can only see what is close."
+        }
+      }
     },
     {
       "id": "logic-haw-003-shuffled",
@@ -593,7 +927,32 @@
       "prompt": "___ KA HAE — finish the rule that wins.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.haw.v1.json",
-        "board_id": "haw-03-lanakila"
+        "board_id": "haw-03-lanakila",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-haw-003-shuffled-enter",
+              "speaker": "narrator",
+              "text": "Same room, new layout. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Touching the hae does nothing: no rule says it wins.",
+              "tag": "step:1"
+            },
+            {
+              "text": "Hawaiian rules name the STATE first, so the missing word goes IN FRONT of ka hae, not after it.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Push LANAKILA into the empty cell before KA HAE, then go touch the flag.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -601,7 +960,7 @@
       "hints": [],
       "metadata": {
         "reviewed": false,
-        "concept": "rule manipulation, ʻōlelo Hawaiʻi",
+        "concept": "lanakila — finishing the winning rule · shuffled",
         "tags": [
           "logic",
           "baba",
@@ -634,11 +993,23 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "haw3.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 11
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "___ KA HAE. The rule about the flag is missing its first word. Everything loose starts somewhere different every visit."
+        }
+      }
     },
     {
       "id": "logic-haw-003-shrouded",
@@ -650,7 +1021,32 @@
       "prompt": "___ KA HAE — finish the rule that wins.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.haw.v1.json",
-        "board_id": "haw-03-lanakila"
+        "board_id": "haw-03-lanakila",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-haw-003-shrouded-enter",
+              "speaker": "narrator",
+              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Touching the hae does nothing: no rule says it wins.",
+              "tag": "step:1"
+            },
+            {
+              "text": "Hawaiian rules name the STATE first, so the missing word goes IN FRONT of ka hae, not after it.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Push LANAKILA into the empty cell before KA HAE, then go touch the flag.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -658,7 +1054,7 @@
       "hints": [],
       "metadata": {
         "reviewed": false,
-        "concept": "rule manipulation, ʻōlelo Hawaiʻi",
+        "concept": "lanakila — finishing the winning rule · shrouded",
         "tags": [
           "logic",
           "baba",
@@ -691,12 +1087,24 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "haw3.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 11
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "___ KA HAE. The rule about the flag is missing its first word. Rearranged, and you can only see what is close."
+        }
+      }
     }
   ],
   "progression": [

@@ -16,8 +16,11 @@ import type { EngineContext, MountedPuzzle, RoomPuzzleModule } from "../../engin
 import { floorOrigin } from "../../engine/core/room";
 import { mulberry32, randomSeed, shufflePositions } from "../../engine/core/shuffle";
 import { tryMove, DIRECTIONS, type Entity } from "../logic/ruleEngine";
+import { starsFor } from "../logic/index";
 import { checkSentence } from "./grammarCheck";
-import { PUSH_RULES, buildGrammarBoard, slotCell, filledSlots, type GrammarBoard } from "./grammarBoard";
+import {
+  PUSH_RULES, buildGrammarBoard, slotCell, filledSlots, wallCells, type GrammarBoard,
+} from "./grammarBoard";
 
 // Scoped style (Rule 5): only .grammar-* classes.
 const ROOM_STYLE = `
@@ -40,6 +43,16 @@ const ROOM_STYLE = `
   background: rgba(24, 19, 11, 0.88); border: 1px solid rgba(255, 224, 138, 0.5);
   border-radius: 999px; padding: 8px 18px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45); }
 .grammar-banner[hidden] { display: none; }
+.grammar-banner .grammar-stars { color: #ffcf4a; letter-spacing: 2px; }
+
+/* Live readout: moves against the level's par (undo refunds moves, so experimenting
+   with a route is free). Matches the logic/vocab chip. */
+.grammar-hud-chip { position: fixed; top: 72px; right: 18px; z-index: 40;
+  pointer-events: none; font-weight: 700; font-size: 13px; color: #f2e6cf;
+  background: rgba(24, 19, 11, 0.82); border: 1px solid rgba(242, 230, 207, 0.3);
+  border-radius: 999px; padding: 5px 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); }
+.grammar-hud-chip .over-par { color: #e0a58a; }
 `;
 
 export const grammarModule: RoomPuzzleModule = {
@@ -77,14 +90,35 @@ export const grammarModule: RoomPuzzleModule = {
     banner.hidden = true;
     ctx.container.appendChild(banner);
 
-    let gb: GrammarBoard = buildGrammarBoard(
-      payload, ctx.room.width - ox * 2, ctx.room.height - oy * 2, playerCell,
-    );
+    const floorW = ctx.room.width - ox * 2;
+    const floorH = ctx.room.height - oy * 2;
+    // Interior '#' cells are solid for the push core, not just drawn (see wallCells).
+    const walls = wallCells(floorW, floorH, (rx, ry) => ctx.room.grid[ry][rx] === "wall", ox, oy);
+    const newBoard = () => buildGrammarBoard(payload, floorW, floorH, playerCell, walls);
+
+    let gb: GrammarBoard = newBoard();
     const player = () => gb.board.entities.find((e) => e.id === "player")!;
-    const history: Entity[][] = [];
+    const history: Array<{ entities: Entity[]; moves: number }> = [];
     let flags: boolean[] = structure.map(() => false); // per-slot wrong-role marker
+    let moves = 0;
     let won = false;
     let disposed = false;
+
+    const movesChip = document.createElement("div");
+    movesChip.className = "grammar-hud-chip";
+    ctx.container.appendChild(movesChip);
+
+    function updateChip() {
+      movesChip.innerHTML = "";
+      if (payload.par) {
+        const count = document.createElement("span");
+        if (moves > payload.par) count.className = "over-par";
+        count.textContent = `Moves ${moves}`;
+        movesChip.append(count, ` · Par ${payload.par}`);
+      } else {
+        movesChip.append(`Moves ${moves}`);
+      }
+    }
 
     function buildSlots() {
       const tile = ctx.tile();
@@ -113,7 +147,9 @@ export const grammarModule: RoomPuzzleModule = {
       const tile = ctx.tile();
       wordLayer.innerHTML = "";
       for (const e of gb.board.entities) {
-        if (e.id === "player") continue; // the slime IS the player — no second body
+        // Only WORD tiles get a chip: the slime IS the player (no second body), and
+        // wall entities are already drawn by the engine's tile layer.
+        if (!gb.words.has(e.id)) continue;
         const box = document.createElement("div");
         box.className = "grammar-cell";
         box.style.width = `${tile}px`;
@@ -148,7 +184,24 @@ export const grammarModule: RoomPuzzleModule = {
 
     function finish() {
       won = true;
-      banner.textContent = feedback.solved ?? "✦ That's a sentence! Walk back to the portal ✦";
+      const solvedText = feedback.solved ?? "✦ That's a sentence! Walk back to the portal ✦";
+      // Rate the solve when the level carries a par — the same ★ rule logic and vocab
+      // use. Any solve clears the level; the stars only price the route you took.
+      if (payload.par) {
+        const stars = starsFor(moves, payload.par);
+        banner.innerHTML = "";
+        const starsEl = document.createElement("span");
+        starsEl.className = "grammar-stars";
+        starsEl.textContent = "★".repeat(stars) + "☆".repeat(3 - stars);
+        banner.append(starsEl, ` ${solvedText}`);
+        try {
+          const key = `grammar.stars.${puzzle.id}`;
+          const prev = Number(localStorage.getItem(key) ?? 0);
+          if (stars > prev) localStorage.setItem(key, String(stars));
+        } catch { /* storage unavailable — the rating is a reward, not progress */ }
+      } else {
+        banner.textContent = solvedText;
+      }
       banner.hidden = false;
       ctx.onSolved(); // earns this room's unlock — the next level appears in the exit menu
     }
@@ -156,7 +209,8 @@ export const grammarModule: RoomPuzzleModule = {
     function move(dir: { dx: number; dy: number }) {
       const snapshot = gb.board.entities.map((e) => ({ ...e }));
       if (!tryMove(gb.board, player(), dir, PUSH_RULES)) return; // fully blocked
-      history.push(snapshot);
+      history.push({ entities: snapshot, moves });
+      moves++;
       // GUIDED TUTORIAL: report what ACTUALLY happened — a step, and any word shoved.
       ctx.dialogue.notify("move");
       if (gb.board.entities.some((e, i) => e.id !== "player" && (e.x !== snapshot[i].x || e.y !== snapshot[i].y))) {
@@ -164,23 +218,30 @@ export const grammarModule: RoomPuzzleModule = {
       }
       evaluate();
       draw();
+      updateChip();
     }
     function undo() {
       if (won || !history.length) return;
-      gb.board.entities = history.pop()!;
+      const prev = history.pop()!;
+      gb.board.entities = prev.entities;
+      moves = prev.moves; // undo REFUNDS moves — trying a route out is free
       evaluate();
       draw();
+      updateChip();
     }
     function reset() {
-      gb = buildGrammarBoard(payload, ctx.room.width - ox * 2, ctx.room.height - oy * 2, playerCell);
+      gb = newBoard();
       history.length = 0;
       flags = structure.map(() => false);
+      moves = 0;
       won = false;
       banner.hidden = true;
       draw();
+      updateChip();
     }
 
     draw();
+    updateChip();
 
     return {
       // Enter is never the module's: the menu portal (the spawn cell) is the exit.

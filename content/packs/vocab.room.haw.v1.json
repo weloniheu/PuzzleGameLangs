@@ -76,9 +76,23 @@
               "trigger": "guided_tutorial",
               "autoAdvance": false
             }
+          ],
+          "hints": [
+            {
+              "text": "Walk into a word to shove it. Words slide one tile at a time.",
+              "tag": "step:1"
+            },
+            {
+              "text": "Stand beside a word and press ? to hear what it means.",
+              "tag": "step:2"
+            },
+            {
+              "text": "aloha and hello are the same greeting. Push one into the other.",
+              "tag": "step:3"
+            }
           ]
         },
-        "par": 8
+        "par": 10
       },
       "solution": {
         "note": "aloha↔hello"
@@ -86,7 +100,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "tutorial — push to match",
+        "concept": "first words — push two to match",
         "tags": [
           "vocab",
           "hawaiian",
@@ -115,7 +129,19 @@
         "features": [],
         "flash_color": "#ba3d3d",
         "grants_unlock": "vocab.tutorial.cleared",
-        "theme": "tropical"
+        "theme": "tropical",
+        "hint_giver": {
+          "pos": {
+            "x": 9,
+            "y": 7
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Push the two words together. They mean the same thing."
+        }
       }
     },
     {
@@ -184,15 +210,28 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "vocab-enter",
+              "id": "vocab-match-001-enter",
               "speaker": "narrator",
-              "text": "Push each Hawaiian word into its English meaning. Stand beside a tile and press ? for help · U undoes a push.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Two words you can hold, two you can drink from. Find the pairs.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Stand next to any word and press ? — it will tell you what it means. Looks are free here.",
+              "tag": "step:1"
+            },
+            {
+              "text": "One of these is hard and heavy. The other one you could swim in.",
+              "tag": "step:2"
+            },
+            {
+              "text": "pōhaku = rock · wai = water. Push each Hawaiian word into its match.",
+              "tag": "step:3"
             }
           ]
         },
-        "par": 17
+        "par": 25
       },
       "solution": {
         "note": "pōhaku↔rock, wai↔water"
@@ -200,7 +239,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "Hawaiian nouns: nature",
+        "concept": "pōhaku a me ka wai — rock and water",
         "tags": [
           "vocab",
           "hawaiian",
@@ -214,9 +253,9 @@
           "###########",
           "#.........#",
           "#.........#",
+          "#....#....#",
           "#.........#",
-          "#.........#",
-          "#.........#",
+          "#....#....#",
           "#.........#",
           "#.........#",
           "###########"
@@ -228,7 +267,19 @@
         "features": [],
         "flash_color": "#ba3d3d",
         "grants_unlock": "vocab1.cleared",
-        "theme": "tropical"
+        "theme": "tropical",
+        "hint_giver": {
+          "pos": {
+            "x": 9,
+            "y": 7
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Two Hawaiian words, two English meanings. Pair them up."
+        }
       }
     },
     {
@@ -319,15 +370,28 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "vocab-enter",
+              "id": "vocab-match-002-enter",
               "speaker": "narrator",
-              "text": "More pairs, more pushing. Remember: ? reveals a meaning, U undoes.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Three pairs now. Two of them bark and purr.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Press ? beside a word to learn it — you have unlimited looks on this level.",
+              "tag": "step:1"
+            },
+            {
+              "text": "One barks, one purrs, and the third is where they both sleep.",
+              "tag": "step:2"
+            },
+            {
+              "text": "ʻīlio = dog · pōpoki = cat · hale = house.",
+              "tag": "step:3"
             }
           ]
         },
-        "par": 33
+        "par": 32
       },
       "solution": {
         "note": "ʻīlio↔dog, pōpoki↔cat, hale↔house"
@@ -335,7 +399,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "Hawaiian nouns: animals, home",
+        "concept": "holoholona a me ka hale — animals and home",
         "tags": [
           "vocab",
           "hawaiian",
@@ -348,11 +412,11 @@
         "tiles": [
           "#############",
           "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#...........#",
           "#...........#",
-          "#...........#",
-          "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#############"
         ],
@@ -363,7 +427,19 @@
         "features": [],
         "flash_color": "#ba3d3d",
         "grants_unlock": "vocab2.cleared",
-        "theme": "tropical"
+        "theme": "tropical",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Three pairs: two animals, and the place they both live."
+        }
       }
     },
     {
@@ -479,21 +555,36 @@
         "feedback": {
           "solved": "✦ Maikaʻi! Every pair is matched — walk back to the portal ✦",
           "help_none": "Stand beside a tile and press ? to see its meaning.",
-          "mismatch": "ʻAʻole — those two don't belong together. Each wrong pairing you test costs a star chance (✗)."
+          "mismatch": "ʻAʻole — those two don't belong together. Each wrong pairing you test costs a star chance (✗).",
+          "reveal_spent": "No looks left — read the words you already know and reason out the rest."
         },
         "dialogue": {
           "speakers": {},
           "on_enter": [
             {
-              "id": "vocab-enter",
+              "id": "vocab-match-003-enter",
               "speaker": "narrator",
-              "text": "The sky family: sun, moon, star, rain. Four pairs to bring together.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Everything up there has a name. One word down here has no partner at all.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Count them: nine tiles, but only four pairs. One tile is bait — find it before you shove it.",
+              "tag": "step:1"
+            },
+            {
+              "text": "makani is the stray. It means wind, and no English tile here matches it.",
+              "tag": "step:2"
+            },
+            {
+              "text": "lā = sun · mahina = moon · hōkū = star · ua = rain. Leave makani where it lies.",
+              "tag": "step:3"
             }
           ]
         },
-        "par": 51
+        "par": 52,
+        "reveal_charges": 3
       },
       "solution": {
         "note": "lā↔sun, mahina↔moon, hōkū↔star, ua↔rain"
@@ -501,7 +592,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "Hawaiian nouns: sky",
+        "concept": "nā mea o ka lani — sky words",
         "tags": [
           "vocab",
           "hawaiian",
@@ -517,7 +608,7 @@
           "#...........#",
           "#...........#",
           "#...........#",
-          "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#...........#",
           "#...........#",
@@ -531,7 +622,19 @@
         "features": [],
         "flash_color": "#ba3d3d",
         "grants_unlock": "vocab3.cleared",
-        "theme": "tropical"
+        "theme": "tropical",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 9
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Four sky words to pair. One word on this floor belongs to nobody. Three looks only."
+        }
       }
     },
     {
@@ -615,25 +718,40 @@
             }
           }
         ],
-        "par": 28,
+        "par": 26,
         "feedback": {
           "solved": "✦ Maikaʻi! The signs spoke true. Walk back to the portal ✦",
           "help_none": "Stand beside a word tile and press ? to see what it means.",
           "mismatch": "ʻAʻole — those two don't belong together (✗).",
-          "false_accuse": "That sign was honest! A false accusation counts against you (✗)."
+          "false_accuse": "That sign was honest! A false accusation counts against you (✗).",
+          "reveal_spent": "No looks left — read the words you already know and reason out the rest."
         },
         "dialogue": {
           "speakers": {},
           "on_enter": [
             {
-              "id": "signs-intro",
+              "id": "vocab-match-004-enter",
               "speaker": "narrator",
-              "text": "Hōʻailona — signs! Push a word beside its sign to check it: the sign glows when the word belongs. You can also press Enter beside a sign to put IT on trial.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "The signs are labelled. Ask one whether a word belongs to it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "A sign carries a picture AND a written word. Shove a word face-first into a sign to ask 'is this me?'",
+              "tag": "step:1"
+            },
+            {
+              "text": "The right word makes the sign glow — and reveals that word's meaning for free.",
+              "tag": "step:2"
+            },
+            {
+              "text": "🌧️ is labelled ua. ⭐ is labelled hōkū. Present those two, then pair each with its English.",
+              "tag": "step:3"
             }
           ]
-        }
+        },
+        "reveal_charges": 2
       },
       "solution": {
         "note": "the pairings are the solution"
@@ -641,7 +759,7 @@
       "hints": [],
       "metadata": {
         "reviewed": false,
-        "concept": "sign-anchored vocabulary",
+        "concept": "nā hōʻailona — reading the signs",
         "tags": [
           "vocab",
           "room",
@@ -669,7 +787,19 @@
         },
         "theme": "tropical",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "vocab4.cleared"
+        "grants_unlock": "vocab4.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "The signs name the word that belongs to them. Shove a word into a sign to test it. Two looks — but a confirmed sign gives one back."
+        }
       }
     },
     {
@@ -790,7 +920,7 @@
             }
           }
         ],
-        "par": 39,
+        "par": 45,
         "reveal_charges": 2,
         "feedback": {
           "solved": "✦ You trusted the words, not the pictures. Maikaʻi loa! ✦",
@@ -803,11 +933,24 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "liars-intro",
+              "id": "vocab-match-005-enter",
               "speaker": "narrator",
-              "text": "Some signs in here LIE: the picture says one thing, the written word another. The WORD is always the truth. Press Enter beside a sign to accuse it — catch a liar and earn a reveal; slander an honest sign and pay for it.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Careful. Down here the pictures have started lying.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "A sign's picture and its written word do not have to agree. The word is always the truth.",
+              "tag": "step:1"
+            },
+            {
+              "text": "Stand beside a sign and press Enter to accuse it. Catch a liar and you earn back a look; slander an honest one and it costs you.",
+              "tag": "step:2"
+            },
+            {
+              "text": "☀️ is labelled wai and 💧 is labelled lā — both lie. 🪨 pōhaku is telling the truth.",
+              "tag": "step:3"
             }
           ]
         }
@@ -818,7 +961,7 @@
       "hints": [],
       "metadata": {
         "reviewed": false,
-        "concept": "false-sign discrimination",
+        "concept": "hoʻopunipuni — some signs lie",
         "tags": [
           "vocab",
           "room",
@@ -833,11 +976,11 @@
           "#############",
           "#...........#",
           "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#...........#",
           "#...........#",
-          "#...........#",
-          "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#...........#",
           "#############"
@@ -848,7 +991,19 @@
         },
         "theme": "tropical",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "vocab5.cleared"
+        "grants_unlock": "vocab5.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 9
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Trust the WORD on a sign, never the picture. Two free looks only."
+        }
       }
     },
     {
@@ -917,15 +1072,28 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "vocab-enter",
+              "id": "vocab-match-001-shuffled-enter",
               "speaker": "narrator",
-              "text": "Push each Hawaiian word into its English meaning. Stand beside a tile and press ? for help · U undoes a push.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Same words, new floor. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Stand next to any word and press ? — it will tell you what it means. Looks are free here.",
+              "tag": "step:1"
+            },
+            {
+              "text": "One of these is hard and heavy. The other one you could swim in.",
+              "tag": "step:2"
+            },
+            {
+              "text": "pōhaku = rock · wai = water. Push each Hawaiian word into its match.",
+              "tag": "step:3"
             }
           ]
         },
-        "par": 17
+        "par": 32
       },
       "solution": {
         "note": "pōhaku↔rock, wai↔water"
@@ -933,7 +1101,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "Hawaiian nouns: nature",
+        "concept": "pōhaku a me ka wai — rock and water · shuffled",
         "tags": [
           "vocab",
           "hawaiian",
@@ -947,9 +1115,9 @@
           "###########",
           "#.........#",
           "#.........#",
+          "#....#....#",
           "#.........#",
-          "#.........#",
-          "#.........#",
+          "#....#....#",
           "#.........#",
           "#.........#",
           "###########"
@@ -961,11 +1129,23 @@
         "features": [],
         "flash_color": "#ba3d3d",
         "grants_unlock": "vocab1.cleared",
-        "theme": "tropical"
+        "theme": "tropical",
+        "hint_giver": {
+          "pos": {
+            "x": 9,
+            "y": 7
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Two Hawaiian words, two English meanings. Pair them up. The words start somewhere different every visit."
+        }
+      }
     },
     {
       "id": "vocab-match-001-shrouded",
@@ -1033,15 +1213,28 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "vocab-enter",
+              "id": "vocab-match-001-shrouded-enter",
               "speaker": "narrator",
-              "text": "Push each Hawaiian word into its English meaning. Stand beside a tile and press ? for help · U undoes a push.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Dark, and rearranged. Walk to a word before you can read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Stand next to any word and press ? — it will tell you what it means. Looks are free here.",
+              "tag": "step:1"
+            },
+            {
+              "text": "One of these is hard and heavy. The other one you could swim in.",
+              "tag": "step:2"
+            },
+            {
+              "text": "pōhaku = rock · wai = water. Push each Hawaiian word into its match.",
+              "tag": "step:3"
             }
           ]
         },
-        "par": 17
+        "par": 32
       },
       "solution": {
         "note": "pōhaku↔rock, wai↔water"
@@ -1049,7 +1242,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "Hawaiian nouns: nature",
+        "concept": "pōhaku a me ka wai — rock and water · shrouded",
         "tags": [
           "vocab",
           "hawaiian",
@@ -1063,9 +1256,9 @@
           "###########",
           "#.........#",
           "#.........#",
+          "#....#....#",
           "#.........#",
-          "#.........#",
-          "#.........#",
+          "#....#....#",
           "#.........#",
           "#.........#",
           "###########"
@@ -1077,12 +1270,24 @@
         "features": [],
         "flash_color": "#ba3d3d",
         "grants_unlock": "vocab1.cleared",
-        "theme": "tropical"
+        "theme": "tropical",
+        "hint_giver": {
+          "pos": {
+            "x": 9,
+            "y": 7
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Two Hawaiian words, two English meanings. Pair them up. New arrangement, and you can only see what is close."
+        }
+      }
     },
     {
       "id": "vocab-match-002-shuffled",
@@ -1172,15 +1377,28 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "vocab-enter",
+              "id": "vocab-match-002-shuffled-enter",
               "speaker": "narrator",
-              "text": "More pairs, more pushing. Remember: ? reveals a meaning, U undoes.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Same words, new floor. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Press ? beside a word to learn it — you have unlimited looks on this level.",
+              "tag": "step:1"
+            },
+            {
+              "text": "One barks, one purrs, and the third is where they both sleep.",
+              "tag": "step:2"
+            },
+            {
+              "text": "ʻīlio = dog · pōpoki = cat · hale = house.",
+              "tag": "step:3"
             }
           ]
         },
-        "par": 33
+        "par": 43
       },
       "solution": {
         "note": "ʻīlio↔dog, pōpoki↔cat, hale↔house"
@@ -1188,7 +1406,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "Hawaiian nouns: animals, home",
+        "concept": "holoholona a me ka hale — animals and home · shuffled",
         "tags": [
           "vocab",
           "hawaiian",
@@ -1201,11 +1419,11 @@
         "tiles": [
           "#############",
           "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#...........#",
           "#...........#",
-          "#...........#",
-          "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#############"
         ],
@@ -1216,11 +1434,23 @@
         "features": [],
         "flash_color": "#ba3d3d",
         "grants_unlock": "vocab2.cleared",
-        "theme": "tropical"
+        "theme": "tropical",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Three pairs: two animals, and the place they both live. The words start somewhere different every visit."
+        }
+      }
     },
     {
       "id": "vocab-match-002-shrouded",
@@ -1310,15 +1540,28 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "vocab-enter",
+              "id": "vocab-match-002-shrouded-enter",
               "speaker": "narrator",
-              "text": "More pairs, more pushing. Remember: ? reveals a meaning, U undoes.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Dark, and rearranged. Walk to a word before you can read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Press ? beside a word to learn it — you have unlimited looks on this level.",
+              "tag": "step:1"
+            },
+            {
+              "text": "One barks, one purrs, and the third is where they both sleep.",
+              "tag": "step:2"
+            },
+            {
+              "text": "ʻīlio = dog · pōpoki = cat · hale = house.",
+              "tag": "step:3"
             }
           ]
         },
-        "par": 33
+        "par": 43
       },
       "solution": {
         "note": "ʻīlio↔dog, pōpoki↔cat, hale↔house"
@@ -1326,7 +1569,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "Hawaiian nouns: animals, home",
+        "concept": "holoholona a me ka hale — animals and home · shrouded",
         "tags": [
           "vocab",
           "hawaiian",
@@ -1339,11 +1582,11 @@
         "tiles": [
           "#############",
           "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#...........#",
           "#...........#",
-          "#...........#",
-          "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#############"
         ],
@@ -1354,12 +1597,24 @@
         "features": [],
         "flash_color": "#ba3d3d",
         "grants_unlock": "vocab2.cleared",
-        "theme": "tropical"
+        "theme": "tropical",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Three pairs: two animals, and the place they both live. New arrangement, and you can only see what is close."
+        }
+      }
     },
     {
       "id": "vocab-match-003-shuffled",
@@ -1474,21 +1729,36 @@
         "feedback": {
           "solved": "✦ Maikaʻi! Every pair is matched — walk back to the portal ✦",
           "help_none": "Stand beside a tile and press ? to see its meaning.",
-          "mismatch": "ʻAʻole — those two don't belong together. Each wrong pairing you test costs a star chance (✗)."
+          "mismatch": "ʻAʻole — those two don't belong together. Each wrong pairing you test costs a star chance (✗).",
+          "reveal_spent": "No looks left — read the words you already know and reason out the rest."
         },
         "dialogue": {
           "speakers": {},
           "on_enter": [
             {
-              "id": "vocab-enter",
+              "id": "vocab-match-003-shuffled-enter",
               "speaker": "narrator",
-              "text": "The sky family: sun, moon, star, rain. Four pairs to bring together.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Same words, new floor. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Count them: nine tiles, but only four pairs. One tile is bait — find it before you shove it.",
+              "tag": "step:1"
+            },
+            {
+              "text": "makani is the stray. It means wind, and no English tile here matches it.",
+              "tag": "step:2"
+            },
+            {
+              "text": "lā = sun · mahina = moon · hōkū = star · ua = rain. Leave makani where it lies.",
+              "tag": "step:3"
             }
           ]
         },
-        "par": 51
+        "par": 66,
+        "reveal_charges": 3
       },
       "solution": {
         "note": "lā↔sun, mahina↔moon, hōkū↔star, ua↔rain"
@@ -1496,7 +1766,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "Hawaiian nouns: sky",
+        "concept": "nā mea o ka lani — sky words · shuffled",
         "tags": [
           "vocab",
           "hawaiian",
@@ -1512,7 +1782,7 @@
           "#...........#",
           "#...........#",
           "#...........#",
-          "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#...........#",
           "#...........#",
@@ -1526,11 +1796,23 @@
         "features": [],
         "flash_color": "#ba3d3d",
         "grants_unlock": "vocab3.cleared",
-        "theme": "tropical"
+        "theme": "tropical",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 9
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Four sky words to pair. One word on this floor belongs to nobody. The words start somewhere different every visit. Three looks only."
+        }
+      }
     },
     {
       "id": "vocab-match-003-shrouded",
@@ -1645,21 +1927,36 @@
         "feedback": {
           "solved": "✦ Maikaʻi! Every pair is matched — walk back to the portal ✦",
           "help_none": "Stand beside a tile and press ? to see its meaning.",
-          "mismatch": "ʻAʻole — those two don't belong together. Each wrong pairing you test costs a star chance (✗)."
+          "mismatch": "ʻAʻole — those two don't belong together. Each wrong pairing you test costs a star chance (✗).",
+          "reveal_spent": "No looks left — read the words you already know and reason out the rest."
         },
         "dialogue": {
           "speakers": {},
           "on_enter": [
             {
-              "id": "vocab-enter",
+              "id": "vocab-match-003-shrouded-enter",
               "speaker": "narrator",
-              "text": "The sky family: sun, moon, star, rain. Four pairs to bring together.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Dark, and rearranged. Walk to a word before you can read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Count them: nine tiles, but only four pairs. One tile is bait — find it before you shove it.",
+              "tag": "step:1"
+            },
+            {
+              "text": "makani is the stray. It means wind, and no English tile here matches it.",
+              "tag": "step:2"
+            },
+            {
+              "text": "lā = sun · mahina = moon · hōkū = star · ua = rain. Leave makani where it lies.",
+              "tag": "step:3"
             }
           ]
         },
-        "par": 51
+        "par": 66,
+        "reveal_charges": 3
       },
       "solution": {
         "note": "lā↔sun, mahina↔moon, hōkū↔star, ua↔rain"
@@ -1667,7 +1964,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "Hawaiian nouns: sky",
+        "concept": "nā mea o ka lani — sky words · shrouded",
         "tags": [
           "vocab",
           "hawaiian",
@@ -1683,7 +1980,7 @@
           "#...........#",
           "#...........#",
           "#...........#",
-          "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#...........#",
           "#...........#",
@@ -1697,12 +1994,24 @@
         "features": [],
         "flash_color": "#ba3d3d",
         "grants_unlock": "vocab3.cleared",
-        "theme": "tropical"
+        "theme": "tropical",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 9
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Four sky words to pair. One word on this floor belongs to nobody. New arrangement, and you can only see what is close. Three looks only."
+        }
+      }
     },
     {
       "id": "vocab-match-004-shuffled",
@@ -1785,25 +2094,40 @@
             }
           }
         ],
-        "par": 28,
+        "par": 44,
         "feedback": {
           "solved": "✦ Maikaʻi! The signs spoke true. Walk back to the portal ✦",
           "help_none": "Stand beside a word tile and press ? to see what it means.",
           "mismatch": "ʻAʻole — those two don't belong together (✗).",
-          "false_accuse": "That sign was honest! A false accusation counts against you (✗)."
+          "false_accuse": "That sign was honest! A false accusation counts against you (✗).",
+          "reveal_spent": "No looks left — read the words you already know and reason out the rest."
         },
         "dialogue": {
           "speakers": {},
           "on_enter": [
             {
-              "id": "signs-intro",
+              "id": "vocab-match-004-shuffled-enter",
               "speaker": "narrator",
-              "text": "Hōʻailona — signs! Push a word beside its sign to check it: the sign glows when the word belongs. You can also press Enter beside a sign to put IT on trial.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Same words, new floor. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "A sign carries a picture AND a written word. Shove a word face-first into a sign to ask 'is this me?'",
+              "tag": "step:1"
+            },
+            {
+              "text": "The right word makes the sign glow — and reveals that word's meaning for free.",
+              "tag": "step:2"
+            },
+            {
+              "text": "🌧️ is labelled ua. ⭐ is labelled hōkū. Present those two, then pair each with its English.",
+              "tag": "step:3"
             }
           ]
-        }
+        },
+        "reveal_charges": 2
       },
       "solution": {
         "note": "the pairings are the solution"
@@ -1811,7 +2135,7 @@
       "hints": [],
       "metadata": {
         "reviewed": false,
-        "concept": "sign-anchored vocabulary",
+        "concept": "nā hōʻailona — reading the signs · shuffled",
         "tags": [
           "vocab",
           "room",
@@ -1839,11 +2163,23 @@
         },
         "theme": "tropical",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "vocab4.cleared"
+        "grants_unlock": "vocab4.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "The signs name the word that belongs to them. Shove a word into a sign to test it. The words start somewhere different every visit. Two looks — but a confirmed sign gives one back."
+        }
+      }
     },
     {
       "id": "vocab-match-004-shrouded",
@@ -1926,25 +2262,40 @@
             }
           }
         ],
-        "par": 28,
+        "par": 44,
         "feedback": {
           "solved": "✦ Maikaʻi! The signs spoke true. Walk back to the portal ✦",
           "help_none": "Stand beside a word tile and press ? to see what it means.",
           "mismatch": "ʻAʻole — those two don't belong together (✗).",
-          "false_accuse": "That sign was honest! A false accusation counts against you (✗)."
+          "false_accuse": "That sign was honest! A false accusation counts against you (✗).",
+          "reveal_spent": "No looks left — read the words you already know and reason out the rest."
         },
         "dialogue": {
           "speakers": {},
           "on_enter": [
             {
-              "id": "signs-intro",
+              "id": "vocab-match-004-shrouded-enter",
               "speaker": "narrator",
-              "text": "Hōʻailona — signs! Push a word beside its sign to check it: the sign glows when the word belongs. You can also press Enter beside a sign to put IT on trial.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Dark, and rearranged. Walk to a word before you can read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "A sign carries a picture AND a written word. Shove a word face-first into a sign to ask 'is this me?'",
+              "tag": "step:1"
+            },
+            {
+              "text": "The right word makes the sign glow — and reveals that word's meaning for free.",
+              "tag": "step:2"
+            },
+            {
+              "text": "🌧️ is labelled ua. ⭐ is labelled hōkū. Present those two, then pair each with its English.",
+              "tag": "step:3"
             }
           ]
-        }
+        },
+        "reveal_charges": 2
       },
       "solution": {
         "note": "the pairings are the solution"
@@ -1952,7 +2303,7 @@
       "hints": [],
       "metadata": {
         "reviewed": false,
-        "concept": "sign-anchored vocabulary",
+        "concept": "nā hōʻailona — reading the signs · shrouded",
         "tags": [
           "vocab",
           "room",
@@ -1980,12 +2331,24 @@
         },
         "theme": "tropical",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "vocab4.cleared"
+        "grants_unlock": "vocab4.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "The signs name the word that belongs to them. Shove a word into a sign to test it. New arrangement, and you can only see what is close. Two looks — but a confirmed sign gives one back."
+        }
+      }
     },
     {
       "id": "vocab-match-005-shuffled",
@@ -2105,7 +2468,7 @@
             }
           }
         ],
-        "par": 39,
+        "par": 57,
         "reveal_charges": 2,
         "feedback": {
           "solved": "✦ You trusted the words, not the pictures. Maikaʻi loa! ✦",
@@ -2118,11 +2481,24 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "liars-intro",
+              "id": "vocab-match-005-shuffled-enter",
               "speaker": "narrator",
-              "text": "Some signs in here LIE: the picture says one thing, the written word another. The WORD is always the truth. Press Enter beside a sign to accuse it — catch a liar and earn a reveal; slander an honest sign and pay for it.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Same words, new floor. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "A sign's picture and its written word do not have to agree. The word is always the truth.",
+              "tag": "step:1"
+            },
+            {
+              "text": "Stand beside a sign and press Enter to accuse it. Catch a liar and you earn back a look; slander an honest one and it costs you.",
+              "tag": "step:2"
+            },
+            {
+              "text": "☀️ is labelled wai and 💧 is labelled lā — both lie. 🪨 pōhaku is telling the truth.",
+              "tag": "step:3"
             }
           ]
         }
@@ -2133,7 +2509,7 @@
       "hints": [],
       "metadata": {
         "reviewed": false,
-        "concept": "false-sign discrimination",
+        "concept": "hoʻopunipuni — some signs lie · shuffled",
         "tags": [
           "vocab",
           "room",
@@ -2148,11 +2524,11 @@
           "#############",
           "#...........#",
           "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#...........#",
           "#...........#",
-          "#...........#",
-          "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#...........#",
           "#############"
@@ -2163,11 +2539,23 @@
         },
         "theme": "tropical",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "vocab5.cleared"
+        "grants_unlock": "vocab5.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 9
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Trust the WORD on a sign, never the picture. Two free looks only. The words start somewhere different every visit."
+        }
+      }
     },
     {
       "id": "vocab-match-005-shrouded",
@@ -2287,7 +2675,7 @@
             }
           }
         ],
-        "par": 39,
+        "par": 57,
         "reveal_charges": 2,
         "feedback": {
           "solved": "✦ You trusted the words, not the pictures. Maikaʻi loa! ✦",
@@ -2300,11 +2688,24 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "liars-intro",
+              "id": "vocab-match-005-shrouded-enter",
               "speaker": "narrator",
-              "text": "Some signs in here LIE: the picture says one thing, the written word another. The WORD is always the truth. Press Enter beside a sign to accuse it — catch a liar and earn a reveal; slander an honest sign and pay for it.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Dark, and rearranged. Walk to a word before you can read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "A sign's picture and its written word do not have to agree. The word is always the truth.",
+              "tag": "step:1"
+            },
+            {
+              "text": "Stand beside a sign and press Enter to accuse it. Catch a liar and you earn back a look; slander an honest one and it costs you.",
+              "tag": "step:2"
+            },
+            {
+              "text": "☀️ is labelled wai and 💧 is labelled lā — both lie. 🪨 pōhaku is telling the truth.",
+              "tag": "step:3"
             }
           ]
         }
@@ -2315,7 +2716,7 @@
       "hints": [],
       "metadata": {
         "reviewed": false,
-        "concept": "false-sign discrimination",
+        "concept": "hoʻopunipuni — some signs lie · shrouded",
         "tags": [
           "vocab",
           "room",
@@ -2330,11 +2731,11 @@
           "#############",
           "#...........#",
           "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#...........#",
           "#...........#",
-          "#...........#",
-          "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#...........#",
           "#############"
@@ -2345,12 +2746,24 @@
         },
         "theme": "tropical",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "vocab5.cleared"
+        "grants_unlock": "vocab5.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 9
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Trust the WORD on a sign, never the picture. Two free looks only. New arrangement, and you can only see what is close."
+        }
+      }
     }
   ],
   "progression": [

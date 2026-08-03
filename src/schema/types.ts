@@ -67,7 +67,10 @@ export interface EnvClue {
  *  FROM the tier (mixed/explicit ⇒ true) and may be set explicitly to compose off-tier
  *  variants. Omitting the whole block ⇒ base + assemble (backward compatible). */
 export interface MechanicsConfig {
-  tier: MechanicTier;
+  /** Omitted ⇒ the level claims NO tier: it stays on the modifier-derived ladder rung
+   *  (see ladder.ts resolveMechanic), so a board level can declare a `goalSpec` without
+   *  collapsing its Shuffled/Shrouded grouping into "Base". */
+  tier?: MechanicTier;
   /** Interaction mode. Omitted ⇒ "assemble". */
   mode?: CodeMode;
   /** What the player is shown as the target — desired output and/or a plain-language
@@ -238,6 +241,8 @@ export interface GrammarBuildPayload {
   structures: string[][];
   /** The FIRST slot's board cell; slots run left→right from here. */
   frame: { x: number; y: number };
+  /** Move budget for the ★★★ rating (undo refunds moves). Omitted → no rating. */
+  par?: number;
   /** Feedback text (CONTENT): "solved" (win banner). The engine hardcodes none. */
   feedback?: Record<string, string>;
   /** Optional room dialogue — same shared shape every room puzzle may declare. */

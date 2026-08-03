@@ -135,11 +135,11 @@
     },
     {
       "id": "en-01-welcome",
-      "title": "Just Walk",
+      "title": "Shove Off",
       "difficulty": 1,
       "width": 13,
       "height": 9,
-      "hint": "Read the rules, then walk onto the flag.",
+      "hint": "The wall has one gap and the rock is sitting in it. ROCK IS PUSH — so push it.",
       "objects": [
         {
           "noun": "slime",
@@ -147,44 +147,119 @@
           "y": 4
         },
         {
+          "noun": "rock",
+          "x": 6,
+          "y": 4
+        },
+        {
           "noun": "flag",
           "x": 9,
-          "y": 4
+          "y": 6
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 0
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 1
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 2
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 3
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 5
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 6
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 7
+        },
+        {
+          "noun": "wall",
+          "x": 6,
+          "y": 8
         }
       ],
       "words": [
         {
           "text": "SLIME",
           "x": 2,
-          "y": 2
+          "y": 1
         },
         {
           "text": "IS",
           "x": 3,
-          "y": 2
+          "y": 1
         },
         {
           "text": "YOU",
           "x": 4,
-          "y": 2
+          "y": 1
         },
         {
           "text": "FLAG",
           "x": 8,
-          "y": 2
+          "y": 1
         },
         {
           "text": "IS",
           "x": 9,
-          "y": 2
+          "y": 1
         },
         {
           "text": "WIN",
           "x": 10,
-          "y": 2
+          "y": 1
+        },
+        {
+          "text": "ROCK",
+          "x": 2,
+          "y": 7
+        },
+        {
+          "text": "IS",
+          "x": 3,
+          "y": 7
+        },
+        {
+          "text": "PUSH",
+          "x": 4,
+          "y": 7
+        },
+        {
+          "text": "WALL",
+          "x": 8,
+          "y": 7
+        },
+        {
+          "text": "IS",
+          "x": 9,
+          "y": 7
+        },
+        {
+          "text": "STOP",
+          "x": 10,
+          "y": 7
         }
       ],
-      "par": 6
+      "par": 8
     },
     {
       "id": "en-02-push",

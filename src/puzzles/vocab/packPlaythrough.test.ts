@@ -115,34 +115,41 @@ describe("guess tier — wrong combinations cap the rating", () => {
 
 describe("hawaiian vocab pack", () => {
   it("tutorial: push aloha to hello", () => {
-    solvesClean(haw, "vocab-match-000", [L, L, L, U, U, R, R, R]);
+    solvesClean(haw, "vocab-match-000", [
+      U, ...rep(L, 3), U, ...rep(R, 3)
+    
+    ]);
   });
   it("Vocab I: rock→pōhaku, water→wai", () => {
     solvesClean(haw, "vocab-match-001", [
-      ...rep(R, 3), ...rep(U, 3), ...rep(L, 3),
-      ...rep(R, 3), D, D, ...rep(L, 3),
+      L, ...rep(U, 2), L, U, L, U, ...rep(R, 4),   // rock ← to pōhaku, around the pillar
+      ...rep(D, 2), R, D, R, D, ...rep(L, 4)      // water ← to wai, the mirrored detour
+    
     ]);
   });
   it("Vocab II: three pairs, locked tiles become obstacles", () => {
     solvesClean(haw, "vocab-match-002", [
-      ...rep(R, 3), ...rep(U, 3), ...rep(L, 3),          // house → hale
-      ...rep(R, 3), U, U, ...rep(L, 5),                  // dog → ʻīlio
-      D, ...rep(R, 5), ...rep(D, 3), ...rep(L, 5),       // cat → pōpoki
+      ...rep(R, 2), U, R, U, ...rep(L, 6),   // cat → pōpoki (a broken row)
+      U, ...rep(R, 2), U, ...rep(L, 3),      // house → hale (the open middle row)
+      U, L, U, ...rep(R, 6)                  // dog → ʻīlio (the other broken row)
+    
     ]);
   });
   it("Vocab III: four pairs around the makani decoy", () => {
     solvesClean(haw, "vocab-match-003", [
-      R, U, L, D, L, ...rep(U, 6),          // star ASIDE first (locks at 4,1 — row 2 stays clear)
-      D, ...rep(R, 5), U, ...rep(L, 5),     // sun ← to lā
-      D, ...rep(R, 6), D, ...rep(L, 7),     // rain ← to ua
-      ...rep(R, 6), D, D, ...rep(L, 5),     // moon ← to mahina
+      L, U, ...rep(L, 3), U, ...rep(R, 5),        // moon → mahina
+      D, L, D, L, ...rep(U, 6),                  // star shoved aside, then up
+      D, ...rep(L, 3), D, L, D, ...rep(R, 8),    // rain ← to ua, around the centre pillar
+      ...rep(U, 2), R, U, ...rep(L, 5)           // sun ← to lā
+    
     ]);
   });
 
   it("Hōʻailona (IV): honest signs + interior WALLS block the push board", () => {
     solvesClean(haw, "vocab-match-004", [
-      ...rep(R, 4), ...rep(U, 5), ...rep(L, 5),  // rain → ua past the wall spine
-      ...rep(R, 5), ...rep(D, 4), ...rep(L, 5),  // star → hōkū
+      ...rep(L, 4), U, ...rep(R, 5),               // rain → ua past the wall spine
+      ...rep(U, 3), ...rep(R, 3), U, ...rep(L, 5)  // star → hōkū
+    
     ]);
     // The wall spine is real: walking straight up from spawn is blocked at the fence.
     const pz = puzzleIn(haw, "vocab-match-004");
@@ -152,9 +159,10 @@ describe("hawaiian vocab pack", () => {
 
   it("Hoʻopunipuni (V): the clean line trusts the words, never touches a sign", () => {
     solvesClean(haw, "vocab-match-005", [
-      ...rep(R, 4), ...rep(U, 6), ...rep(L, 5),  // sun ← to lā
-      ...rep(R, 5), D, D, ...rep(L, 5),          // water ← to wai
-      ...rep(R, 5), D, D, ...rep(L, 5),          // rock ← to pōhaku
+      U, R, ...rep(U, 4), ...rep(R, 2), U, R, U, ...rep(L, 6),  // sun ← to lā
+      ...rep(D, 2), ...rep(L, 2), D, ...rep(R, 5),             // water ← to wai
+      D, ...rep(R, 2), D, R, D, ...rep(L, 6)                   // rock ← to pōhaku
+    
     ]);
   });
 
@@ -172,22 +180,24 @@ describe("hawaiian vocab pack", () => {
 describe("english synonym pack (Lexicon — the high tier)", () => {
   it("Lexicon I: arid–dry, brisk–quick around the tepid decoy", () => {
     solvesClean(en, "vocab-en-000", [
-      ...rep(U, 6), ...rep(R, 4), D, ...rep(L, 5),
-      ...rep(D, 5), ...rep(R, 5), U, ...rep(L, 5),
+      ...rep(L, 3), U, L, U, ...rep(R, 6),     // brisk–quick below the pillar
+      ...rep(U, 2), R, U, R, U, ...rep(L, 6)   // arid–dry above it
+    
     ]);
   });
   it("Lexicon II: three pairs, two decoys, limited reveals", () => {
     solvesClean(en, "vocab-en-001", [
-      ...rep(R, 4), ...rep(U, 5), ...rep(L, 5),
-      ...rep(R, 5), D, D, ...rep(L, 5),
-      ...rep(R, 5), D, D, ...rep(L, 5),
+      L, ...rep(U, 2), ...rep(L, 2), D, L, D, ...rep(R, 6),
+      ...rep(U, 2), ...rep(R, 2), U, ...rep(L, 5),
+      U, ...rep(L, 2), U, L, U, ...rep(R, 6)
+    
     ]);
   });
   it("Lexicon III: antonym traps — the clean line still exists", () => {
     solvesClean(en, "vocab-en-002", [
-      ...rep(R, 5), U, ...rep(L, 7), D, L, ...rep(U, 4), // rare → scarce
-      R, ...rep(U, 4), ...rep(R, 7), D, ...rep(L, 8),    // brilliant ← along the top
-      U, L, ...rep(D, 4),                                // …and down to vivid
+      ...rep(R, 4), ...rep(U, 4), R, U, ...rep(L, 7),                 // rare → scarce
+      ...rep(D, 4), ...rep(L, 2), ...rep(U, 5), L, U, ...rep(R, 7)   // brilliant → vivid
+    
     ]);
   });
 

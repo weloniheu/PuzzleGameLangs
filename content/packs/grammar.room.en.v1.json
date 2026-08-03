@@ -91,8 +91,23 @@
               "trigger": "guided_tutorial",
               "autoAdvance": false
             }
+          ],
+          "hints": [
+            {
+              "text": "Walk into a word to shove it. Words slide one cell at a time, and U undoes a push.",
+              "tag": "step:1"
+            },
+            {
+              "text": "The dashed boxes are the frame. 'who?' takes the doer; 'does what?' takes the action.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Push 'the slime' into the who? box and 'hops' into the does what? box.",
+              "tag": "step:3"
+            }
           ]
-        }
+        },
+        "par": 12
       },
       "solution": {
         "sentence": "the slime hops"
@@ -100,7 +115,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "tutorial — push words into the frame",
+        "concept": "your first sentence",
         "tags": [
           "grammar",
           "room",
@@ -130,7 +145,19 @@
         "features": [],
         "flash_color": "#b99c44",
         "grants_unlock": "grammar.tutorial.cleared",
-        "theme": "library"
+        "theme": "library",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Push the two words up into the frame: who, then does what."
+        }
       }
     },
     {
@@ -165,7 +192,7 @@
             "text": "runs",
             "role": "verb",
             "pos": {
-              "x": 6,
+              "x": 7,
               "y": 5
             }
           },
@@ -174,7 +201,7 @@
             "role": "subject",
             "pos": {
               "x": 2,
-              "y": 6
+              "y": 7
             }
           },
           {
@@ -182,7 +209,7 @@
             "role": "verb",
             "pos": {
               "x": 10,
-              "y": 6
+              "y": 7
             }
           }
         ],
@@ -203,14 +230,28 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "gram-enter",
+              "id": "grammar-build-001-enter",
               "speaker": "narrator",
-              "text": "Push the words into the frame to build a sentence: a who, then a doing-word. Arrows/WASD push · U undo · R reset.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Four words, two slots. More than one answer works here.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "The frame checks the KIND of word, not the meaning — a subject in 'who?' and a verb in 'does what?' is enough.",
+              "tag": "step:1"
+            },
+            {
+              "text": "'the dog' and 'the cat' are both subjects. 'runs' and 'sleeps' are both verbs. Any combination passes.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Take whichever pair is closest and push them into the two boxes.",
+              "tag": "step:3"
             }
           ]
-        }
+        },
+        "par": 18
       },
       "solution": {
         "sentence": "the dog runs"
@@ -218,7 +259,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "Grammar I",
+        "concept": "who does what",
         "tags": [
           "grammar",
           "room"
@@ -233,7 +274,7 @@
           "#.............#",
           "#.............#",
           "#.............#",
-          "#.............#",
+          "#......#......#",
           "#.............#",
           "#.............#",
           "#.............#",
@@ -247,7 +288,19 @@
         "features": [],
         "flash_color": "#b99c44",
         "grants_unlock": "grammar1.cleared",
-        "theme": "library"
+        "theme": "library",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Two slots, four words. Any subject plus any verb is a sentence."
+        }
       }
     },
     {
@@ -349,14 +402,28 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "gram-enter",
+              "id": "grammar-build-002-enter",
               "speaker": "narrator",
-              "text": "Three slots: who, does what, to what. One word fits nowhere — leave it be.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Three slots — and one word that belongs in none of them.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Fill all three boxes with the right kind of word and the frame closes itself. A wrong-kind word turns its box red.",
+              "tag": "step:1"
+            },
+            {
+              "text": "'banana!' is not a subject, a verb, or an object. Leave it on the floor.",
+              "tag": "step:2"
+            },
+            {
+              "text": "the dog / chases / the ball reads correctly. So does the cat / catches / a stick.",
+              "tag": "step:3"
             }
           ]
-        }
+        },
+        "par": 22
       },
       "solution": {
         "sentence": "the dog chases the ball"
@@ -364,7 +431,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "Grammar II",
+        "concept": "and what it happens to",
         "tags": [
           "grammar",
           "room"
@@ -393,7 +460,19 @@
         "features": [],
         "flash_color": "#b99c44",
         "grants_unlock": "grammar2.cleared",
-        "theme": "library"
+        "theme": "library",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Three slots: who, does what, to what. One word on this floor fits nowhere."
+        }
       }
     },
     {
@@ -524,14 +603,28 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "gram-enter",
+              "id": "grammar-build-003-enter",
               "speaker": "narrator",
-              "text": "A longer frame: end it with how or when. Two words are decoys.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "A fourth slot: how. Two of these words are just litter.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "The last box wants an adverb — a word describing HOW the action is done.",
+              "tag": "step:1"
+            },
+            {
+              "text": "'banana!' and 'blue' fit no slot here. Everything else has exactly one home.",
+              "tag": "step:2"
+            },
+            {
+              "text": "the cat / catches / a stick / quickly. Push each word into its box and the frame closes.",
+              "tag": "step:3"
             }
           ]
-        }
+        },
+        "par": 30
       },
       "solution": {
         "sentence": "the cat catches a stick quickly"
@@ -539,7 +632,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "Grammar III",
+        "concept": "how it happens",
         "tags": [
           "grammar",
           "room"
@@ -568,7 +661,19 @@
         "features": [],
         "flash_color": "#b99c44",
         "grants_unlock": "grammar3.cleared",
-        "theme": "library"
+        "theme": "library",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Four slots: who, does what, to what, how. Two words on this floor fit nowhere."
+        }
       }
     },
     {
@@ -603,7 +708,7 @@
             "text": "runs",
             "role": "verb",
             "pos": {
-              "x": 6,
+              "x": 7,
               "y": 5
             }
           },
@@ -612,7 +717,7 @@
             "role": "subject",
             "pos": {
               "x": 2,
-              "y": 6
+              "y": 7
             }
           },
           {
@@ -620,7 +725,7 @@
             "role": "verb",
             "pos": {
               "x": 10,
-              "y": 6
+              "y": 7
             }
           }
         ],
@@ -641,14 +746,28 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "gram-enter",
+              "id": "grammar-build-001-shuffled-enter",
               "speaker": "narrator",
-              "text": "Push the words into the frame to build a sentence: a who, then a doing-word. Arrows/WASD push · U undo · R reset.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Same room, new layout. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "The frame checks the KIND of word, not the meaning — a subject in 'who?' and a verb in 'does what?' is enough.",
+              "tag": "step:1"
+            },
+            {
+              "text": "'the dog' and 'the cat' are both subjects. 'runs' and 'sleeps' are both verbs. Any combination passes.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Take whichever pair is closest and push them into the two boxes.",
+              "tag": "step:3"
             }
           ]
-        }
+        },
+        "par": 30
       },
       "solution": {
         "sentence": "the dog runs"
@@ -656,7 +775,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "Grammar I",
+        "concept": "who does what · shuffled",
         "tags": [
           "grammar",
           "room"
@@ -671,7 +790,7 @@
           "#.............#",
           "#.............#",
           "#.............#",
-          "#.............#",
+          "#......#......#",
           "#.............#",
           "#.............#",
           "#.............#",
@@ -685,11 +804,23 @@
         "features": [],
         "flash_color": "#b99c44",
         "grants_unlock": "grammar1.cleared",
-        "theme": "library"
+        "theme": "library",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Two slots, four words. Any subject plus any verb is a sentence. Everything loose starts somewhere different every visit."
+        }
+      }
     },
     {
       "id": "grammar-build-001-shrouded",
@@ -723,7 +854,7 @@
             "text": "runs",
             "role": "verb",
             "pos": {
-              "x": 6,
+              "x": 7,
               "y": 5
             }
           },
@@ -732,7 +863,7 @@
             "role": "subject",
             "pos": {
               "x": 2,
-              "y": 6
+              "y": 7
             }
           },
           {
@@ -740,7 +871,7 @@
             "role": "verb",
             "pos": {
               "x": 10,
-              "y": 6
+              "y": 7
             }
           }
         ],
@@ -761,14 +892,28 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "gram-enter",
+              "id": "grammar-build-001-shrouded-enter",
               "speaker": "narrator",
-              "text": "Push the words into the frame to build a sentence: a who, then a doing-word. Arrows/WASD push · U undo · R reset.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "The frame checks the KIND of word, not the meaning — a subject in 'who?' and a verb in 'does what?' is enough.",
+              "tag": "step:1"
+            },
+            {
+              "text": "'the dog' and 'the cat' are both subjects. 'runs' and 'sleeps' are both verbs. Any combination passes.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Take whichever pair is closest and push them into the two boxes.",
+              "tag": "step:3"
             }
           ]
-        }
+        },
+        "par": 30
       },
       "solution": {
         "sentence": "the dog runs"
@@ -776,7 +921,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "Grammar I",
+        "concept": "who does what · shrouded",
         "tags": [
           "grammar",
           "room"
@@ -791,7 +936,7 @@
           "#.............#",
           "#.............#",
           "#.............#",
-          "#.............#",
+          "#......#......#",
           "#.............#",
           "#.............#",
           "#.............#",
@@ -805,12 +950,24 @@
         "features": [],
         "flash_color": "#b99c44",
         "grants_unlock": "grammar1.cleared",
-        "theme": "library"
+        "theme": "library",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Two slots, four words. Any subject plus any verb is a sentence. Rearranged, and you can only see what is close."
+        }
+      }
     },
     {
       "id": "grammar-build-002-shuffled",
@@ -911,14 +1068,28 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "gram-enter",
+              "id": "grammar-build-002-shuffled-enter",
               "speaker": "narrator",
-              "text": "Three slots: who, does what, to what. One word fits nowhere — leave it be.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Same room, new layout. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Fill all three boxes with the right kind of word and the frame closes itself. A wrong-kind word turns its box red.",
+              "tag": "step:1"
+            },
+            {
+              "text": "'banana!' is not a subject, a verb, or an object. Leave it on the floor.",
+              "tag": "step:2"
+            },
+            {
+              "text": "the dog / chases / the ball reads correctly. So does the cat / catches / a stick.",
+              "tag": "step:3"
             }
           ]
-        }
+        },
+        "par": 50
       },
       "solution": {
         "sentence": "the dog chases the ball"
@@ -926,7 +1097,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "Grammar II",
+        "concept": "and what it happens to · shuffled",
         "tags": [
           "grammar",
           "room"
@@ -955,11 +1126,23 @@
         "features": [],
         "flash_color": "#b99c44",
         "grants_unlock": "grammar2.cleared",
-        "theme": "library"
+        "theme": "library",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Three slots: who, does what, to what. One word on this floor fits nowhere. Everything loose starts somewhere different every visit."
+        }
+      }
     },
     {
       "id": "grammar-build-002-shrouded",
@@ -1060,14 +1243,28 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "gram-enter",
+              "id": "grammar-build-002-shrouded-enter",
               "speaker": "narrator",
-              "text": "Three slots: who, does what, to what. One word fits nowhere — leave it be.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Fill all three boxes with the right kind of word and the frame closes itself. A wrong-kind word turns its box red.",
+              "tag": "step:1"
+            },
+            {
+              "text": "'banana!' is not a subject, a verb, or an object. Leave it on the floor.",
+              "tag": "step:2"
+            },
+            {
+              "text": "the dog / chases / the ball reads correctly. So does the cat / catches / a stick.",
+              "tag": "step:3"
             }
           ]
-        }
+        },
+        "par": 50
       },
       "solution": {
         "sentence": "the dog chases the ball"
@@ -1075,7 +1272,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "Grammar II",
+        "concept": "and what it happens to · shrouded",
         "tags": [
           "grammar",
           "room"
@@ -1104,12 +1301,24 @@
         "features": [],
         "flash_color": "#b99c44",
         "grants_unlock": "grammar2.cleared",
-        "theme": "library"
+        "theme": "library",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Three slots: who, does what, to what. One word on this floor fits nowhere. Rearranged, and you can only see what is close."
+        }
+      }
     },
     {
       "id": "grammar-build-003-shuffled",
@@ -1239,14 +1448,28 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "gram-enter",
+              "id": "grammar-build-003-shuffled-enter",
               "speaker": "narrator",
-              "text": "A longer frame: end it with how or when. Two words are decoys.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Same room, new layout. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "The last box wants an adverb — a word describing HOW the action is done.",
+              "tag": "step:1"
+            },
+            {
+              "text": "'banana!' and 'blue' fit no slot here. Everything else has exactly one home.",
+              "tag": "step:2"
+            },
+            {
+              "text": "the cat / catches / a stick / quickly. Push each word into its box and the frame closes.",
+              "tag": "step:3"
             }
           ]
-        }
+        },
+        "par": 76
       },
       "solution": {
         "sentence": "the cat catches a stick quickly"
@@ -1254,7 +1477,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "Grammar III",
+        "concept": "how it happens · shuffled",
         "tags": [
           "grammar",
           "room"
@@ -1283,11 +1506,23 @@
         "features": [],
         "flash_color": "#b99c44",
         "grants_unlock": "grammar3.cleared",
-        "theme": "library"
+        "theme": "library",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Four slots: who, does what, to what, how. Two words on this floor fit nowhere. Everything loose starts somewhere different every visit."
+        }
+      }
     },
     {
       "id": "grammar-build-003-shrouded",
@@ -1417,14 +1652,28 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "gram-enter",
+              "id": "grammar-build-003-shrouded-enter",
               "speaker": "narrator",
-              "text": "A longer frame: end it with how or when. Two words are decoys.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "The last box wants an adverb — a word describing HOW the action is done.",
+              "tag": "step:1"
+            },
+            {
+              "text": "'banana!' and 'blue' fit no slot here. Everything else has exactly one home.",
+              "tag": "step:2"
+            },
+            {
+              "text": "the cat / catches / a stick / quickly. Push each word into its box and the frame closes.",
+              "tag": "step:3"
             }
           ]
-        }
+        },
+        "par": 76
       },
       "solution": {
         "sentence": "the cat catches a stick quickly"
@@ -1432,7 +1681,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "Grammar III",
+        "concept": "how it happens · shrouded",
         "tags": [
           "grammar",
           "room"
@@ -1461,12 +1710,24 @@
         "features": [],
         "flash_color": "#b99c44",
         "grants_unlock": "grammar3.cleared",
-        "theme": "library"
+        "theme": "library",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Four slots: who, does what, to what, how. Two words on this floor fit nowhere. Rearranged, and you can only see what is close."
+        }
+      }
     }
   ],
   "progression": [
