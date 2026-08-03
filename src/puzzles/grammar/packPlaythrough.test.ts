@@ -7,7 +7,7 @@ import enPack from "../../../content/packs/grammar.room.en.v1.json";
 import { validatePuzzle } from "../../generation/validateRepair";
 import { tryMove, DIRECTIONS, type Direction } from "../logic/ruleEngine";
 import { checkSentence } from "./grammarCheck";
-import { buildGrammarBoard, filledSlots, slotCell, PUSH_RULES } from "./grammarBoard";
+import { buildGrammarBoard, filledSlots, slotCell, wallCells, PUSH_RULES } from "./grammarBoard";
 import type { GrammarBuildPayload } from "../../schema/types";
 import type { Puzzle } from "../../schema/types";
 
@@ -22,9 +22,12 @@ const OX = 1, OY = 1;
 function play(puzzle: Puzzle, moves: Dir[]): boolean {
   const payload = puzzle.payload as GrammarBuildPayload;
   const room = puzzle.room!;
+  const floorW = room.width - OX * 2, floorH = room.height - OY * 2;
   const gb = buildGrammarBoard(
-    payload, room.width - OX * 2, room.height - OY * 2,
+    payload, floorW, floorH,
     { x: room.spawn!.x - OX, y: room.spawn!.y - OY },
+    // Interior '#' cells are SOLID here exactly as they are in the module.
+    wallCells(floorW, floorH, (rx, ry) => room.tiles[ry][rx] === "#", OX, OY),
   );
   const player = () => gb.board.entities.find((e) => e.id === "player")!;
   const solved = () => checkSentence(filledSlots(gb, payload), payload.structures).valid;
@@ -33,6 +36,15 @@ function play(puzzle: Puzzle, moves: Dir[]): boolean {
     if (solved()) return true;
   }
   return solved();
+}
+
+/** The scripted solution must win AND fit the authored par (the ★★★ budget), so an
+ *  author cannot ship a rating the level's own geometry can't deliver. */
+function solves(id: string, moves: Dir[]) {
+  const puzzle = byId(id);
+  expect(play(puzzle, moves)).toBe(true);
+  const par = (puzzle.payload as GrammarBuildPayload).par;
+  if (par !== undefined) expect(moves.length).toBeLessThanOrEqual(par);
 }
 
 const byId = (id: string) =>
@@ -48,19 +60,21 @@ describe("english grammar pack (push format)", () => {
   });
 
   it("grammar-build-000 (tutorial): two words, straight into the frame", () => {
-    expect(play(byId("grammar-build-000"), seq("LUUUDDDRUUU"))).toBe(true);
+    solves("grammar-build-000", seq("UUUDDDLUUU"));
   });
 
-  it("grammar-build-001: push 'the dog' then 'runs' up into the frame", () => {
-    expect(play(byId("grammar-build-001"), seq("LUUUDDDRUUU"))).toBe(true);
+  it("grammar-build-001: the verb's column is walled — deliver it SIDEWAYS", () => {
+    // 'the dog' rides straight up into who?; the pillar under does-what? forces 'runs'
+    // up the next column over and then a shove LEFT into the slot.
+    solves("grammar-build-001", seq("LUUUDDDRRUUURUL"));
   });
 
   it("grammar-build-002: subject, verb, object — leave the decoy", () => {
-    expect(play(byId("grammar-build-002"), seq("LLLUUUUDDDRUUUDDDRUUU"))).toBe(true);
+    solves("grammar-build-002", seq("ULUUUDDDLUUUDDDLUUU"));
   });
 
   it("grammar-build-003: four slots, two decoys", () => {
-    expect(play(byId("grammar-build-003"), seq("LLUUUUDDDRUUUDDDRUUUDDDRUUU"))).toBe(true);
+    solves("grammar-build-003", seq("UUUUDDDRUUUDDDLLUUUDDDLUUU"));
   });
 
   // Same rim rule as the logic pack: a word flush against a wall can't be pushed off

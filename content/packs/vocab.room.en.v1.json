@@ -70,7 +70,7 @@
             "quick"
           ]
         ],
-        "par": 32,
+        "par": 28,
         "feedback": {
           "solved": "✦ Word wise! Walk back to the portal ✦",
           "help_none": "Stand beside a word tile and press ? to see what it means.",
@@ -80,11 +80,24 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "lex-intro",
+              "id": "vocab-en-000-enter",
               "speaker": "narrator",
-              "text": "These tiles are all English — push each word to its SYNONYM. Testing a wrong pair is counted (✗), so think before you shove. One tile here matches nothing at all.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "All English this time. Same meaning, different word.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Stand beside a word and press ? for its meaning. Every wrong pair you test is counted (✗).",
+              "tag": "step:1"
+            },
+            {
+              "text": "'tepid' means lukewarm — nothing else here is about temperature. It has no partner.",
+              "tag": "step:2"
+            },
+            {
+              "text": "arid = dry · brisk = quick. Leave tepid where it lies.",
+              "tag": "step:3"
             }
           ]
         }
@@ -95,7 +108,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "english synonyms",
+        "concept": "synonyms — words that agree",
         "tags": [
           "vocab",
           "synonyms",
@@ -108,11 +121,11 @@
         "tiles": [
           "#############",
           "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#...........#",
           "#...........#",
-          "#...........#",
-          "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#############"
         ],
@@ -122,7 +135,19 @@
         },
         "theme": "library",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "lex1.cleared"
+        "grants_unlock": "lex1.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Push each word into the one that MEANS the same. One word here matches nothing."
+        }
       }
     },
     {
@@ -222,13 +247,38 @@
             "outdated"
           ]
         ],
-        "par": 38,
+        "par": 42,
         "reveal_charges": 3,
         "feedback": {
           "solved": "✦ Sharp vocabulary! Walk back to the portal ✦",
           "help_none": "Stand beside a word tile and press ? to see what it means.",
           "mismatch": "Not a pair. Every wrong combination you test is counted (✗) — read before you shove.",
           "reveal_spent": "No reveal charges left — you'll have to reason it out from the words themselves."
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "vocab-en-001-enter",
+              "speaker": "narrator",
+              "text": "Eight words, three pairs. Two of them are here to waste your looks.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Three ? looks and no more. Read the words you already know first, then spend a look on the ones you don't.",
+              "tag": "step:1"
+            },
+            {
+              "text": "'furtive' and 'lavish' have no partner in this room. Ignore them both.",
+              "tag": "step:2"
+            },
+            {
+              "text": "candid = honest · frugal = thrifty · obsolete = outdated.",
+              "tag": "step:3"
+            }
+          ]
         }
       },
       "solution": {
@@ -237,7 +287,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "english synonyms",
+        "concept": "synonyms — three pairs, two strays",
         "tags": [
           "vocab",
           "synonyms",
@@ -250,11 +300,11 @@
         "tiles": [
           "#############",
           "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#...........#",
           "#...........#",
-          "#...........#",
-          "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#############"
         ],
@@ -264,7 +314,19 @@
         },
         "theme": "library",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "lex2.cleared"
+        "grants_unlock": "lex2.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Three pairs among eight tiles. Only 3 looks — spend them on the words you can't reason out."
+        }
       }
     },
     {
@@ -351,13 +413,38 @@
             "brilliant"
           ]
         ],
-        "par": 46,
+        "par": 43,
         "reveal_charges": 2,
         "feedback": {
           "solved": "✦ You saw through the traps! Walk back to the portal ✦",
           "help_none": "Stand beside a word tile and press ? to see what it means.",
           "mismatch": "Opposites attract careless matchers — that pair is wrong (✗).",
           "reveal_spent": "No reveal charges left — you'll have to reason it out from the words themselves."
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "vocab-en-002-enter",
+              "speaker": "narrator",
+              "text": "Careful here. The obvious partner is sometimes the exact opposite.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "'plentiful' and 'dull' aren't synonyms of anything here — they are antonyms, planted to catch a careless shove.",
+              "tag": "step:1"
+            },
+            {
+              "text": "scarce means 'hard to find'. Which word means 'seldom seen'?",
+              "tag": "step:2"
+            },
+            {
+              "text": "scarce = rare · vivid = brilliant. plentiful, dull and mundane all match nothing.",
+              "tag": "step:3"
+            }
+          ]
         }
       },
       "solution": {
@@ -366,7 +453,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "english synonyms",
+        "concept": "the trap — opposites look like partners",
         "tags": [
           "vocab",
           "synonyms",
@@ -382,10 +469,10 @@
           "#...........#",
           "#...........#",
           "#...........#",
+          "#....#......#",
           "#...........#",
           "#...........#",
-          "#...........#",
-          "#...........#",
+          "#........#..#",
           "#...........#",
           "#############"
         ],
@@ -395,7 +482,19 @@
         },
         "theme": "library",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "lex3.cleared"
+        "grants_unlock": "lex3.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 9
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "The nearest word may be the OPPOSITE. Two looks only."
+        }
       }
     },
     {
@@ -464,7 +563,7 @@
             "quick"
           ]
         ],
-        "par": 32,
+        "par": 30,
         "feedback": {
           "solved": "✦ Word wise! Walk back to the portal ✦",
           "help_none": "Stand beside a word tile and press ? to see what it means.",
@@ -474,11 +573,24 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "lex-intro",
+              "id": "vocab-en-000-shuffled-enter",
               "speaker": "narrator",
-              "text": "These tiles are all English — push each word to its SYNONYM. Testing a wrong pair is counted (✗), so think before you shove. One tile here matches nothing at all.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Same room, new layout. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Stand beside a word and press ? for its meaning. Every wrong pair you test is counted (✗).",
+              "tag": "step:1"
+            },
+            {
+              "text": "'tepid' means lukewarm — nothing else here is about temperature. It has no partner.",
+              "tag": "step:2"
+            },
+            {
+              "text": "arid = dry · brisk = quick. Leave tepid where it lies.",
+              "tag": "step:3"
             }
           ]
         }
@@ -489,7 +601,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "english synonyms",
+        "concept": "synonyms — words that agree · shuffled",
         "tags": [
           "vocab",
           "synonyms",
@@ -502,11 +614,11 @@
         "tiles": [
           "#############",
           "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#...........#",
           "#...........#",
-          "#...........#",
-          "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#############"
         ],
@@ -516,11 +628,23 @@
         },
         "theme": "library",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "lex1.cleared"
+        "grants_unlock": "lex1.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Push each word into the one that MEANS the same. One word here matches nothing. Everything loose starts somewhere different every visit."
+        }
+      }
     },
     {
       "id": "vocab-en-000-shrouded",
@@ -588,7 +712,7 @@
             "quick"
           ]
         ],
-        "par": 32,
+        "par": 30,
         "feedback": {
           "solved": "✦ Word wise! Walk back to the portal ✦",
           "help_none": "Stand beside a word tile and press ? to see what it means.",
@@ -598,11 +722,24 @@
           "speakers": {},
           "on_enter": [
             {
-              "id": "lex-intro",
+              "id": "vocab-en-000-shrouded-enter",
               "speaker": "narrator",
-              "text": "These tiles are all English — push each word to its SYNONYM. Testing a wrong pair is counted (✗), so think before you shove. One tile here matches nothing at all.",
-              "trigger": "on_enter",
-              "autoAdvance": false
+              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Stand beside a word and press ? for its meaning. Every wrong pair you test is counted (✗).",
+              "tag": "step:1"
+            },
+            {
+              "text": "'tepid' means lukewarm — nothing else here is about temperature. It has no partner.",
+              "tag": "step:2"
+            },
+            {
+              "text": "arid = dry · brisk = quick. Leave tepid where it lies.",
+              "tag": "step:3"
             }
           ]
         }
@@ -613,7 +750,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "english synonyms",
+        "concept": "synonyms — words that agree · shrouded",
         "tags": [
           "vocab",
           "synonyms",
@@ -626,11 +763,11 @@
         "tiles": [
           "#############",
           "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#...........#",
           "#...........#",
-          "#...........#",
-          "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#############"
         ],
@@ -640,12 +777,24 @@
         },
         "theme": "library",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "lex1.cleared"
+        "grants_unlock": "lex1.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Push each word into the one that MEANS the same. One word here matches nothing. Rearranged, and you can only see what is close."
+        }
+      }
     },
     {
       "id": "vocab-en-001-shuffled",
@@ -744,13 +893,38 @@
             "outdated"
           ]
         ],
-        "par": 38,
+        "par": 42,
         "reveal_charges": 3,
         "feedback": {
           "solved": "✦ Sharp vocabulary! Walk back to the portal ✦",
           "help_none": "Stand beside a word tile and press ? to see what it means.",
           "mismatch": "Not a pair. Every wrong combination you test is counted (✗) — read before you shove.",
           "reveal_spent": "No reveal charges left — you'll have to reason it out from the words themselves."
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "vocab-en-001-shuffled-enter",
+              "speaker": "narrator",
+              "text": "Same room, new layout. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Three ? looks and no more. Read the words you already know first, then spend a look on the ones you don't.",
+              "tag": "step:1"
+            },
+            {
+              "text": "'furtive' and 'lavish' have no partner in this room. Ignore them both.",
+              "tag": "step:2"
+            },
+            {
+              "text": "candid = honest · frugal = thrifty · obsolete = outdated.",
+              "tag": "step:3"
+            }
+          ]
         }
       },
       "solution": {
@@ -759,7 +933,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "english synonyms",
+        "concept": "synonyms — three pairs, two strays · shuffled",
         "tags": [
           "vocab",
           "synonyms",
@@ -772,11 +946,11 @@
         "tiles": [
           "#############",
           "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#...........#",
           "#...........#",
-          "#...........#",
-          "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#############"
         ],
@@ -786,11 +960,23 @@
         },
         "theme": "library",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "lex2.cleared"
+        "grants_unlock": "lex2.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Three pairs among eight tiles. Only 3 looks — spend them on the words you can't reason out. Everything loose starts somewhere different every visit."
+        }
+      }
     },
     {
       "id": "vocab-en-001-shrouded",
@@ -889,13 +1075,38 @@
             "outdated"
           ]
         ],
-        "par": 38,
+        "par": 42,
         "reveal_charges": 3,
         "feedback": {
           "solved": "✦ Sharp vocabulary! Walk back to the portal ✦",
           "help_none": "Stand beside a word tile and press ? to see what it means.",
           "mismatch": "Not a pair. Every wrong combination you test is counted (✗) — read before you shove.",
           "reveal_spent": "No reveal charges left — you'll have to reason it out from the words themselves."
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "vocab-en-001-shrouded-enter",
+              "speaker": "narrator",
+              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Three ? looks and no more. Read the words you already know first, then spend a look on the ones you don't.",
+              "tag": "step:1"
+            },
+            {
+              "text": "'furtive' and 'lavish' have no partner in this room. Ignore them both.",
+              "tag": "step:2"
+            },
+            {
+              "text": "candid = honest · frugal = thrifty · obsolete = outdated.",
+              "tag": "step:3"
+            }
+          ]
         }
       },
       "solution": {
@@ -904,7 +1115,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "english synonyms",
+        "concept": "synonyms — three pairs, two strays · shrouded",
         "tags": [
           "vocab",
           "synonyms",
@@ -917,11 +1128,11 @@
         "tiles": [
           "#############",
           "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#...........#",
           "#...........#",
-          "#...........#",
-          "#...........#",
+          "#.....#.....#",
           "#...........#",
           "#############"
         ],
@@ -931,12 +1142,24 @@
         },
         "theme": "library",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "lex2.cleared"
+        "grants_unlock": "lex2.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Three pairs among eight tiles. Only 3 looks — spend them on the words you can't reason out. Rearranged, and you can only see what is close."
+        }
+      }
     },
     {
       "id": "vocab-en-002-shuffled",
@@ -1022,13 +1245,38 @@
             "brilliant"
           ]
         ],
-        "par": 46,
+        "par": 43,
         "reveal_charges": 2,
         "feedback": {
           "solved": "✦ You saw through the traps! Walk back to the portal ✦",
           "help_none": "Stand beside a word tile and press ? to see what it means.",
           "mismatch": "Opposites attract careless matchers — that pair is wrong (✗).",
           "reveal_spent": "No reveal charges left — you'll have to reason it out from the words themselves."
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "vocab-en-002-shuffled-enter",
+              "speaker": "narrator",
+              "text": "Same room, new layout. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "'plentiful' and 'dull' aren't synonyms of anything here — they are antonyms, planted to catch a careless shove.",
+              "tag": "step:1"
+            },
+            {
+              "text": "scarce means 'hard to find'. Which word means 'seldom seen'?",
+              "tag": "step:2"
+            },
+            {
+              "text": "scarce = rare · vivid = brilliant. plentiful, dull and mundane all match nothing.",
+              "tag": "step:3"
+            }
+          ]
         }
       },
       "solution": {
@@ -1037,7 +1285,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "english synonyms",
+        "concept": "the trap — opposites look like partners · shuffled",
         "tags": [
           "vocab",
           "synonyms",
@@ -1053,10 +1301,10 @@
           "#...........#",
           "#...........#",
           "#...........#",
+          "#....#......#",
           "#...........#",
           "#...........#",
-          "#...........#",
-          "#...........#",
+          "#........#..#",
           "#...........#",
           "#############"
         ],
@@ -1066,11 +1314,23 @@
         },
         "theme": "library",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "lex3.cleared"
+        "grants_unlock": "lex3.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 9
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "The nearest word may be the OPPOSITE. Two looks only. Everything loose starts somewhere different every visit."
+        }
+      }
     },
     {
       "id": "vocab-en-002-shrouded",
@@ -1156,13 +1416,38 @@
             "brilliant"
           ]
         ],
-        "par": 46,
+        "par": 43,
         "reveal_charges": 2,
         "feedback": {
           "solved": "✦ You saw through the traps! Walk back to the portal ✦",
           "help_none": "Stand beside a word tile and press ? to see what it means.",
           "mismatch": "Opposites attract careless matchers — that pair is wrong (✗).",
           "reveal_spent": "No reveal charges left — you'll have to reason it out from the words themselves."
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "vocab-en-002-shrouded-enter",
+              "speaker": "narrator",
+              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "'plentiful' and 'dull' aren't synonyms of anything here — they are antonyms, planted to catch a careless shove.",
+              "tag": "step:1"
+            },
+            {
+              "text": "scarce means 'hard to find'. Which word means 'seldom seen'?",
+              "tag": "step:2"
+            },
+            {
+              "text": "scarce = rare · vivid = brilliant. plentiful, dull and mundane all match nothing.",
+              "tag": "step:3"
+            }
+          ]
         }
       },
       "solution": {
@@ -1171,7 +1456,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "english synonyms",
+        "concept": "the trap — opposites look like partners · shrouded",
         "tags": [
           "vocab",
           "synonyms",
@@ -1187,10 +1472,10 @@
           "#...........#",
           "#...........#",
           "#...........#",
+          "#....#......#",
           "#...........#",
           "#...........#",
-          "#...........#",
-          "#...........#",
+          "#........#..#",
           "#...........#",
           "#############"
         ],
@@ -1200,12 +1485,24 @@
         },
         "theme": "library",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "lex3.cleared"
+        "grants_unlock": "lex3.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 9
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "The nearest word may be the OPPOSITE. Two looks only. Rearranged, and you can only see what is close."
+        }
+      }
     }
   ],
   "progression": [

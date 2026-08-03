@@ -47,6 +47,20 @@
               "trigger": "guided_tutorial",
               "autoAdvance": false
             }
+          ],
+          "hints": [
+            {
+              "text": "Those words on the floor aren't decoration — they are the rules of this room, read left to right.",
+              "tag": "step:1"
+            },
+            {
+              "text": "SLIME IS YOU means the slime is the thing you move. FLAG IS WIN means touching the flag ends the level.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Walk right until you are standing on the flag.",
+              "tag": "step:3"
+            }
           ]
         }
       },
@@ -56,7 +70,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "tutorial — rules are words",
+        "concept": "the floor spells the rules",
         "tags": [
           "logic",
           "baba",
@@ -84,7 +98,19 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic.tutorial.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Read the two rules written on the floor, then reach the flag."
+        }
       }
     },
     {
@@ -97,7 +123,32 @@
       "prompt": "Push the words to change the rules.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-01-welcome"
+        "board_id": "en-01-welcome",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-001-enter",
+              "speaker": "narrator",
+              "text": "A wall, one gap — and something sitting in it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "That wall runs the full height of the room. There is exactly one way through it.",
+              "tag": "step:1"
+            },
+            {
+              "text": "Read the third rule: ROCK IS PUSH. That is permission — walk into the rock and it moves.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Shove the rock through the gap, step through behind it, then go down and right to the flag.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -105,7 +156,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "one rule per obstacle",
         "tags": [
           "logic",
           "baba",
@@ -134,7 +185,19 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic1.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "A rock plugs the only gap in the wall. Read what the rules say the rock is."
+        }
       }
     },
     {
@@ -147,7 +210,32 @@
       "prompt": "Push the words to change the rules.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-02-push"
+        "board_id": "en-02-push",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-002-enter",
+              "speaker": "narrator",
+              "text": "One corridor, one rock, and no room to change your mind.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Drive the rock straight at the flag and it wedges against the far wall — with the flag underneath it. U undoes a move; R restarts.",
+              "tag": "step:1"
+            },
+            {
+              "text": "The corridor has pockets above and below. The rock only needs to go somewhere that isn't in front of you.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Go down and around, come up beneath the rock, and shove it UP into the pocket. Then walk the corridor clean.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -155,7 +243,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "a push you can't take back",
         "tags": [
           "logic",
           "baba",
@@ -184,7 +272,19 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic2.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Reach the flag. Shoving the rock straight down the corridor will jam it."
+        }
       }
     },
     {
@@ -197,7 +297,32 @@
       "prompt": "Push the words to change the rules.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-03-break-wall"
+        "board_id": "en-03-break-wall",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-003-enter",
+              "speaker": "narrator",
+              "text": "No way around this one. So change the rules instead.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "There is no gap in that wall. Walking will never get you across.",
+              "tag": "step:1"
+            },
+            {
+              "text": "WALL IS STOP is spelled out on the floor — and written words are objects you can push.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Shove any one of those three words out of its line. The wall stops stopping you; then walk right to the flag.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -205,7 +330,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "a rule you must unmake",
         "tags": [
           "logic",
           "baba",
@@ -236,7 +361,19 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic3.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 1,
+            "y": 11
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "The wall runs floor to ceiling. Change what the wall IS."
+        }
       }
     },
     {
@@ -249,7 +386,32 @@
       "prompt": "Push the words to change the rules.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-04-make-win"
+        "board_id": "en-04-make-win",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-004-enter",
+              "speaker": "narrator",
+              "text": "The flag is only a flag until something says otherwise.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Stand on the flag and nothing happens. Read the rules and you'll see why.",
+              "tag": "step:1"
+            },
+            {
+              "text": "FLAG IS sits unfinished, with an empty cell after it. There is a loose word lying on the floor.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Push WIN into the empty cell right after FLAG IS, then go stand on the flag.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -257,7 +419,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "finish a rule to win",
         "tags": [
           "logic",
           "baba",
@@ -288,7 +450,19 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic4.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 11
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "FLAG IS … nothing. Complete the sentence before the flag can mean anything."
+        }
       }
     },
     {
@@ -301,7 +475,32 @@
       "prompt": "Push the words to change the rules.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-05-become"
+        "board_id": "en-05-become",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-005-enter",
+              "speaker": "narrator",
+              "text": "No flag anywhere. But there is a rock, and a spare word.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Look for the flag. There isn't one — so reaching it was never the plan.",
+              "tag": "step:1"
+            },
+            {
+              "text": "A rule doesn't have to end in a behaviour. ROCK IS ⟨something⟩ can name another OBJECT instead.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Build ROCK IS FLAG. The rock turns into a flag, FLAG IS WIN is already standing, so go touch it.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -309,7 +508,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "turning one thing into another",
         "tags": [
           "logic",
           "baba",
@@ -340,7 +539,19 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic5.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 11
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "There is no flag in this room. Make one."
+        }
       }
     },
     {
@@ -353,7 +564,32 @@
       "prompt": "Two phases: unmake a rule, then finish another beyond the breach.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-06-through"
+        "board_id": "en-06-through",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-006-enter",
+              "speaker": "narrator",
+              "text": "Two jobs. One of them is behind the wall.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "This is two puzzles stacked: get through the wall, then deal with what is waiting past it.",
+              "tag": "step:1"
+            },
+            {
+              "text": "First break WALL IS STOP the way you did before — push one word out of its line.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Past the wall, FLAG IS is unfinished. WIN is back on YOUR side — bring it through the breach with you.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -361,7 +597,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "two rules, one after the other",
         "tags": [
           "logic",
           "baba",
@@ -392,7 +628,19 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic6.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 1,
+            "y": 11
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Break the rule that blocks you, then finish the rule that wins — the second one waits on the far side."
+        }
       }
     },
     {
@@ -405,7 +653,32 @@
       "prompt": "The flag is sealed. Deduce which rule actually wins.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-07-which-rule"
+        "board_id": "en-07-which-rule",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-007-enter",
+              "speaker": "narrator",
+              "text": "Sealed in. So the flag was never the way out.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Walk over and check: the flag is walled in on all four sides. Stop trying to reach it.",
+              "tag": "step:1"
+            },
+            {
+              "text": "WIN is a loose word. Nothing says it has to finish FLAG IS — it can end a rule about anything you CAN touch.",
+              "tag": "step:2"
+            },
+            {
+              "text": "There is a rock you can reach. Build ROCK IS WIN, then go touch the rock.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -413,7 +686,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "the flag is not the answer",
         "tags": [
           "logic",
           "baba",
@@ -444,7 +717,19 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic7.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 11
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "The flag is sealed in on every side. Something else in this room can be made to win."
+        }
       }
     },
     {
@@ -457,7 +742,32 @@
       "prompt": "Two locks, one path. Break, cross, build, win.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-08-two-locks"
+        "board_id": "en-08-two-locks",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-008-enter",
+              "speaker": "narrator",
+              "text": "Two locks, one path. Take them in the right order.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "The rock is the only thing plugging the gap in that wall — and right now the rules say it cannot move.",
+              "tag": "step:1"
+            },
+            {
+              "text": "ROCK IS STOP is written on YOUR side of the wall. Break it and the rock stops blocking.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Cross the gap, then finish FLAG IS with the WIN lying on the far side, and touch the flag.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -465,7 +775,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "break one rule, build another",
         "tags": [
           "logic",
           "baba",
@@ -496,7 +806,19 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic8.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 1,
+            "y": 11
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Two locks: something stops you, and nothing wins yet. Order matters."
+        }
       }
     },
     {
@@ -509,7 +831,32 @@
       "prompt": "Push the words to change the rules.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-01-welcome"
+        "board_id": "en-01-welcome",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-001-shuffled-enter",
+              "speaker": "narrator",
+              "text": "Same room, new layout. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "That wall runs the full height of the room. There is exactly one way through it.",
+              "tag": "step:1"
+            },
+            {
+              "text": "Read the third rule: ROCK IS PUSH. That is permission — walk into the rock and it moves.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Shove the rock through the gap, step through behind it, then go down and right to the flag.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -517,7 +864,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "one rule per obstacle · shuffled",
         "tags": [
           "logic",
           "baba",
@@ -546,11 +893,23 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic1.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "A rock plugs the only gap in the wall. Read what the rules say the rock is. Everything loose starts somewhere different every visit."
+        }
+      }
     },
     {
       "id": "logic-rules-001-shrouded",
@@ -562,7 +921,32 @@
       "prompt": "Push the words to change the rules.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-01-welcome"
+        "board_id": "en-01-welcome",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-001-shrouded-enter",
+              "speaker": "narrator",
+              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "That wall runs the full height of the room. There is exactly one way through it.",
+              "tag": "step:1"
+            },
+            {
+              "text": "Read the third rule: ROCK IS PUSH. That is permission — walk into the rock and it moves.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Shove the rock through the gap, step through behind it, then go down and right to the flag.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -570,7 +954,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "one rule per obstacle · shrouded",
         "tags": [
           "logic",
           "baba",
@@ -599,12 +983,24 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic1.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "A rock plugs the only gap in the wall. Read what the rules say the rock is. Rearranged, and you can only see what is close."
+        }
+      }
     },
     {
       "id": "logic-rules-002-shuffled",
@@ -616,7 +1012,32 @@
       "prompt": "Push the words to change the rules.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-02-push"
+        "board_id": "en-02-push",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-002-shuffled-enter",
+              "speaker": "narrator",
+              "text": "Same room, new layout. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Drive the rock straight at the flag and it wedges against the far wall — with the flag underneath it. U undoes a move; R restarts.",
+              "tag": "step:1"
+            },
+            {
+              "text": "The corridor has pockets above and below. The rock only needs to go somewhere that isn't in front of you.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Go down and around, come up beneath the rock, and shove it UP into the pocket. Then walk the corridor clean.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -624,7 +1045,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "a push you can't take back · shuffled",
         "tags": [
           "logic",
           "baba",
@@ -653,11 +1074,23 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic2.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Reach the flag. Shoving the rock straight down the corridor will jam it. Everything loose starts somewhere different every visit."
+        }
+      }
     },
     {
       "id": "logic-rules-002-shrouded",
@@ -669,7 +1102,32 @@
       "prompt": "Push the words to change the rules.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-02-push"
+        "board_id": "en-02-push",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-002-shrouded-enter",
+              "speaker": "narrator",
+              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Drive the rock straight at the flag and it wedges against the far wall — with the flag underneath it. U undoes a move; R restarts.",
+              "tag": "step:1"
+            },
+            {
+              "text": "The corridor has pockets above and below. The rock only needs to go somewhere that isn't in front of you.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Go down and around, come up beneath the rock, and shove it UP into the pocket. Then walk the corridor clean.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -677,7 +1135,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "a push you can't take back · shrouded",
         "tags": [
           "logic",
           "baba",
@@ -706,12 +1164,24 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic2.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 9
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Reach the flag. Shoving the rock straight down the corridor will jam it. Rearranged, and you can only see what is close."
+        }
+      }
     },
     {
       "id": "logic-rules-003-shuffled",
@@ -723,7 +1193,32 @@
       "prompt": "Push the words to change the rules.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-03-break-wall"
+        "board_id": "en-03-break-wall",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-003-shuffled-enter",
+              "speaker": "narrator",
+              "text": "Same room, new layout. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "There is no gap in that wall. Walking will never get you across.",
+              "tag": "step:1"
+            },
+            {
+              "text": "WALL IS STOP is spelled out on the floor — and written words are objects you can push.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Shove any one of those three words out of its line. The wall stops stopping you; then walk right to the flag.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -731,7 +1226,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "a rule you must unmake · shuffled",
         "tags": [
           "logic",
           "baba",
@@ -762,11 +1257,23 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic3.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 1,
+            "y": 11
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "The wall runs floor to ceiling. Change what the wall IS. Everything loose starts somewhere different every visit."
+        }
+      }
     },
     {
       "id": "logic-rules-003-shrouded",
@@ -778,7 +1285,32 @@
       "prompt": "Push the words to change the rules.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-03-break-wall"
+        "board_id": "en-03-break-wall",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-003-shrouded-enter",
+              "speaker": "narrator",
+              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "There is no gap in that wall. Walking will never get you across.",
+              "tag": "step:1"
+            },
+            {
+              "text": "WALL IS STOP is spelled out on the floor — and written words are objects you can push.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Shove any one of those three words out of its line. The wall stops stopping you; then walk right to the flag.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -786,7 +1318,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "a rule you must unmake · shrouded",
         "tags": [
           "logic",
           "baba",
@@ -817,12 +1349,24 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic3.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 1,
+            "y": 11
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "The wall runs floor to ceiling. Change what the wall IS. Rearranged, and you can only see what is close."
+        }
+      }
     },
     {
       "id": "logic-rules-004-shuffled",
@@ -834,7 +1378,32 @@
       "prompt": "Push the words to change the rules.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-04-make-win"
+        "board_id": "en-04-make-win",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-004-shuffled-enter",
+              "speaker": "narrator",
+              "text": "Same room, new layout. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Stand on the flag and nothing happens. Read the rules and you'll see why.",
+              "tag": "step:1"
+            },
+            {
+              "text": "FLAG IS sits unfinished, with an empty cell after it. There is a loose word lying on the floor.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Push WIN into the empty cell right after FLAG IS, then go stand on the flag.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -842,7 +1411,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "finish a rule to win · shuffled",
         "tags": [
           "logic",
           "baba",
@@ -873,11 +1442,23 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic4.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 11
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "FLAG IS … nothing. Complete the sentence before the flag can mean anything. Everything loose starts somewhere different every visit."
+        }
+      }
     },
     {
       "id": "logic-rules-004-shrouded",
@@ -889,7 +1470,32 @@
       "prompt": "Push the words to change the rules.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-04-make-win"
+        "board_id": "en-04-make-win",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-004-shrouded-enter",
+              "speaker": "narrator",
+              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Stand on the flag and nothing happens. Read the rules and you'll see why.",
+              "tag": "step:1"
+            },
+            {
+              "text": "FLAG IS sits unfinished, with an empty cell after it. There is a loose word lying on the floor.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Push WIN into the empty cell right after FLAG IS, then go stand on the flag.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -897,7 +1503,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "finish a rule to win · shrouded",
         "tags": [
           "logic",
           "baba",
@@ -928,12 +1534,24 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic4.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 11
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "FLAG IS … nothing. Complete the sentence before the flag can mean anything. Rearranged, and you can only see what is close."
+        }
+      }
     },
     {
       "id": "logic-rules-005-shuffled",
@@ -945,7 +1563,32 @@
       "prompt": "Push the words to change the rules.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-05-become"
+        "board_id": "en-05-become",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-005-shuffled-enter",
+              "speaker": "narrator",
+              "text": "Same room, new layout. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Look for the flag. There isn't one — so reaching it was never the plan.",
+              "tag": "step:1"
+            },
+            {
+              "text": "A rule doesn't have to end in a behaviour. ROCK IS ⟨something⟩ can name another OBJECT instead.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Build ROCK IS FLAG. The rock turns into a flag, FLAG IS WIN is already standing, so go touch it.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -953,7 +1596,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "turning one thing into another · shuffled",
         "tags": [
           "logic",
           "baba",
@@ -984,11 +1627,23 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic5.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 11
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "There is no flag in this room. Make one. Everything loose starts somewhere different every visit."
+        }
+      }
     },
     {
       "id": "logic-rules-005-shrouded",
@@ -1000,7 +1655,32 @@
       "prompt": "Push the words to change the rules.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-05-become"
+        "board_id": "en-05-become",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-005-shrouded-enter",
+              "speaker": "narrator",
+              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Look for the flag. There isn't one — so reaching it was never the plan.",
+              "tag": "step:1"
+            },
+            {
+              "text": "A rule doesn't have to end in a behaviour. ROCK IS ⟨something⟩ can name another OBJECT instead.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Build ROCK IS FLAG. The rock turns into a flag, FLAG IS WIN is already standing, so go touch it.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -1008,7 +1688,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "turning one thing into another · shrouded",
         "tags": [
           "logic",
           "baba",
@@ -1039,12 +1719,24 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic5.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 11
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "There is no flag in this room. Make one. Rearranged, and you can only see what is close."
+        }
+      }
     },
     {
       "id": "logic-rules-006-shuffled",
@@ -1056,7 +1748,32 @@
       "prompt": "Two phases: unmake a rule, then finish another beyond the breach.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-06-through"
+        "board_id": "en-06-through",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-006-shuffled-enter",
+              "speaker": "narrator",
+              "text": "Same room, new layout. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "This is two puzzles stacked: get through the wall, then deal with what is waiting past it.",
+              "tag": "step:1"
+            },
+            {
+              "text": "First break WALL IS STOP the way you did before — push one word out of its line.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Past the wall, FLAG IS is unfinished. WIN is back on YOUR side — bring it through the breach with you.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -1064,7 +1781,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "two rules, one after the other · shuffled",
         "tags": [
           "logic",
           "baba",
@@ -1095,11 +1812,23 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic6.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 1,
+            "y": 11
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Break the rule that blocks you, then finish the rule that wins — the second one waits on the far side. Everything loose starts somewhere different every visit."
+        }
+      }
     },
     {
       "id": "logic-rules-006-shrouded",
@@ -1111,7 +1840,32 @@
       "prompt": "Two phases: unmake a rule, then finish another beyond the breach.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-06-through"
+        "board_id": "en-06-through",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-006-shrouded-enter",
+              "speaker": "narrator",
+              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "This is two puzzles stacked: get through the wall, then deal with what is waiting past it.",
+              "tag": "step:1"
+            },
+            {
+              "text": "First break WALL IS STOP the way you did before — push one word out of its line.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Past the wall, FLAG IS is unfinished. WIN is back on YOUR side — bring it through the breach with you.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -1119,7 +1873,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "two rules, one after the other · shrouded",
         "tags": [
           "logic",
           "baba",
@@ -1150,12 +1904,24 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic6.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 1,
+            "y": 11
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Break the rule that blocks you, then finish the rule that wins — the second one waits on the far side. Rearranged, and you can only see what is close."
+        }
+      }
     },
     {
       "id": "logic-rules-007-shuffled",
@@ -1167,7 +1933,32 @@
       "prompt": "The flag is sealed. Deduce which rule actually wins.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-07-which-rule"
+        "board_id": "en-07-which-rule",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-007-shuffled-enter",
+              "speaker": "narrator",
+              "text": "Same room, new layout. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Walk over and check: the flag is walled in on all four sides. Stop trying to reach it.",
+              "tag": "step:1"
+            },
+            {
+              "text": "WIN is a loose word. Nothing says it has to finish FLAG IS — it can end a rule about anything you CAN touch.",
+              "tag": "step:2"
+            },
+            {
+              "text": "There is a rock you can reach. Build ROCK IS WIN, then go touch the rock.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -1175,7 +1966,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "the flag is not the answer · shuffled",
         "tags": [
           "logic",
           "baba",
@@ -1206,11 +1997,23 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic7.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 11
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "The flag is sealed in on every side. Something else in this room can be made to win. Everything loose starts somewhere different every visit."
+        }
+      }
     },
     {
       "id": "logic-rules-007-shrouded",
@@ -1222,7 +2025,32 @@
       "prompt": "The flag is sealed. Deduce which rule actually wins.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-07-which-rule"
+        "board_id": "en-07-which-rule",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-007-shrouded-enter",
+              "speaker": "narrator",
+              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Walk over and check: the flag is walled in on all four sides. Stop trying to reach it.",
+              "tag": "step:1"
+            },
+            {
+              "text": "WIN is a loose word. Nothing says it has to finish FLAG IS — it can end a rule about anything you CAN touch.",
+              "tag": "step:2"
+            },
+            {
+              "text": "There is a rock you can reach. Build ROCK IS WIN, then go touch the rock.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -1230,7 +2058,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "the flag is not the answer · shrouded",
         "tags": [
           "logic",
           "baba",
@@ -1261,12 +2089,24 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic7.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 13,
+            "y": 11
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "The flag is sealed in on every side. Something else in this room can be made to win. Rearranged, and you can only see what is close."
+        }
+      }
     },
     {
       "id": "logic-rules-008-shuffled",
@@ -1278,7 +2118,32 @@
       "prompt": "Two locks, one path. Break, cross, build, win.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-08-two-locks"
+        "board_id": "en-08-two-locks",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-008-shuffled-enter",
+              "speaker": "narrator",
+              "text": "Same room, new layout. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "The rock is the only thing plugging the gap in that wall — and right now the rules say it cannot move.",
+              "tag": "step:1"
+            },
+            {
+              "text": "ROCK IS STOP is written on YOUR side of the wall. Break it and the rock stops blocking.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Cross the gap, then finish FLAG IS with the WIN lying on the far side, and touch the flag.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -1286,7 +2151,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "break one rule, build another · shuffled",
         "tags": [
           "logic",
           "baba",
@@ -1317,11 +2182,23 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic8.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 1,
+            "y": 11
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Two locks: something stops you, and nothing wins yet. Order matters. Everything loose starts somewhere different every visit."
+        }
+      }
     },
     {
       "id": "logic-rules-008-shrouded",
@@ -1333,7 +2210,32 @@
       "prompt": "Two locks, one path. Break, cross, build, win.",
       "payload": {
         "pack_url": "/content/packs/logic.rules.en.v1.json",
-        "board_id": "en-08-two-locks"
+        "board_id": "en-08-two-locks",
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "logic-rules-008-shrouded-enter",
+              "speaker": "narrator",
+              "text": "Dark, and rearranged. You'll have to walk to it to read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "The rock is the only thing plugging the gap in that wall — and right now the rules say it cannot move.",
+              "tag": "step:1"
+            },
+            {
+              "text": "ROCK IS STOP is written on YOUR side of the wall. Break it and the rock stops blocking.",
+              "tag": "step:2"
+            },
+            {
+              "text": "Cross the gap, then finish FLAG IS with the WIN lying on the far side, and touch the flag.",
+              "tag": "step:3"
+            }
+          ]
+        }
       },
       "solution": {
         "note": "win conditions live in the logic pack's boards"
@@ -1341,7 +2243,7 @@
       "hints": [],
       "metadata": {
         "reviewed": true,
-        "concept": "rule manipulation",
+        "concept": "break one rule, build another · shrouded",
         "tags": [
           "logic",
           "baba",
@@ -1372,12 +2274,24 @@
         },
         "flash_color": "#5fbe6f",
         "grants_unlock": "logic8.cleared",
-        "theme": "grove"
+        "theme": "grove",
+        "hint_giver": {
+          "pos": {
+            "x": 1,
+            "y": 11
+          },
+          "marker": "❓"
+        }
       },
       "modifiers": [
         "randomized",
         "lowlight"
-      ]
+      ],
+      "mechanics": {
+        "goalSpec": {
+          "description": "Two locks: something stops you, and nothing wins yet. Order matters. Rearranged, and you can only see what is close."
+        }
+      }
     }
   ],
   "progression": [

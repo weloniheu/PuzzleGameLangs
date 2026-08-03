@@ -43,7 +43,10 @@ export function validatePuzzle(p: unknown): { ok: boolean; errors: string[] } {
 
   // --- difficulty axes 2 & 3 (closed sets; optional, defaulting to guided/assemble/[]) ---
   if (o.mechanics) {
-    if (!MECHANIC_TIERS.includes(o.mechanics.tier)) errors.push(`bad mechanics.tier "${o.mechanics.tier}"`);
+    // `tier` is optional: a level may carry only a goalSpec (see MechanicsConfig).
+    if (o.mechanics.tier !== undefined && !MECHANIC_TIERS.includes(o.mechanics.tier)) {
+      errors.push(`bad mechanics.tier "${o.mechanics.tier}"`);
+    }
     if (o.mechanics.mode && !CODE_MODES.includes(o.mechanics.mode)) errors.push(`bad mechanics.mode "${o.mechanics.mode}"`);
   }
   if (o.modifiers !== undefined) {

@@ -53,8 +53,12 @@ describe("english logic pack", () => {
     solves(en, "en-00-tutorial", rep(R, 4));
   });
 
-  it("en-01-welcome: walk right onto the flag", () => {
-    solves(en, "en-01-welcome", rep(R, 6));
+  it("en-01-welcome: the rock plugs the wall's only gap — shove it through", () => {
+    solves(en, "en-01-welcome", [R, R, R, R, D, D, R, R]);
+    // Straight down the row never wins: the flag sits off the rock's line.
+    expect(play(en, "en-01-welcome", rep(R, 12))).toBe(false);
+    // And there is no way around — the wall runs the full height of the room.
+    expect(play(en, "en-01-welcome", [D, D, ...rep(R, 9)])).toBe(false);
   });
 
   it("en-02-push: route around and pocket the rock (straight push jams it)", () => {
