@@ -19,6 +19,7 @@ import { resetCodex, getUnlocks } from "./core/codex";
 import { createTeardown } from "./core/teardown";
 import { resolveFeatures, resolveInventorySlots } from "./core/roomFeatures";
 import type { LadderData } from "./core/ladder";
+import type { AchievementGroup } from "./core/achievements";
 import { mulberry32, randomSeed, shufflePositions } from "./core/shuffle";
 import { renderTileLayer } from "./systems/tileLayer";
 import { computeTile, computeViewport } from "./systems/camera";
@@ -58,6 +59,9 @@ export interface RoomCallbacks {
   /** Resolve a SHARED tutorial by id (the manager merges every pack's `tutorials` map).
    *  Used for the level's `tutorial_refs` first-encounter playback. */
   tutorialFor?: (id: string) => TutorialBlock | null;
+  /** The ACHIEVEMENTS tracker's rows, recomputed fresh on each open so a key earned
+   *  this session shows immediately. Omitted ⇒ settings hides the Achievements tab. */
+  achievements?: () => AchievementGroup[];
 }
 /** Handle to a mounted room. `teardown()` destroys EVERYTHING the room created. */
 export interface RoomHandle {
@@ -222,6 +226,7 @@ export function mountRoom(
     relayout: () => relayout(),
     applyTermFont: () => mounted?.panel?.applyFont?.(),
     resetCodex,
+    achievements: callbacks.achievements,
     onBeforeOpen: () => dropFocusToRoom(), // clear inventory/panel focus before opening
     onClose: focusRoom,
     onEscape: () => handleEscape(),        // route esc through the room's esc ladder

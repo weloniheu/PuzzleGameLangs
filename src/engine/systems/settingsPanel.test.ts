@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createCaptureMachine, CAPTURE_MAX, CAPTURE_WINDOW } from "./settingsPanel";
+import { createCaptureMachine, moveCursor, CAPTURE_MAX, CAPTURE_WINDOW, type Cursor } from "./settingsPanel";
 import { rebind, defaultBindings, type Key } from "../core/keybindings";
 
 // CHARACTERIZATION TEST (B5): the rebind CAPTURE state machine — the BUFFER + commit
@@ -89,5 +89,41 @@ describe("capture → rebind end-to-end (commit changes binding; cancel leaves i
     m.cancel();
     vi.advanceTimersByTime(CAPTURE_WINDOW * 5);
     expect(bindings).toBe(before); // untouched reference — nothing rebound
+  });
+});
+
+// --- keyboard NAVIGATION cursor (Rule 4: the panel is driven by movement keys) ---
+// Widths describe the panel as rows of controls: 1 = a plain row (a menu entry, the
+// reset button), >1 = an option strip (scheme tabs, room size, a binding's chips).
+
+describe("moveCursor — panel navigation", () => {
+  const at = (row: number, col = 0): Cursor => ({ row, col });
+
+  it("up/down change row and snap back to the first control", () => {
+    expect(moveCursor([1, 3, 1], at(0), "down")).toEqual({ row: 1, col: 0 });
+    expect(moveCursor([1, 3, 1], { row: 1, col: 2 }, "down")).toEqual({ row: 2, col: 0 });
+    expect(moveCursor([1, 3, 1], at(2), "up")).toEqual({ row: 1, col: 0 });
+  });
+
+  it("clamps at the top and bottom instead of wrapping", () => {
+    expect(moveCursor([1, 2], at(0), "up")).toEqual({ row: 0, col: 0 });
+    expect(moveCursor([1, 2], at(1), "down")).toEqual({ row: 1, col: 0 });
+  });
+
+  it("left/right step WITHIN a multi-control row and clamp at its ends", () => {
+    expect(moveCursor([1, 3], at(1), "right")).toEqual({ row: 1, col: 1 });
+    expect(moveCursor([1, 3], { row: 1, col: 2 }, "right")).toEqual({ row: 1, col: 2 });
+    expect(moveCursor([1, 3], { row: 1, col: 0 }, "left")).toEqual({ row: 1, col: 0 });
+  });
+
+  it("left/right fall through to up/down on a SINGLE-control row", () => {
+    expect(moveCursor([1, 1, 1], at(1), "right")).toEqual({ row: 2, col: 0 });
+    expect(moveCursor([1, 1, 1], at(1), "left")).toEqual({ row: 0, col: 0 });
+  });
+
+  it("re-clamps a stale cursor after a re-render shrinks the panel", () => {
+    // "none" is the paint-time no-op: keep the position, just make it legal again.
+    expect(moveCursor([1, 2], { row: 9, col: 9 }, "none")).toEqual({ row: 1, col: 1 });
+    expect(moveCursor([], at(3), "down")).toEqual({ row: 0, col: 0 });
   });
 });

@@ -1128,7 +1128,7 @@
         },
         "features": [],
         "flash_color": "#ba3d3d",
-        "grants_unlock": "vocab1.cleared",
+        "grants_unlock": "vocab1.shuffled.cleared",
         "theme": "tropical",
         "hint_giver": {
           "pos": {
@@ -1272,7 +1272,7 @@
         },
         "features": [],
         "flash_color": "#ba3d3d",
-        "grants_unlock": "vocab1.cleared",
+        "grants_unlock": "vocab1.shrouded.cleared",
         "theme": "tropical",
         "hint_giver": {
           "pos": {
@@ -1439,7 +1439,7 @@
         },
         "features": [],
         "flash_color": "#ba3d3d",
-        "grants_unlock": "vocab2.cleared",
+        "grants_unlock": "vocab2.shuffled.cleared",
         "theme": "tropical",
         "hint_giver": {
           "pos": {
@@ -1605,7 +1605,7 @@
         },
         "features": [],
         "flash_color": "#ba3d3d",
-        "grants_unlock": "vocab2.cleared",
+        "grants_unlock": "vocab2.shrouded.cleared",
         "theme": "tropical",
         "hint_giver": {
           "pos": {
@@ -1807,7 +1807,7 @@
         },
         "features": [],
         "flash_color": "#ba3d3d",
-        "grants_unlock": "vocab3.cleared",
+        "grants_unlock": "vocab3.shuffled.cleared",
         "theme": "tropical",
         "hint_giver": {
           "pos": {
@@ -2008,7 +2008,7 @@
         },
         "features": [],
         "flash_color": "#ba3d3d",
-        "grants_unlock": "vocab3.cleared",
+        "grants_unlock": "vocab3.shrouded.cleared",
         "theme": "tropical",
         "hint_giver": {
           "pos": {
@@ -2181,7 +2181,7 @@
         },
         "theme": "tropical",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "vocab4.cleared",
+        "grants_unlock": "vocab4.shuffled.cleared",
         "hint_giver": {
           "pos": {
             "x": 11,
@@ -2352,7 +2352,7 @@
         },
         "theme": "tropical",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "vocab4.cleared",
+        "grants_unlock": "vocab4.shrouded.cleared",
         "hint_giver": {
           "pos": {
             "x": 11,
@@ -2563,7 +2563,7 @@
         },
         "theme": "tropical",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "vocab5.cleared",
+        "grants_unlock": "vocab5.shuffled.cleared",
         "hint_giver": {
           "pos": {
             "x": 11,
@@ -2773,7 +2773,7 @@
         },
         "theme": "tropical",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "vocab5.cleared",
+        "grants_unlock": "vocab5.shrouded.cleared",
         "hint_giver": {
           "pos": {
             "x": 11,
@@ -2837,7 +2837,7 @@
         {
           "id": "vocab-match-001-shrouded",
           "label": "Vocab I",
-          "unlock": "vocab1.cleared"
+          "unlock": "vocab1.shuffled.cleared"
         },
         {
           "id": "vocab-match-002-shuffled",
@@ -2847,7 +2847,7 @@
         {
           "id": "vocab-match-002-shrouded",
           "label": "Vocab II",
-          "unlock": "vocab2.cleared"
+          "unlock": "vocab2.shuffled.cleared"
         },
         {
           "id": "vocab-match-003-shuffled",
@@ -2857,7 +2857,7 @@
         {
           "id": "vocab-match-003-shrouded",
           "label": "Vocab III",
-          "unlock": "vocab3.cleared"
+          "unlock": "vocab3.shuffled.cleared"
         },
         {
           "id": "vocab-match-004-shuffled",
@@ -2867,7 +2867,7 @@
         {
           "id": "vocab-match-004-shrouded",
           "label": "Hōʻailona",
-          "unlock": "vocab4.cleared"
+          "unlock": "vocab4.shuffled.cleared"
         },
         {
           "id": "vocab-match-005-shuffled",
@@ -2877,7 +2877,7 @@
         {
           "id": "vocab-match-005-shrouded",
           "label": "Hoʻopunipuni",
-          "unlock": "vocab5.cleared"
+          "unlock": "vocab5.shuffled.cleared"
         }
       ]
     }

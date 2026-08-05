@@ -18,7 +18,8 @@ import { join } from "node:path";
 import type { Pack, Puzzle, PuzzleType, TutorialBlock } from "../schema/types";
 import { createRoomManager, type RoomManager, type TypeLadder } from "./roomManager";
 import { resolveMechanic, type LadderLevel } from "./core/ladder";
-import { addUnlock } from "./core/codex";
+import { addUnlock, getUnlocks } from "./core/codex";
+import { buildAchievements, groupAchievements } from "./core/achievements";
 import { roomSettings } from "./systems/settingsPanel";
 
 const ROOT = join(__dirname, "..", "..");
@@ -66,11 +67,20 @@ function bootWorld() {
   }
   const container = document.createElement("div");
   document.body.appendChild(container);
+  // Same achievements wiring main.bootHub uses: derived from the merged ladders.
+  const achievements = () =>
+    groupAchievements(
+      buildAchievements(
+        [...laddersByType].map(([puzzleType, l]) => ({ puzzleType, levels: l.levels })),
+        (id) => registry.get(id)?.room?.grants_unlock,
+      ),
+      new Set(getUnlocks()),
+    );
   const manager = createRoomManager(
     container,
     (id) => registry.get(id) ?? null,
     (t) => laddersByType.get(t) ?? { levels: [], lockedLanguages: [] },
-    { tutorialFor: (id) => tutorialsById.get(id) ?? null },
+    { tutorialFor: (id) => tutorialsById.get(id) ?? null, achievements },
   );
   return { container, manager };
 }
@@ -79,6 +89,14 @@ const viewport = (c: HTMLElement) => c.querySelector(".room-viewport") as HTMLEl
 const press = (c: HTMLElement, key: string, times = 1) => {
   for (let i = 0; i < times; i++) {
     viewport(c).dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+  }
+};
+/** A key press aimed at the SETTINGS panel (it owns its own keydown listener, and
+ *  viewport events never reach it). */
+const pressPanel = (c: HTMLElement, key: string, times = 1) => {
+  const panel = c.querySelector(".room-settings-panel") as HTMLElement;
+  for (let i = 0; i < times; i++) {
+    panel.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
   }
 };
 const text = (c: HTMLElement, sel: string) =>
@@ -136,8 +154,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // The card badges the room it is actually in — the hub's own "✦ Hub", not a module.
     expect(text(c, ".tutorial-card-module")).toBe("Hub");
 
-    // (Every hub portal is open now, so the old coming_soon interjection probe is
-    //  gone with the last blocked door.)
+    // (The other three portals are LOCKED on a fresh save — see the gating test below.)
     // Walk to the OPEN Coding door: the portal opens the LADDER (5a) at the LANGUAGE
     // rung — Python + the coming-soon siblings, framed by ← Back / ⌂ Return to hub.
     press(c, "ArrowLeft", 4); // (5,4) → (1,4)
@@ -222,11 +239,13 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     expect(text(c, ".room-destmenu-tag")).toBe("CURRENT"); // Tutorial is where we are
     expect([...c.querySelectorAll(".room-destmenu-option")][0].classList.contains("selected")).toBe(true);
     // ← Back climbs one rung at a time, landing on the group we came from.
-    press(c, "Escape");            // → mechanic rung: Explicit just unlocked, Mixed still locked
+    press(c, "Escape");            // → mechanic rung: the harder TIERS are both still shut
     expect(text(c, ".room-destmenu-title")).toBe("Python — mechanic");
     const mechRows = [...c.querySelectorAll(".room-destmenu-option")];
-    expect(mechRows.find((b) => b.textContent!.includes("Explicit"))!.classList.contains("locked")).toBe(false);
+    // Tier order is now Base → Mixed → Explicit (PROGRESSION.md): Mixed opens after
+    // Variables, Explicit after Mixed — so one tutorial clear opens neither.
     expect(mechRows.find((b) => b.textContent!.includes("Mixed"))!.classList.contains("locked")).toBe(true);
+    expect(mechRows.find((b) => b.textContent!.includes("Explicit"))!.classList.contains("locked")).toBe(true);
     press(c, "Escape");            // → language rung
     expect(text(c, ".room-destmenu-title")).toBe("Where to?");
     expect(ladderLabels(c)).toEqual(["Python", "JavaScript", "SQL", "← Back", "⌂ Return to hub"]);
@@ -255,8 +274,112 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     manager.teardown(); // idempotent
   });
 
+  it("settings: the MOVEMENT keys drive the panel, and Achievements tracks earned keys", () => {
+    const { container: c, manager } = world;
+    addUnlock("coding.tutorial.cleared"); // one achievement already earned
+    manager.enter("hub");
+    press(c, "Escape");   // skip the hub tutorial
+    press(c, "Escape");   // esc ladder → open settings
+    expect(text(c, ".room-settings-card")).toContain("Settings");
+
+    const entries = () => [...c.querySelectorAll(".room-menu-entry")];
+    const cursor = () => c.querySelector(".room-settings-card button.nav-cursor")!.textContent;
+    // The panel opens with the cursor on its first row; the "Quit" stub is disabled,
+    // so it is skipped rather than becoming a dead stop.
+    expect(entries().map((b) => b.textContent)).toEqual(["Achievements", "Controls", "Display", "Quitcoming soon"]);
+    expect(cursor()).toBe("Achievements");
+
+    // WASD moves too (standard binds arrows AND WASD), and up clamps at the top.
+    pressPanel(c, "s");
+    expect(cursor()).toBe("Controls");
+    pressPanel(c, "ArrowDown");
+    expect(cursor()).toBe("Display");
+    pressPanel(c, "ArrowUp", 5);
+    expect(cursor()).toBe("Achievements");
+
+    // Enter drills in — no mouse anywhere in this flow.
+    pressPanel(c, "Enter");
+    expect(text(c, ".room-settings-title")).toBe("Achievements");
+    // Earned rows are marked; unearned ones are listed but not.
+    const rows = [...c.querySelectorAll(".achievements-row")];
+    const tutorialRow = rows.find((r) => r.textContent!.includes("Tutorial"))!;
+    expect(tutorialRow.classList.contains("earned")).toBe(true);
+    expect(rows.find((r) => r.textContent!.includes("Logic I"))!.classList.contains("earned")).toBe(false);
+    expect(text(c, ".achievements-summary")).toMatch(/^1 of \d+ earned$/);
+    // Every track the packs declare shows up as its own group.
+    expect([...c.querySelectorAll(".achievements-group")].map((g) => g.firstChild!.textContent))
+      .toEqual(["Coding — Python", "Logic — English", "Logic — ʻŌlelo Hawaiʻi", "Grammar — English", "Language — ʻŌlelo Hawaiʻi", "Language — English"]);
+
+    // ← Back is the first row of the sub-tab, so Enter on it returns to the menu.
+    expect(cursor()).toBe("←");
+    pressPanel(c, "Enter");
+    expect(text(c, ".room-settings-title")).toBe("Settings");
+    manager.teardown();
+  });
+
+  it("settings: vim's hjkl drive the panel when that scheme is active", () => {
+    const { container: c, manager } = world;
+    manager.enter("hub");
+    press(c, "Escape");
+    press(c, "Escape");
+    const cursor = () => c.querySelector(".room-settings-card button.nav-cursor")!.textContent;
+    // Switch to vim through the Controls tab, then navigate with hjkl only.
+    pressPanel(c, "ArrowDown");           // → Controls
+    pressPanel(c, "Enter");
+    expect(text(c, ".room-settings-title")).toBe("Controls");
+    pressPanel(c, "ArrowDown");           // → the scheme strip (Standard | Vim)
+    pressPanel(c, "ArrowRight");          // within the strip → Vim
+    expect(cursor()).toBe("Vim");
+    pressPanel(c, "Enter");               // make vim the ACTIVE scheme
+    expect(roomSettings.scheme).toBe("vim");
+    try {
+      // Arrows are no longer bound; hjkl is. j/k change row, l steps within a strip.
+      pressPanel(c, "ArrowDown");
+      expect(cursor()).toBe("Vim");       // unbound key → cursor unmoved
+      pressPanel(c, "k");                 // → the ← back row
+      expect(cursor()).toBe("←");
+      pressPanel(c, "j");                 // → back onto the scheme strip
+      pressPanel(c, "h");                 // within the strip → Standard
+      expect(cursor()).toBe("Standard");
+    } finally {
+      roomSettings.scheme = "standard";   // restore the session default
+    }
+    manager.teardown();
+  });
+
+  it("hub gating: a locked portal blocks and speaks; earning its key opens it (PROGRESSION.md)", () => {
+    const { container: c, manager } = world;
+    // FRESH SAVE: only Coding is walkable — the other three render as locked stone pads.
+    manager.enter("hub");
+    const glyphs = () =>
+      [...c.querySelectorAll(".room-door-layer .tile-portal-glyph")].map((g) => g.textContent);
+    expect(glyphs()).toEqual(["🔒", "🔒", "🔒"]); // Logic, Grammar, Language
+    press(c, "Escape");            // skip the hub tutorial so the door beat owns the surface
+
+    // Bump the LOCKED Logic door (4,1) from spawn (6,4): blocked → its beat, no transition.
+    press(c, "ArrowLeft", 2);      // (6,4) → (4,4)
+    press(c, "ArrowUp", 3);        // (4,4) → (4,1) Logic door
+    press(c, "Enter");
+    expect(speech(c)).toContain("Clear Grammar I");
+    expect(c.querySelector(".room-destmenu-title")).toBeNull(); // no ladder, no hop
+    expect(c.querySelectorAll(".room-world")).toHaveLength(1);  // still the hub
+    manager.teardown();
+
+    // EARN the key → the same door is open, and interacting opens its ladder.
+    addUnlock("grammar1.cleared");
+    manager.enter("hub");
+    expect(glyphs()).toEqual(["🔒", "🔒"]); // Logic's lock is gone
+    press(c, "Escape");
+    press(c, "ArrowLeft", 2);
+    press(c, "ArrowUp", 3);
+    press(c, "Enter");
+    expect(text(c, ".room-destmenu-title")).toBe("Logic portal");
+    manager.teardown();
+  });
+
   it("logic room: the hub's Logic portal mounts the TUTORIAL board; ENGINE input drives it", async () => {
     const { container: c, manager } = world;
+    addUnlock("grammar1.cleared"); // the Logic portal is gated on Grammar I (PROGRESSION.md)
     manager.enter("hub");
     press(c, "Enter");      // tut-1
     press(c, "ArrowLeft");  // tut-2 (move) → (5,4)
@@ -331,6 +454,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
 
   it("grammar room: shared push slides word-tiles into the frame; auto-wins", () => {
     const { container: c, manager } = world;
+    addUnlock("vocab1.cleared"); // the Grammar portal is gated on Vocab I (PROGRESSION.md)
     manager.enter("hub");
     press(c, "Enter");      // tut-1
     press(c, "ArrowLeft");  // tut-2 (move) → (5,4)
@@ -423,6 +547,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
 
   it("vocab room: shared Sokoban push locks pairs; ? reveals a meaning", () => {
     const { container: c, manager } = world;
+    addUnlock("coding.tutorial.cleared"); // the Language portal is gated on the coding tutorial
     manager.enter("hub");
     press(c, "Enter");      // tut-1
     press(c, "ArrowLeft");  // tut-2 (move) → (5,4)

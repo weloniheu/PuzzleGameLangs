@@ -716,7 +716,7 @@
         },
         "theme": "library",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "lex1.cleared",
+        "grants_unlock": "lex1.shuffled.cleared",
         "hint_giver": {
           "pos": {
             "x": 11,
@@ -868,7 +868,7 @@
         },
         "theme": "library",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "lex1.cleared",
+        "grants_unlock": "lex1.shrouded.cleared",
         "hint_giver": {
           "pos": {
             "x": 11,
@@ -1097,7 +1097,7 @@
         },
         "theme": "library",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "lex2.cleared",
+        "grants_unlock": "lex2.shuffled.cleared",
         "hint_giver": {
           "pos": {
             "x": 11,
@@ -1325,7 +1325,7 @@
         },
         "theme": "library",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "lex2.cleared",
+        "grants_unlock": "lex2.shrouded.cleared",
         "hint_giver": {
           "pos": {
             "x": 11,
@@ -1545,7 +1545,7 @@
         },
         "theme": "library",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "lex3.cleared",
+        "grants_unlock": "lex3.shuffled.cleared",
         "hint_giver": {
           "pos": {
             "x": 11,
@@ -1764,7 +1764,7 @@
         },
         "theme": "library",
         "flash_color": "#ba3d3d",
-        "grants_unlock": "lex3.cleared",
+        "grants_unlock": "lex3.shrouded.cleared",
         "hint_giver": {
           "pos": {
             "x": 11,
@@ -1794,7 +1794,7 @@
         {
           "id": "vocab-en-000",
           "label": "Lexicon I",
-          "unlock": "vocab3.cleared"
+          "unlock": "vocab5.cleared"
         },
         {
           "id": "vocab-en-001",
@@ -1814,7 +1814,7 @@
         {
           "id": "vocab-en-000-shrouded",
           "label": "Lexicon I",
-          "unlock": "lex1.cleared"
+          "unlock": "lex1.shuffled.cleared"
         },
         {
           "id": "vocab-en-001-shuffled",
@@ -1824,7 +1824,7 @@
         {
           "id": "vocab-en-001-shrouded",
           "label": "Lexicon II",
-          "unlock": "lex2.cleared"
+          "unlock": "lex2.shuffled.cleared"
         },
         {
           "id": "vocab-en-002-shuffled",
@@ -1834,7 +1834,7 @@
         {
           "id": "vocab-en-002-shrouded",
           "label": "Lexicon III",
-          "unlock": "lex3.cleared"
+          "unlock": "lex3.shuffled.cleared"
         }
       ]
     }

@@ -96,8 +96,10 @@
             },
             "target": "logic-rules-000",
             "label": "Logic",
-            "state": "open",
-            "icon": "/assets/logicportal.png"
+            "state": "locked",
+            "icon": "/assets/logicportal.png",
+            "unlock": "grammar1.cleared",
+            "beat": "Rules are just sentences that bite. Clear Grammar I before you start rewriting them."
           },
           {
             "pos": {
@@ -106,8 +108,10 @@
             },
             "target": "grammar-build-000",
             "label": "Grammar",
-            "state": "open",
-            "icon": "/assets/grammarprotal.png"
+            "state": "locked",
+            "icon": "/assets/grammarprotal.png",
+            "unlock": "vocab1.cleared",
+            "beat": "Words first, sentences after. Clear Vocab I in the Language grove and this gate will open."
           },
           {
             "pos": {
@@ -116,8 +120,10 @@
             },
             "target": "vocab-match-000",
             "label": "Language",
-            "state": "open",
-            "icon": "/assets/languageportal.png"
+            "state": "locked",
+            "icon": "/assets/languageportal.png",
+            "unlock": "coding.tutorial.cleared",
+            "beat": "The word grove is still asleep. Clear the snake's coding tutorial and it will wake for you."
           }
         ],
         "features": [

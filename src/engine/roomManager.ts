@@ -17,6 +17,7 @@ import { mountRoom, type RoomHandle } from "./roomHost";
 import { addUnlock, getUnlocks } from "./core/codex";
 import { HUB_ID } from "./core/progression";
 import type { LadderData, LadderLevel, LockedLanguage } from "./core/ladder";
+import type { AchievementGroup } from "./core/achievements";
 import { portalFlashColor } from "./core/portalColors";
 
 export interface RoomManager {
@@ -42,7 +43,13 @@ export function createRoomManager(
   container: HTMLElement,
   resolve: (id: string) => Puzzle | null,
   ladderForType: (puzzleType: PuzzleType) => TypeLadder,
-  hooks: { onBeforeMount?: () => void; tutorialFor?: (id: string) => TutorialBlock | null } = {},
+  hooks: {
+    onBeforeMount?: () => void;
+    tutorialFor?: (id: string) => TutorialBlock | null;
+    /** The achievements tracker's rows (main.ts owns the merged progression). Passed
+     *  straight through to every room's settings panel; omitted ⇒ no Achievements tab. */
+    achievements?: () => AchievementGroup[];
+  } = {},
 ): RoomManager {
   let current: RoomHandle | null = null;
 
@@ -94,6 +101,7 @@ export function createRoomManager(
       // Shared first-encounter tutorials the level references (Pack.tutorials); the manager
       // owns the cross-pack lookup, the host owns the seen-check + playback.
       tutorialFor: hooks.tutorialFor,
+      achievements: hooks.achievements,
       // A transition (door OR ladder selection) is just "enter the target".
       onDoor: (target) => enter(target),
       // Solving a room can earn an unlock (e.g. reveal the next level in the ladder).
