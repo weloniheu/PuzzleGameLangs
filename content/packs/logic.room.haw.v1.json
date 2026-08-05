@@ -433,7 +433,7 @@
           "y": 4
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "haw0.cleared",
+        "grants_unlock": "haw0.shuffled.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -526,7 +526,7 @@
           "y": 4
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "haw0.cleared",
+        "grants_unlock": "haw0.shrouded.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -622,7 +622,7 @@
           "y": 5
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "haw1.cleared",
+        "grants_unlock": "haw1.shuffled.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -717,7 +717,7 @@
           "y": 5
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "haw1.cleared",
+        "grants_unlock": "haw1.shrouded.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -815,7 +815,7 @@
           "y": 6
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "haw2.cleared",
+        "grants_unlock": "haw2.shuffled.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -912,7 +912,7 @@
           "y": 6
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "haw2.cleared",
+        "grants_unlock": "haw2.shrouded.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -1010,7 +1010,7 @@
           "y": 8
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "haw3.cleared",
+        "grants_unlock": "haw3.shuffled.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -1107,7 +1107,7 @@
           "y": 8
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "haw3.cleared",
+        "grants_unlock": "haw3.shrouded.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -1138,7 +1138,7 @@
         {
           "id": "logic-haw-000",
           "label": "Loiloi ʻEkahi",
-          "unlock": "logic1.cleared"
+          "unlock": "logic4.cleared"
         },
         {
           "id": "logic-haw-001",
@@ -1163,7 +1163,7 @@
         {
           "id": "logic-haw-000-shrouded",
           "label": "Loiloi ʻEkahi",
-          "unlock": "haw0.cleared"
+          "unlock": "haw0.shuffled.cleared"
         },
         {
           "id": "logic-haw-001-shuffled",
@@ -1173,7 +1173,7 @@
         {
           "id": "logic-haw-001-shrouded",
           "label": "Loiloi ʻElua",
-          "unlock": "haw1.cleared"
+          "unlock": "haw1.shuffled.cleared"
         },
         {
           "id": "logic-haw-002-shuffled",
@@ -1183,7 +1183,7 @@
         {
           "id": "logic-haw-002-shrouded",
           "label": "Loiloi ʻEkolu",
-          "unlock": "haw2.cleared"
+          "unlock": "haw2.shuffled.cleared"
         },
         {
           "id": "logic-haw-003-shuffled",
@@ -1193,7 +1193,7 @@
         {
           "id": "logic-haw-003-shrouded",
           "label": "Loiloi ʻEhā",
-          "unlock": "haw3.cleared"
+          "unlock": "haw3.shuffled.cleared"
         }
       ]
     }

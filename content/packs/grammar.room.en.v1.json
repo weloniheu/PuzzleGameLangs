@@ -803,7 +803,7 @@
         },
         "features": [],
         "flash_color": "#b99c44",
-        "grants_unlock": "grammar1.cleared",
+        "grants_unlock": "grammar1.shuffled.cleared",
         "theme": "library",
         "hint_giver": {
           "pos": {
@@ -952,7 +952,7 @@
         },
         "features": [],
         "flash_color": "#b99c44",
-        "grants_unlock": "grammar1.cleared",
+        "grants_unlock": "grammar1.shrouded.cleared",
         "theme": "library",
         "hint_giver": {
           "pos": {
@@ -1131,7 +1131,7 @@
         },
         "features": [],
         "flash_color": "#b99c44",
-        "grants_unlock": "grammar2.cleared",
+        "grants_unlock": "grammar2.shuffled.cleared",
         "theme": "library",
         "hint_giver": {
           "pos": {
@@ -1309,7 +1309,7 @@
         },
         "features": [],
         "flash_color": "#b99c44",
-        "grants_unlock": "grammar2.cleared",
+        "grants_unlock": "grammar2.shrouded.cleared",
         "theme": "library",
         "hint_giver": {
           "pos": {
@@ -1517,7 +1517,7 @@
         },
         "features": [],
         "flash_color": "#b99c44",
-        "grants_unlock": "grammar3.cleared",
+        "grants_unlock": "grammar3.shuffled.cleared",
         "theme": "library",
         "hint_giver": {
           "pos": {
@@ -1724,7 +1724,7 @@
         },
         "features": [],
         "flash_color": "#b99c44",
-        "grants_unlock": "grammar3.cleared",
+        "grants_unlock": "grammar3.shrouded.cleared",
         "theme": "library",
         "hint_giver": {
           "pos": {
@@ -1779,7 +1779,7 @@
         {
           "id": "grammar-build-001-shrouded",
           "label": "Grammar I",
-          "unlock": "grammar1.cleared"
+          "unlock": "grammar1.shuffled.cleared"
         },
         {
           "id": "grammar-build-002-shuffled",
@@ -1789,7 +1789,7 @@
         {
           "id": "grammar-build-002-shrouded",
           "label": "Grammar II",
-          "unlock": "grammar2.cleared"
+          "unlock": "grammar2.shuffled.cleared"
         },
         {
           "id": "grammar-build-003-shuffled",
@@ -1799,7 +1799,7 @@
         {
           "id": "grammar-build-003-shrouded",
           "label": "Grammar III",
-          "unlock": "grammar3.cleared"
+          "unlock": "grammar3.shuffled.cleared"
         }
       ]
     }

@@ -5,6 +5,13 @@ import { runPuzzle } from "./engine/puzzleRunner";
 import { mountRoom } from "./engine/roomHost";
 import { createRoomManager, type RoomManager, type TypeLadder } from "./engine/roomManager";
 import { resolveMechanic, type LadderLevel } from "./engine/core/ladder";
+import {
+  buildAchievements, groupAchievements, renderAchievements,
+  type AchievementGroup, type AchievementSource,
+} from "./engine/core/achievements";
+import { getUnlocks } from "./engine/core/codex";
+import { resolve as resolveBinding, normalizeKey } from "./engine/core/keybindings";
+import { roomSettings } from "./engine/systems/settingsPanel";
 
 // The code game boots into a minimal TEST HUB (throwaway — real hub design comes later);
 // the hub's doors transition to the Python code pack's puzzles via the room manager.
@@ -108,40 +115,62 @@ const roomRegistry = new Map<string, Puzzle>();
 const laddersByType = new Map<PuzzleType, TypeLadder>();
 const tutorialsById = new Map<string, TutorialBlock>();   // shared first-encounter tutorials
 
-async function bootHub() {
-  if (!roomRegistry.size) {
-    const [hub, code, logic, logicHaw, grammar, vocab, vocabEn] = await Promise.all([
-      loadPack(HUB_PACK), loadPack(CODE_PACK), loadPack(LOGIC_ROOM_PACK),
-      loadPack(LOGIC_ROOM_HAW_PACK), loadPack(GRAMMAR_ROOM_PACK), loadPack(VOCAB_ROOM_PACK),
-      loadPack(VOCAB_ROOM_EN_PACK),
-    ]);
-    for (const p of [...hub.puzzles, ...code.puzzles, ...logic.puzzles, ...logicHaw.puzzles, ...grammar.puzzles, ...vocab.puzzles, ...vocabEn.puzzles]) {
-      roomRegistry.set(p.id, p);
-    }
-    // Merge each pack's progression → the per-type ladder (stamped levels + locked
-    // languages) and tutorials → id map (first-encounter).
-    for (const pack of [hub, code, logic, logicHaw, grammar, vocab, vocabEn]) {
-      for (const prog of pack.progression ?? []) {
-        const ladder = laddersByType.get(prog.puzzle_type) ?? { levels: [], lockedLanguages: [] };
-        const stamped: LadderLevel[] = prog.levels.map((lv) => ({
-          ...lv,
-          language: lv.language ?? pack.language,
-          languageLabel: pack.language_label,
-          mechanic: lv.mechanic ?? resolveMechanic(roomRegistry.get(lv.id)),
-        }));
-        ladder.levels.push(...stamped);
-        ladder.lockedLanguages.push(...(prog.locked_languages ?? []));
-        laddersByType.set(prog.puzzle_type, ladder);
-      }
-      for (const [id, block] of Object.entries(pack.tutorials ?? {})) tutorialsById.set(id, block);
-    }
+/** Load every pack ONCE and fill the room registry, the per-type ladders and the shared
+ *  tutorial map. Kicked off at boot (not on Start) so the title screen's achievements
+ *  tracker has the progression data to read. */
+async function loadWorld() {
+  const [hub, code, logic, logicHaw, grammar, vocab, vocabEn] = await Promise.all([
+    loadPack(HUB_PACK), loadPack(CODE_PACK), loadPack(LOGIC_ROOM_PACK),
+    loadPack(LOGIC_ROOM_HAW_PACK), loadPack(GRAMMAR_ROOM_PACK), loadPack(VOCAB_ROOM_PACK),
+    loadPack(VOCAB_ROOM_EN_PACK),
+  ]);
+  for (const p of [...hub.puzzles, ...code.puzzles, ...logic.puzzles, ...logicHaw.puzzles, ...grammar.puzzles, ...vocab.puzzles, ...vocabEn.puzzles]) {
+    roomRegistry.set(p.id, p);
   }
+  // Merge each pack's progression → the per-type ladder (stamped levels + locked
+  // languages) and tutorials → id map (first-encounter).
+  for (const pack of [hub, code, logic, logicHaw, grammar, vocab, vocabEn]) {
+    for (const prog of pack.progression ?? []) {
+      const ladder = laddersByType.get(prog.puzzle_type) ?? { levels: [], lockedLanguages: [] };
+      const stamped: LadderLevel[] = prog.levels.map((lv) => ({
+        ...lv,
+        language: lv.language ?? pack.language,
+        languageLabel: pack.language_label,
+        mechanic: lv.mechanic ?? resolveMechanic(roomRegistry.get(lv.id)),
+      }));
+      ladder.levels.push(...stamped);
+      ladder.lockedLanguages.push(...(prog.locked_languages ?? []));
+      laddersByType.set(prog.puzzle_type, ladder);
+    }
+    for (const [id, block] of Object.entries(pack.tutorials ?? {})) tutorialsById.set(id, block);
+  }
+}
+const worldReady = loadWorld();
+
+/** The ACHIEVEMENTS tracker, rebuilt on every open: one row per unlock key some level
+ *  grants, marked against the CURRENT saved unlocks. Same data the ladder gates on,
+ *  so the tracker and the menus can never disagree. */
+function achievementGroups(): AchievementGroup[] {
+  const sources: AchievementSource[] = [...laddersByType].map(([puzzleType, ladder]) => ({
+    puzzleType,
+    levels: ladder.levels,
+  }));
+  const defs = buildAchievements(sources, (id) => roomRegistry.get(id)?.room?.grants_unlock);
+  return groupAchievements(defs, new Set(getUnlocks()));
+}
+
+async function bootHub() {
+  await worldReady;
   if (!roomManager) {
     roomManager = createRoomManager(
       gameRoot,
       (id) => roomRegistry.get(id) ?? null,
       (puzzleType) => laddersByType.get(puzzleType) ?? { levels: [], lockedLanguages: [] },
-      { onBeforeMount: useFullscreen, tutorialFor: (id) => tutorialsById.get(id) ?? null },
+      {
+        onBeforeMount: useFullscreen,
+        tutorialFor: (id) => tutorialsById.get(id) ?? null,
+        achievements: achievementGroups,
+      },
     );
   }
   roomManager.enter("hub");
@@ -157,9 +186,10 @@ window.addEventListener("keydown", (e) => {
   loadAndShow(DEV_PACKS[n - 1]);
 });
 
-// --- title screen (STYLE 3a "Dawn grove"): morning sky, the mascot, ▶ Start ---
-// Pure chrome over the boot: Enter (or the Start button) tears it down and enters
-// the hub. Static markup only; the slime reuses the shared .slime-* body parts.
+// --- title screen (STYLE 3a "Dawn grove"): morning sky, the mascot, the menu ---
+// Pure chrome over the boot: ▶ Start tears it down and enters the hub; 🏆 Achievements
+// opens the tracker over it. Driven by the SAME movement bindings as the game (arrows /
+// WASD, or hjkl in vim) so the menus feel like one control scheme.
 function showTitleScreen(onStart: () => void) {
   const screen = document.createElement("div");
   screen.className = "title-screen";
@@ -179,8 +209,16 @@ function showTitleScreen(onStart: () => void) {
         <div class="slime-eye slime-eye-l"></div><div class="slime-eye slime-eye-r"></div>
       </div></div>
     </div>
-    <button type="button" class="title-start">▶ Start</button>
-    <div class="title-hint">PRESS ENTER</div>
+    <div class="title-menu">
+      <button type="button" class="title-start">▶ Start</button>
+      <button type="button" class="title-achievements">🏆 Achievements</button>
+    </div>
+    <div class="title-hint">↑↓ CHOOSE · ⏎ SELECT</div>
+    <div class="title-ach-panel" hidden><div class="title-ach-card">
+      <p class="title-ach-title">🏆 Achievements</p>
+      <div class="title-ach-body"></div>
+      <p class="title-ach-hint">Esc to close</p>
+    </div></div>
   `;
   // The mascot slime is positioned by the .title-slime box, not the room engine.
   const mascot = screen.querySelector(".slime") as HTMLElement;
@@ -189,14 +227,54 @@ function showTitleScreen(onStart: () => void) {
   document.body.appendChild(screen);
   app.hidden = true;
 
+  const buttons = [...screen.querySelectorAll<HTMLButtonElement>(".title-menu button")];
+  const panel = screen.querySelector(".title-ach-panel") as HTMLElement;
+  const panelBody = screen.querySelector(".title-ach-body") as HTMLElement;
+  // The tracker is taller than the card: make it the focused scroller so the arrow
+  // keys page through it natively while it's open.
+  const panelCard = screen.querySelector(".title-ach-card") as HTMLElement;
+  panelCard.tabIndex = -1;
+  let sel = 0;
+  const paint = () => buttons.forEach((b, i) => b.classList.toggle("selected", i === sel));
+  paint();
+
   const start = () => {
     window.removeEventListener("keydown", onKey);
     screen.remove();
     onStart();
   };
-  const onKey = (e: KeyboardEvent) => { if (e.key === "Enter") start(); };
+  /** The packs may still be in flight on a cold load — say so rather than showing an
+   *  empty tracker, and fill it in when they land. */
+  function openAchievements() {
+    panel.hidden = false;
+    panelBody.textContent = "Loading…";
+    panelCard.scrollTop = 0;
+    panelCard.focus({ preventScroll: true });
+    worldReady.then(() => {
+      if (!panel.hidden) renderAchievements(panelBody, achievementGroups());
+    });
+  }
+  const closeAchievements = () => { panel.hidden = true; };
+
+  function onKey(e: KeyboardEvent) {
+    if (!panel.hidden) {
+      // The tracker is a read-only overlay: any way out closes it, nothing else applies.
+      if (e.key === "Escape" || e.key === "Enter") { e.preventDefault(); closeAchievements(); }
+      return;
+    }
+    if (e.key === "Enter") { e.preventDefault(); buttons[sel].click(); return; }
+    const r = resolveBinding(roomSettings.bindings[roomSettings.scheme], [normalizeKey(e.key)]);
+    if (r.kind !== "fire") return;
+    if (r.action === "up" || r.action === "left") { e.preventDefault(); sel = Math.max(0, sel - 1); paint(); }
+    else if (r.action === "down" || r.action === "right") { e.preventDefault(); sel = Math.min(buttons.length - 1, sel + 1); paint(); }
+  }
   window.addEventListener("keydown", onKey);
-  (screen.querySelector(".title-start") as HTMLButtonElement).onclick = start;
+
+  // Mouse is secondary here (window management only): clicking picks directly, and
+  // hovering never steals the keyboard cursor.
+  buttons[0].onclick = start;
+  buttons[1].onclick = openAchievements;
+  panel.addEventListener("pointerdown", (e) => { if (e.target === panel) closeAchievements(); });
 }
 
 showTitleScreen(bootHub);

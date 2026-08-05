@@ -892,7 +892,7 @@
           "y": 5
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "logic1.cleared",
+        "grants_unlock": "logic1.shuffled.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -985,7 +985,7 @@
           "y": 5
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "logic1.cleared",
+        "grants_unlock": "logic1.shrouded.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -1079,7 +1079,7 @@
           "y": 5
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "logic2.cleared",
+        "grants_unlock": "logic2.shuffled.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -1172,7 +1172,7 @@
           "y": 5
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "logic2.cleared",
+        "grants_unlock": "logic2.shrouded.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -1268,7 +1268,7 @@
           "y": 6
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "logic3.cleared",
+        "grants_unlock": "logic3.shuffled.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -1363,7 +1363,7 @@
           "y": 6
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "logic3.cleared",
+        "grants_unlock": "logic3.shrouded.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -1459,7 +1459,7 @@
           "y": 8
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "logic4.cleared",
+        "grants_unlock": "logic4.shuffled.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -1554,7 +1554,7 @@
           "y": 8
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "logic4.cleared",
+        "grants_unlock": "logic4.shrouded.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -1650,7 +1650,7 @@
           "y": 8
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "logic5.cleared",
+        "grants_unlock": "logic5.shuffled.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -1745,7 +1745,7 @@
           "y": 8
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "logic5.cleared",
+        "grants_unlock": "logic5.shrouded.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -1841,7 +1841,7 @@
           "y": 6
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "logic6.cleared",
+        "grants_unlock": "logic6.shuffled.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -1936,7 +1936,7 @@
           "y": 6
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "logic6.cleared",
+        "grants_unlock": "logic6.shrouded.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -2032,7 +2032,7 @@
           "y": 4
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "logic7.cleared",
+        "grants_unlock": "logic7.shuffled.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -2127,7 +2127,7 @@
           "y": 4
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "logic7.cleared",
+        "grants_unlock": "logic7.shrouded.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -2223,7 +2223,7 @@
           "y": 7
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "logic8.cleared",
+        "grants_unlock": "logic8.shuffled.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -2318,7 +2318,7 @@
           "y": 7
         },
         "flash_color": "#5fbe6f",
-        "grants_unlock": "logic8.cleared",
+        "grants_unlock": "logic8.shrouded.cleared",
         "theme": "grove",
         "hint_giver": {
           "pos": {
@@ -2398,7 +2398,7 @@
         {
           "id": "logic-rules-001-shrouded",
           "label": "Logic I",
-          "unlock": "logic1.cleared"
+          "unlock": "logic1.shuffled.cleared"
         },
         {
           "id": "logic-rules-002-shuffled",
@@ -2408,7 +2408,7 @@
         {
           "id": "logic-rules-002-shrouded",
           "label": "Logic II",
-          "unlock": "logic2.cleared"
+          "unlock": "logic2.shuffled.cleared"
         },
         {
           "id": "logic-rules-003-shuffled",
@@ -2418,7 +2418,7 @@
         {
           "id": "logic-rules-003-shrouded",
           "label": "Logic III",
-          "unlock": "logic3.cleared"
+          "unlock": "logic3.shuffled.cleared"
         },
         {
           "id": "logic-rules-004-shuffled",
@@ -2428,7 +2428,7 @@
         {
           "id": "logic-rules-004-shrouded",
           "label": "Logic IV",
-          "unlock": "logic4.cleared"
+          "unlock": "logic4.shuffled.cleared"
         },
         {
           "id": "logic-rules-005-shuffled",
@@ -2438,7 +2438,7 @@
         {
           "id": "logic-rules-005-shrouded",
           "label": "Logic V",
-          "unlock": "logic5.cleared"
+          "unlock": "logic5.shuffled.cleared"
         },
         {
           "id": "logic-rules-006-shuffled",
@@ -2448,7 +2448,7 @@
         {
           "id": "logic-rules-006-shrouded",
           "label": "Logic VI",
-          "unlock": "logic6.cleared"
+          "unlock": "logic6.shuffled.cleared"
         },
         {
           "id": "logic-rules-007-shuffled",
@@ -2458,7 +2458,7 @@
         {
           "id": "logic-rules-007-shrouded",
           "label": "Logic VII",
-          "unlock": "logic7.cleared"
+          "unlock": "logic7.shuffled.cleared"
         },
         {
           "id": "logic-rules-008-shuffled",
@@ -2468,7 +2468,7 @@
         {
           "id": "logic-rules-008-shrouded",
           "label": "Logic VIII",
-          "unlock": "logic8.cleared"
+          "unlock": "logic8.shuffled.cleared"
         }
       ]
     }

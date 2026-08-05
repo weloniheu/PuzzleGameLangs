@@ -11,9 +11,10 @@
 // ---------------------------------------------------------------------------
 
 import {
-  defaultBindings, actionsFor, normalizeKey, rebind, bindingGlyph,
+  defaultBindings, actionsFor, normalizeKey, rebind, bindingGlyph, resolve,
   type SchemeId, type Bindings, type Key,
 } from "../core/keybindings";
+import { renderAchievements, type AchievementGroup } from "../core/achievements";
 import type { RoomSize } from "./camera";
 
 const SCHEME_LABELS: Record<SchemeId, string> = { standard: "Standard", vim: "Vim" };
@@ -23,6 +24,7 @@ const TERM_FONT_MAX = 28;
 const TERM_FONT_STEP = 2;
 export const CAPTURE_WINDOW = 320; // ms an in-progress capture waits before committing
 export const CAPTURE_MAX = 2;      // longest sequence the rebinder captures (covers dd/dw)
+const SCROLL_STEP = 48;            // px one up/down press scrolls a read-only list
 
 // Session-persistent room preferences (survive puzzle switches within a session): the
 // active scheme + editable bindings for BOTH schemes, room size, terminal font.
@@ -76,6 +78,30 @@ export function createCaptureMachine(opts: {
   };
 }
 
+// --- keyboard NAVIGATION cursor (PURE of DOM; testable) ----------------------
+// The panel is a grid of rows: most rows hold one control, but an option strip
+// (scheme tabs, room size, font presets, a binding's chips) holds several side by
+// side. Up/down always change row. Left/right step WITHIN a multi-control row and
+// clamp at its ends; on a single-control row they fall through to up/down, so the
+// four movement keys alone reach everything.
+export interface Cursor { row: number; col: number }
+const clampN = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+/** @param widths how many controls each row holds, top to bottom. */
+export function moveCursor(widths: number[], cur: Cursor, action: string): Cursor {
+  if (!widths.length) return { row: 0, col: 0 };
+  const row = clampN(cur.row, 0, widths.length - 1);
+  const col = clampN(cur.col, 0, widths[row] - 1);
+  const toRow = (delta: number) => ({ row: clampN(row + delta, 0, widths.length - 1), col: 0 });
+  switch (action) {
+    case "up": return toRow(-1);
+    case "down": return toRow(1);
+    case "left": return widths[row] > 1 ? { row, col: clampN(col - 1, 0, widths[row] - 1) } : toRow(-1);
+    case "right": return widths[row] > 1 ? { row, col: clampN(col + 1, 0, widths[row] - 1) } : toRow(1);
+    default: return { row, col };
+  }
+}
+
 // --- the panel -------------------------------------------------------------
 export interface SettingsPanelDeps {
   container: HTMLElement;
@@ -83,6 +109,9 @@ export interface SettingsPanelDeps {
   relayout: () => void;       // Display "Room size" change re-tiles
   applyTermFont: () => void;  // push the terminal font size onto the terminal
   resetCodex: () => void;     // "Reset all progress"
+  /** The ACHIEVEMENTS tracker's rows, recomputed on every open (a key earned this
+   *  session shows immediately). Omitted ⇒ the Achievements entry isn't offered. */
+  achievements?: () => AchievementGroup[];
   onBeforeOpen: () => void;   // drop inventory/terminal focus before opening
   onClose: () => void;        // return focus to the room on close
   onEscape: () => void;       // the esc ladder (handles esc while the panel is open)
@@ -107,7 +136,7 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
   settingsEl.appendChild(settingsCard);
   deps.container.appendChild(settingsEl);
 
-  let view: "menu" | "controls" | "display" = "menu";
+  let view: "menu" | "controls" | "display" | "achievements" = "menu";
   let captureTarget: { action: string; slot: number } | null = null;
   let captureMsg = "";
   const machine = createCaptureMachine({ max: CAPTURE_MAX, window: CAPTURE_WINDOW, onCommit: onCaptureCommit });
@@ -130,7 +159,7 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
       back.className = "room-settings-back";
       back.textContent = "←";
       back.title = "Back to menu";
-      back.onclick = () => { view = "menu"; render(); };
+      back.onclick = () => setView("menu");
       head.appendChild(back);
     }
     const t = document.createElement("p");
@@ -145,8 +174,11 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
     const list = document.createElement("div");
     list.className = "room-settings-menu";
     const entries: [string, (() => void) | null][] = [
-      ["Controls", () => { view = "controls"; render(); }],
-      ["Display", () => { view = "display"; render(); }],
+      // Offered only when the host supplies progression data (the tracker has nothing
+      // to read otherwise) — same shape as the other feature-gated surfaces.
+      ...(deps.achievements ? [["Achievements", () => setView("achievements")] as [string, () => void]] : []),
+      ["Controls", () => setView("controls")],
+      ["Display", () => setView("display")],
       ["Quit", null], // stub — wired in a later phase
     ];
     for (const [text, onClick] of entries) {
@@ -187,12 +219,12 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
       b.onclick = () => { roomSettings.scheme = s; cancelCapture(); render(); };
       tabs.appendChild(b);
     }
-    settingsCard.append(settingsLabel("Scheme (click to make active & edit)"), tabs);
+    settingsCard.append(settingsLabel("Scheme — ←→ to pick, ⏎ to make it active"), tabs);
 
     if (roomSettings.scheme === "standard") {
       const note = document.createElement("p");
       note.className = "room-settings-help-text";
-      note.textContent = "Standard: arrows AND WASD both move you. Click a binding to remap it.";
+      note.textContent = "Standard: arrows AND WASD both move you. Select a binding to remap it.";
       settingsCard.appendChild(note);
     }
 
@@ -221,7 +253,7 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
       row.append(name, chips);
       list.appendChild(row);
     }
-    settingsCard.append(settingsLabel("Keys — click to remap · Esc cancels"), list);
+    settingsCard.append(settingsLabel("Keys — ⏎ on a key to remap it · Esc cancels"), list);
 
     // Reserved + conflict messages.
     const msg = document.createElement("p");
@@ -244,6 +276,16 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
     settingsCard.appendChild(reset);
     // (No "Replay tutorials" button: tutorials replay on every room entry by themselves,
     //  so a control promising to make them replay would have nothing to do.)
+  }
+
+  /** The ACHIEVEMENTS tab — the same tracker the title screen shows, rendered by the
+   *  shared renderer so the two surfaces can never drift apart. Read-only. */
+  function buildAchievementsView() {
+    settingsCard.appendChild(settingsHead("Achievements", true));
+    const box = document.createElement("div");
+    box.className = "room-settings-achievements";
+    renderAchievements(box, deps.achievements?.() ?? []);
+    settingsCard.appendChild(box);
   }
 
   function buildDisplay() {
@@ -312,12 +354,67 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
     settingsCard.append(settingsLabel("Terminal text size"), presetRow, stepRow, sample);
   }
 
+  // --- keyboard navigation (Rule 4: the panel is driven by the MOVEMENT keys) ---
+  // Rows are read back off the DOM after each render rather than declared by each
+  // builder, so a new control is navigable the moment it's appended. Consecutive
+  // buttons inside one option strip form a single left/right row.
+  const STRIP = ".room-settings-schemes, .room-settings-font, .room-bind-chips";
+  let navRows: HTMLButtonElement[][] = [];
+  let cursor: Cursor = { row: 0, col: 0 };
+
+  function collectNav() {
+    navRows = [];
+    let lastStrip: Element | null = null;
+    for (const b of settingsCard.querySelectorAll<HTMLButtonElement>("button")) {
+      if (b.disabled) continue; // a "coming soon" stub is not a destination
+      const strip = b.closest(STRIP);
+      if (strip && strip === lastStrip) navRows[navRows.length - 1].push(b);
+      else navRows.push([b]);
+      lastStrip = strip;
+    }
+  }
+  /** Paint the cursor (clamping it into whatever the latest render produced). */
+  function paintNav() {
+    for (const row of navRows) for (const b of row) b.classList.remove("nav-cursor");
+    if (!navRows.length) return;
+    cursor = moveCursor(navRows.map((r) => r.length), cursor, "none");
+    navRows[cursor.row][cursor.col].classList.add("nav-cursor");
+  }
+  function navMove(action: string) {
+    // A read-only screen (Achievements) has one control — ← Back — and a long list
+    // behind it, so up/down SCROLL it rather than fighting over a single row. Without
+    // this the keyboard could never reach the bottom of the tracker.
+    const scroller = settingsCard.querySelector<HTMLElement>(".room-settings-achievements");
+    if (scroller && (action === "up" || action === "down")) {
+      scroller.scrollTop += action === "down" ? SCROLL_STEP : -SCROLL_STEP;
+      return;
+    }
+    cursor = moveCursor(navRows.map((r) => r.length), cursor, action);
+    paintNav();
+  }
+  function navActivate() {
+    navRows[cursor.row]?.[cursor.col]?.click();
+  }
+  /** Switch screens with the cursor back at the top (a new screen is a new list). */
+  function setView(next: typeof view) {
+    view = next;
+    cursor = { row: 0, col: 0 };
+    render();
+  }
+
   /** Render the current settings screen; keep focus on the panel so Esc lands here. */
   function render() {
     settingsCard.innerHTML = "";
     if (view === "controls") buildControls();
     else if (view === "display") buildDisplay();
+    else if (view === "achievements") buildAchievementsView();
     else buildMenu();
+    const hint = document.createElement("p");
+    hint.className = "room-settings-nav-hint";
+    hint.textContent = "↑↓ move · ←→ adjust · ⏎ select · Esc back";
+    settingsCard.appendChild(hint);
+    collectNav();
+    paintNav();
     settingsEl.focus({ preventScroll: true });
   }
 
@@ -368,11 +465,10 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
 
   function openPanel() {
     deps.onBeforeOpen();          // drop inventory/terminal focus first
-    view = "menu";               // always enter at the top menu
     cancelCapture();
     captureMsg = "";
     settingsEl.hidden = false;
-    render();
+    setView("menu");             // always enter at the top menu, cursor on its first row
   }
   function closePanel() {
     cancelCapture();
@@ -384,7 +480,7 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
   }
   /** Esc while the panel is open: back out one level (sub-tab → menu → closed). */
   function escBack() {
-    if (view !== "menu") { view = "menu"; render(); }
+    if (view !== "menu") { setView("menu"); }
     else closePanel();
   }
 
@@ -403,7 +499,18 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
   settingsEl.addEventListener("pointerdown", (e) => { if (e.target === settingsEl) closePanel(); });
   settingsEl.addEventListener("keydown", (e) => {
     if (captureTarget) { e.preventDefault(); e.stopPropagation(); handleCaptureKey(e); return; } // rebind grabs all keys
-    if (e.key === "Escape") { e.preventDefault(); deps.onEscape(); }
+    if (e.key === "Escape") { e.preventDefault(); deps.onEscape(); return; }
+    // Everything else is NAVIGATION, resolved against the player's ACTIVE scheme —
+    // arrows/WASD in standard, hjkl in vim, or whatever they rebound movement to.
+    if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+      e.preventDefault(); e.stopPropagation(); navActivate(); return;
+    }
+    const r = resolve(roomSettings.bindings[roomSettings.scheme], [normalizeKey(e.key)]);
+    if (r.kind !== "fire") return;
+    if (r.action === "interact") { e.preventDefault(); e.stopPropagation(); navActivate(); return; }
+    if (["up", "down", "left", "right"].includes(r.action)) {
+      e.preventDefault(); e.stopPropagation(); navMove(r.action);
+    }
   });
 
   return { gearButton, open: openPanel, close: closePanel, isOpen, escBack, cancelCapture };

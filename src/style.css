@@ -1377,3 +1377,76 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   margin-top: 14px; font-family: "IBM Plex Mono", monospace; font-size: 11px;
   letter-spacing: 0.1em; color: #6b4a24;
 }
+/* Title MENU: Start + Achievements, driven by the movement keys. `.selected` is the
+   keyboard cursor and must read stronger than :hover (mouse never moves the cursor). */
+.title-menu { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.title-achievements {
+  font-family: inherit; cursor: pointer;
+  background: linear-gradient(#e6c887, #cba25c); color: #4a3110;
+  font-weight: 600; font-size: 15px; padding: 9px 24px;
+  border: none; border-radius: 11px;
+  box-shadow: 0 4px 0 #9a7233, 0 6px 10px rgba(0, 0, 0, 0.25);
+}
+.title-achievements:hover { filter: brightness(1.06); }
+.title-achievements:active { transform: translateY(2px); box-shadow: 0 2px 0 #9a7233, 0 4px 8px rgba(0, 0, 0, 0.3); }
+/* `.selected` is the ONLY cursor here — a click leaves DOM focus on a button, and a
+   second ring would read as two cursors at once. */
+.title-menu button.selected { outline: 3px solid #6f4a2b; outline-offset: 3px; }
+.title-menu button:focus { outline: none; }
+.title-menu button.selected:focus { outline: 3px solid #6f4a2b; }
+.title-ach-card:focus { outline: none; }
+
+/* The tracker overlay on the title screen. */
+.title-ach-panel {
+  position: absolute; inset: 0; z-index: 2; display: flex;
+  align-items: center; justify-content: center; padding: 24px;
+  background: rgba(28, 18, 8, 0.62);
+}
+.title-ach-panel[hidden] { display: none; }
+.title-ach-card {
+  width: min(520px, 100%); max-height: 100%; overflow-y: auto;
+  background: linear-gradient(var(--panel-wood-hi), var(--panel-wood-lo));
+  color: var(--parchment);
+  border: 2px solid var(--panel-wood-border); border-radius: 16px; padding: 18px 20px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+.title-ach-title { margin: 0 0 0.9rem; font-weight: 700; font-size: 1.15rem; }
+.title-ach-hint {
+  margin: 1rem 0 0; font-family: "IBM Plex Mono", monospace;
+  font-size: 11px; letter-spacing: 0.1em; color: var(--panel-muted);
+}
+
+/* ---------------------------------------------------------------------------
+   ACHIEVEMENTS tracker — ONE look, mounted by both the title screen and the
+   settings panel (see engine/core/achievements.ts renderAchievements).
+   --------------------------------------------------------------------------- */
+.achievements-summary { margin: 0 0 0.5rem; font-size: 0.9rem; font-weight: 600; }
+.achievements-bar {
+  height: 8px; border-radius: 5px; overflow: hidden; margin-bottom: 1rem;
+  background: rgba(0, 0, 0, 0.28);
+}
+.achievements-bar-fill { height: 100%; background: linear-gradient(90deg, #d8a441, #f0cd6a); }
+.achievements-group {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem;
+  margin: 0.9rem 0 0.35rem; font-weight: 700; font-size: 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14); padding-bottom: 0.25rem;
+}
+.achievements-count { font-family: "IBM Plex Mono", monospace; font-size: 0.8rem; opacity: 0.75; }
+.achievements-list { list-style: none; margin: 0; padding: 0; }
+.achievements-row {
+  display: flex; align-items: baseline; gap: 0.5rem;
+  padding: 0.16rem 0; font-size: 0.86rem; opacity: 0.45;
+}
+.achievements-row.earned { opacity: 1; }
+.achievements-mark { color: #f0cd6a; width: 1em; flex: none; }
+.room-settings-achievements { max-height: 46vh; overflow-y: auto; }
+
+/* The settings panel's KEYBOARD cursor. Mouse hover must never look like the cursor,
+   so this is an outline (structural) rather than a background swap. */
+.room-settings-card button.nav-cursor {
+  outline: 2px solid var(--amber); outline-offset: 2px; position: relative;
+}
+.room-settings-nav-hint {
+  margin: 0.9rem 0 0; font-family: "IBM Plex Mono", monospace; font-size: 0.72rem;
+  letter-spacing: 0.04em; color: var(--panel-muted); text-align: center;
+}
