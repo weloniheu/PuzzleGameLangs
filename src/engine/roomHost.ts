@@ -548,6 +548,19 @@ export function mountRoom(
     if (inv.focused()) { exitInventory(); } else { inv.enterFocus(); }
   }
 
+  /** Throw the held token away — the same slot choice `place` makes (inventory focus →
+   *  the SELECTED slot, room focus → the FIFO front), minus the placing: the token is
+   *  simply gone. Generic to any room that declares an inventory, so it lives here and
+   *  not in a module — no puzzle type needs to know the action exists.
+   *
+   *  Deliberately inert while the full-inventory drop prompt is up: that prompt already
+   *  owns the discard decision (Enter on an empty slot throws the pending token away),
+   *  and removing a slot underneath it would free space the prompt never notices. */
+  function pressDiscard() {
+    if (!inv || inv.hasPendingDrop()) return;
+    inv.removeAt(inv.focused() ? inv.selected() : 0); // out-of-range slot ⇒ no-op
+  }
+
   function doInteract() {
     if (inv?.focused()) { if (inv.hasPendingDrop()) inv.confirmDrop(); return; }
     if (mounted?.onInteract(pos)) return;          // stand on a module object (Build / Run) → activate
@@ -586,6 +599,7 @@ export function mountRoom(
     if (mounted?.onAction?.(action)) return;
     if (MOVE[action]) { moveOrCursor(MOVE[action]); return; }
     if (action === "pickup") { pressPickup(); return; }
+    if (action === "discard") { pressDiscard(); return; }
     if (action === "interact") doInteract();
   }
 

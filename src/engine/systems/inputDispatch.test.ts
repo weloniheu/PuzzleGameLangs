@@ -129,12 +129,29 @@ describe("decide — esc + bindings (room focus)", () => {
     expect(first).toEqual({ kind: "pending", pending: ["d"] });
     expect(decide(roomCtx, "d", ["d"], vim)).toEqual({ kind: "fire", action: "clearLine" });
     expect(decide(roomCtx, "w", ["d"], vim)).toEqual({ kind: "fire", action: "pickup" }); // dw
+    expect(decide(roomCtx, "x", ["d"], vim)).toEqual({ kind: "fire", action: "discard" }); // dx
+  });
+
+  it("the whole d-operator family stays distinct — dd / dw / dx never shadow each other", () => {
+    // They diverge at the SECOND key, so each is reachable and none is a prefix of another.
+    const fired = ["d", "w", "x"].map((k) => decide(roomCtx, k, ["d"], vim));
+    expect(fired).toEqual([
+      { kind: "fire", action: "clearLine" },
+      { kind: "fire", action: "pickup" },
+      { kind: "fire", action: "discard" },
+    ]);
+    // Bare `x` is still vim's delete-under-cursor, NOT the inventory discard.
+    expect(decide(roomCtx, "x", [], vim)).toEqual({ kind: "fire", action: "deleteToken" });
   });
 
   it("a broken sequence RESTARTS from the pressed key", () => {
-    // pending "d", then "x": ["d","x"] matches nothing → restart from ["x"] → deleteToken
-    expect(decide(roomCtx, "x", ["d"], vim)).toEqual({ kind: "fire", action: "deleteToken" });
+    // pending "d", then "p": ["d","p"] matches nothing → restart from ["p"] → place
+    expect(decide(roomCtx, "p", ["d"], vim)).toEqual({ kind: "fire", action: "place" });
     // pending "d", then an unbound key: restart also finds nothing → pass
     expect(decide(roomCtx, "z", ["d"], vim)).toEqual({ kind: "pass" });
+  });
+
+  it("standard binds the inventory discard to a bare 'x' (no vim operator prefix)", () => {
+    expect(decide(roomCtx, "x", [], standard)).toEqual({ kind: "fire", action: "discard" });
   });
 });

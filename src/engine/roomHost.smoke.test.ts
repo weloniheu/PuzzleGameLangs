@@ -629,6 +629,36 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     expect((c.querySelector(".room-settings-panel") as HTMLElement).hidden).toBe(true);
   });
 
+  // 'x' discards the held token: the same slot choice 'p' makes, minus the placing.
+  it("discard (x): throws the held token away without placing it on the board", () => {
+    const { container: c, manager } = world;
+    manager.enter("py-code-tutorial-000");
+    skipTeaching(c);
+    const filled = () => [...c.querySelectorAll(".room-inventory-slot:not(.empty)")].map((s) => s.textContent);
+
+    // Collect print / hello from the piles at (9,6) and (10,6); spawn is (6,7).
+    press(c, "ArrowUp");        // (6,6)
+    press(c, "ArrowRight", 3);  // (9,6) print pile
+    press(c, "i");
+    press(c, "ArrowRight");     // (10,6) hello pile
+    press(c, "i");
+    expect(filled()).toHaveLength(2);
+
+    // Room focus → discards the FIFO front ("print"), exactly the token 'p' would place.
+    press(c, "x");
+    expect(filled()).toHaveLength(1);
+    expect(filled()[0]).toContain("hello");
+    // ...and it went nowhere: the board has no placed tile, unlike a real 'p'.
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(0);
+
+    // Discarding the last one empties the strip; pressing again on empty is a safe no-op.
+    press(c, "x");
+    expect(filled()).toHaveLength(0);
+    press(c, "x");
+    expect(filled()).toHaveLength(0);
+    manager.teardown();
+  });
+
   // The punctuation TIER, driven through the real mount (proves the module threads
   // requirePunctuation into doRun — not just the pure checker).
   // Teaching now plays on EVERY entry, so these tests dismiss it the way a player does:
