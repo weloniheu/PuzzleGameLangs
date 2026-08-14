@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-visual-catalog.sh\"",
+            "timeout": 15,
+            "statusMessage": "Checking VISUAL_CATALOG.md against the diff..."
+          }
+        ]
+      }
+    ]
+  }
+}

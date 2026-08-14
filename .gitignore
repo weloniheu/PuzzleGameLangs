@@ -5,3 +5,4 @@ release/
 .DS_Store
 node_modules/
 dist/
+.claude/.visual-catalog-hook-state

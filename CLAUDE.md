@@ -97,6 +97,13 @@ When you extend code puzzles, keep validation as an order/equality check against
   Stardew-style tiles, recolorable slime, syntax-colored code blocks.
 - **Apply that style only to this game type's scoped styles.** Do not let it leak
   into other puzzle types' renderers or shared/global CSS.
+- **Every player-facing visual/behavioral surface is inventoried in `VISUAL_CATALOG.md`**
+  (repo root) — the action→visual table, overlays, transient effects, timing constants.
+  Adding or changing one (a keybinding, a `classList.add`/`toggle` state, a `setTimeout`
+  duration, a new CSS class or `@keyframes`) means updating that file in the SAME change.
+  A Stop hook (`.claude/hooks/check-visual-catalog.sh`) checks the working-tree diff for
+  this and reminds/blocks if the catalog was missed — but the obligation is the rule, not
+  the hook; don't treat "the hook didn't fire" as permission to skip it.
 
 ---
 
