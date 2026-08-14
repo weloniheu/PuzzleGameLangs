@@ -201,6 +201,15 @@ function buildDemo(kind: TutorialDemo): HTMLElement {
       el.append(slot, tile);
       break;
     }
+    case "drop": {
+      // A token leaves the slot and lands out in front, bobbing on the floor — the
+      // opposite arc of "place", which snaps INTO a slot.
+      const slot = document.createElement("div");
+      slot.className = "tdemo-slot";
+      const item = chip("", "tdemo-drop-chip");
+      el.append(slot, item);
+      break;
+    }
     case "build": {
       const btn = document.createElement("div");
       btn.className = "tdemo-button tdemo-button-build";

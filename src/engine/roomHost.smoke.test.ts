@@ -182,24 +182,40 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // Pick up print / hello / world (FIFO), from spawn (6,7).
     press(c, "ArrowUp");           // (6,6)
     press(c, "ArrowRight", 3);     // (9,6) print pile
-    press(c, "i");
+    press(c, "e");
     expect(text(c, ".room-inventory")).toContain("print");
+    // → the hotbar step (informational, Enter-gated), then the place step.
+    expect(speech(c)).toContain("number key");
+    press(c, "Enter");
     expect(speech(c)).toContain("press P"); // tutorial advanced to "place"
     press(c, "ArrowRight");        // (10,6) hello
-    press(c, "i");
+    press(c, "e");
     press(c, "ArrowRight");        // (11,6) world
-    press(c, "i");
+    press(c, "e");
 
     // Place the line at indent 0: (1,1) (2,1) (3,1).
     press(c, "ArrowUp", 5);        // (11,1)
     press(c, "ArrowLeft", 10);     // (1,1) — the coding area's left edge
     press(c, "p");
     expect(c.querySelectorAll(".tile-placed")).toHaveLength(1);
-    expect(speech(c)).toContain("Build"); // tutorial advanced to "build"
+    // → the Q-drop step, which waits for a real drop. Perform one and take it back.
+    // (West of (1,1) is wall, so step DOWN first and drop onto the cell below.)
+    expect(speech(c)).toContain("Press Q");
+    press(c, "ArrowDown");         // (1,2), facing down → drop lands on (1,3)
+    press(c, "q");                 // throws the held slot ("hello")
+    expect(c.querySelectorAll(".room-dropped")).toHaveLength(1);
+    press(c, "ArrowDown");         // walk onto it → auto-repickup, appended FIFO
+    expect(c.querySelectorAll(".room-dropped")).toHaveLength(0);
+    expect(speech(c)).toContain("Build"); // tutorial advanced past drop to "build"
+
+    // That round trip put the inventory back as [world, hello] — so pick the slot
+    // explicitly rather than relying on FIFO order, which is what the hotbar is for.
+    press(c, "ArrowUp", 2);        // back to (1,1)
     press(c, "ArrowRight");        // (2,1)
+    press(c, "2");                 // select slot 2 → "hello"
     press(c, "p");
     press(c, "ArrowRight");        // (3,1)
-    press(c, "p");
+    press(c, "p");                 // only "world" left
     expect(c.querySelectorAll(".tile-placed")).toHaveLength(3);
 
     // PROBE the debug readout (position-dependent, module-owned).
@@ -622,40 +638,120 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "ArrowLeft");  // tut-2 (move)
     press(c, "Enter");      // tut-3 → tut-4 waits enter_door (input passes through)
 
-    press(c, "i"); // empty floor → inventory focus
+    press(c, "e"); // empty floor → inventory focus
     expect(c.querySelector(".room-inventory")!.classList.contains("focused")).toBe(true);
     press(c, "Escape"); // esc ladder: exit inventory, do NOT open settings
     expect(c.querySelector(".room-inventory")!.classList.contains("focused")).toBe(false);
     expect((c.querySelector(".room-settings-panel") as HTMLElement).hidden).toBe(true);
   });
 
-  // 'x' discards the held token: the same slot choice 'p' makes, minus the placing.
-  it("discard (x): throws the held token away without placing it on the board", () => {
+  // --- Q DROP: a loose token on the floor, not a placed one (see roomHost's dropped block) ---
+  const filledSlots = (c: HTMLElement) =>
+    [...c.querySelectorAll(".room-inventory-slot:not(.empty)")].map((s) => s.textContent);
+  const droppedItems = (c: HTMLElement) =>
+    [...c.querySelectorAll(".room-dropped .room-dropped-label")].map((s) => s.textContent);
+  /** Walk to the `print` pile at (9,6) from the tutorial room's spawn (6,7) and take one. */
+  const grabPrint = (c: HTMLElement) => {
+    press(c, "ArrowUp");       // (6,6)
+    press(c, "ArrowRight", 3); // (9,6) print pile
+    press(c, "e");
+  };
+
+  it("drop (q): throws the held token onto the cell the slime FACES, not onto the board", () => {
     const { container: c, manager } = world;
     manager.enter("py-code-tutorial-000");
     skipTeaching(c);
-    const filled = () => [...c.querySelectorAll(".room-inventory-slot:not(.empty)")].map((s) => s.textContent);
+    grabPrint(c);
+    expect(filledSlots(c)).toHaveLength(1);
 
-    // Collect print / hello from the piles at (9,6) and (10,6); spawn is (6,7).
-    press(c, "ArrowUp");        // (6,6)
-    press(c, "ArrowRight", 3);  // (9,6) print pile
-    press(c, "i");
-    press(c, "ArrowRight");     // (10,6) hello pile
-    press(c, "i");
-    expect(filled()).toHaveLength(2);
+    press(c, "ArrowUp");  // now at (9,5), facing UP → the drop lands at (9,4)
+    press(c, "q");
+    expect(filledSlots(c)).toHaveLength(0);       // left the inventory
+    expect(droppedItems(c)).toEqual(["print"]);   // ...onto the floor
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(0); // NOT a placed token
+    manager.teardown();
+  });
 
-    // Room focus → discards the FIFO front ("print"), exactly the token 'p' would place.
-    press(c, "x");
-    expect(filled()).toHaveLength(1);
-    expect(filled()[0]).toContain("hello");
-    // ...and it went nowhere: the board has no placed tile, unlike a real 'p'.
-    expect(c.querySelectorAll(".tile-placed")).toHaveLength(0);
+  it("drop (q): walking back over a dropped token picks it up again, no keypress", () => {
+    const { container: c, manager } = world;
+    manager.enter("py-code-tutorial-000");
+    skipTeaching(c);
+    grabPrint(c);
 
-    // Discarding the last one empties the strip; pressing again on empty is a safe no-op.
-    press(c, "x");
-    expect(filled()).toHaveLength(0);
-    press(c, "x");
-    expect(filled()).toHaveLength(0);
+    press(c, "ArrowUp"); // (9,5) facing up
+    press(c, "q");       // → lands at (9,4)
+    expect(filledSlots(c)).toHaveLength(0);
+    press(c, "ArrowUp"); // walk onto (9,4)
+    expect(droppedItems(c)).toHaveLength(0);      // gone from the floor
+    expect(filledSlots(c)).toHaveLength(1);       // ...and back in hand
+    expect(filledSlots(c)[0]).toContain("print");
+    manager.teardown();
+  });
+
+  it("drop (q): a token left lying on the floor despawns on its own after 8s", () => {
+    vi.useFakeTimers();
+    try {
+      const { container: c, manager } = world;
+      manager.enter("py-code-tutorial-000");
+      skipTeaching(c);
+      grabPrint(c);
+      press(c, "ArrowUp");
+      press(c, "q");
+      expect(droppedItems(c)).toEqual(["print"]);
+
+      vi.advanceTimersByTime(6000); // into the warning window — still there, now fading
+      expect(droppedItems(c)).toEqual(["print"]);
+      expect(c.querySelector(".room-dropped")!.classList.contains("expiring")).toBe(true);
+
+      vi.advanceTimersByTime(2100); // past 8s
+      expect(droppedItems(c)).toHaveLength(0);
+      expect(filledSlots(c)).toHaveLength(0); // despawned, not silently refunded
+      manager.teardown();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("drop (q): blocked by a wall — the token stays in hand rather than vanishing", () => {
+    const { container: c, manager } = world;
+    manager.enter("py-code-tutorial-000");
+    skipTeaching(c);
+    grabPrint(c);
+
+    // From (9,6) walk right to the east wall, then face into it.
+    press(c, "ArrowRight", 3); // clamps against the wall at (11,6), facing right
+    press(c, "q");
+    expect(droppedItems(c)).toHaveLength(0); // nothing landed
+    expect(filledSlots(c)).toHaveLength(1);  // and nothing was eaten
+    manager.teardown();
+  });
+
+  it("hotbar: digits select the slot that place/drop act on", () => {
+    const { container: c, manager } = world;
+    manager.enter("py-code-tutorial-000");
+    skipTeaching(c);
+    const selectedIndex = () =>
+      [...c.querySelectorAll(".room-inventory-slot")].findIndex((s) => s.classList.contains("selected"));
+
+    // Collect print (9,6) then hello (10,6) → slots 1 and 2.
+    grabPrint(c);
+    press(c, "ArrowRight");
+    press(c, "e");
+    expect(filledSlots(c)).toHaveLength(2);
+    expect(selectedIndex()).toBe(0); // slot 1 is active by default
+
+    press(c, "2");
+    expect(selectedIndex()).toBe(1);
+    // Dropping now throws the SECOND slot's token, not the first.
+    press(c, "ArrowUp");
+    press(c, "q");
+    expect(droppedItems(c)).toEqual(["hello"]);
+    expect(filledSlots(c)[0]).toContain("print");
+
+    // A digit past the room's slot count is ignored rather than clamping.
+    const before = selectedIndex();
+    press(c, "9");
+    expect(selectedIndex()).toBe(before);
     manager.teardown();
   });
 
@@ -673,15 +769,15 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // Collect print / ( / "hello world" / ) — in the order they'll be placed (FIFO).
     press(c, "ArrowUp");           // (6,6)
     press(c, "ArrowRight", 3);     // (9,6) print
-    press(c, "i");
+    press(c, "e");
     press(c, "ArrowRight");        // (10,6) (
-    press(c, "i");
+    press(c, "e");
     press(c, "ArrowUp", 2);        // (10,4)
     press(c, "ArrowLeft");         // (9,4) "hello world"
-    press(c, "i");
+    press(c, "e");
     press(c, "ArrowRight", 2);     // (11,4)
     press(c, "ArrowDown", 2);      // (11,6) )
-    press(c, "i");
+    press(c, "e");
 
     // Place print ( "hello world" ) at indent 0: (1,1) (2,1) (3,1) (4,1).
     press(c, "ArrowUp", 5);        // (11,1)
@@ -711,9 +807,9 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // Collect only print and "hello world" — skip the parens.
     press(c, "ArrowUp");           // (6,6)
     press(c, "ArrowRight", 3);     // (9,6) print
-    press(c, "i");
+    press(c, "e");
     press(c, "ArrowUp", 2);        // (9,4) "hello world"
-    press(c, "i");
+    press(c, "e");
 
     // Place print "hello world" (no parens) at (1,1) (2,1).
     press(c, "ArrowUp", 3);        // (9,1)
@@ -746,11 +842,11 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // Pick up in the WRONG order — inventory is FIFO, so: hello, then print, then world.
     press(c, "ArrowUp");        // (6,6)
     press(c, "ArrowRight", 4);  // (10,6) hello
-    press(c, "i");
+    press(c, "e");
     press(c, "ArrowLeft");      // (9,6) print
-    press(c, "i");
+    press(c, "e");
     press(c, "ArrowRight", 2);  // (11,6) world
-    press(c, "i");
+    press(c, "e");
 
     // Place all three at indent 0 → "hello print world": the right words, wrong order.
     press(c, "ArrowUp", 5);     // (11,1)
@@ -824,13 +920,13 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // Batch 1: collect x, =, 5 and lay line 0 "x = 5" at row 1.
     press(c, "ArrowRight", 5);  // (6,7) → (11,7)
     press(c, "ArrowUp", 4);     // (11,3) x pile
-    press(c, "i");
+    press(c, "e");
     press(c, "ArrowDown");      // (11,4)
     press(c, "ArrowLeft", 2);   // (9,4) = pile
-    press(c, "i");
+    press(c, "e");
     press(c, "ArrowRight", 2);  // (11,4)
     press(c, "ArrowDown", 2);   // (11,6) 5 pile
-    press(c, "i");
+    press(c, "e");
     press(c, "ArrowUp", 5);     // (11,1)
     press(c, "ArrowLeft", 10);  // (1,1)
     press(c, "p");                          // x
@@ -842,10 +938,10 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "ArrowDown", 6);   // (3,1) → (3,7)
     press(c, "ArrowRight", 6);  // (9,7)
     press(c, "ArrowUp");        // (9,6) print pile
-    press(c, "i");
+    press(c, "e");
     press(c, "ArrowRight", 2);  // (11,6)
     press(c, "ArrowUp", 3);     // (11,3) x pile
-    press(c, "i");
+    press(c, "e");
     press(c, "ArrowUp");        // (11,2) — climb above the row-3 wall block before going left
     press(c, "ArrowLeft", 10);  // (1,2) — row 2 is clear of the walls
     press(c, "p");                          // print at (1,2)
@@ -874,19 +970,19 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // It's LOCKED: standing on it (4,1) and pressing pickup does nothing.
     press(c, "ArrowLeft", 2);  // (6,7) → (4,7)
     press(c, "ArrowUp", 6);    // (4,1) the prefilled )
-    press(c, "i");
+    press(c, "e");
     expect(c.querySelectorAll(".tile-placed")).toHaveLength(1); // still there — not pickable
 
     // Collect print, (, "hello world".
     press(c, "ArrowDown", 6);  // (4,7)
     press(c, "ArrowRight", 5); // (9,7)
     press(c, "ArrowUp");       // (9,6) print
-    press(c, "i");
+    press(c, "e");
     press(c, "ArrowRight");    // (10,6) (
-    press(c, "i");
+    press(c, "e");
     press(c, "ArrowUp", 2);    // (10,4)
     press(c, "ArrowLeft");     // (9,4) "hello world"
-    press(c, "i");
+    press(c, "e");
 
     // Place print ( "hello world" at (1,1)(2,1)(3,1); the locked ) already sits at (4,1).
     press(c, "ArrowUp", 3);    // (9,1)
@@ -914,11 +1010,11 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
 
     // Header batch: collect for i in range 3 (row 6), then lay it at row 1, indent 0.
     press(c, "ArrowUp");           // (6,6)
-    press(c, "ArrowRight"); press(c, "i"); // (7,6) for
-    press(c, "ArrowRight"); press(c, "i"); // (8,6) i
-    press(c, "ArrowRight"); press(c, "i"); // (9,6) in
-    press(c, "ArrowRight"); press(c, "i"); // (10,6) range
-    press(c, "ArrowRight"); press(c, "i"); // (11,6) 3
+    press(c, "ArrowRight"); press(c, "e"); // (7,6) for
+    press(c, "ArrowRight"); press(c, "e"); // (8,6) i
+    press(c, "ArrowRight"); press(c, "e"); // (9,6) in
+    press(c, "ArrowRight"); press(c, "e"); // (10,6) range
+    press(c, "ArrowRight"); press(c, "e"); // (11,6) 3
     press(c, "ArrowUp", 5);        // (11,1)
     press(c, "ArrowLeft", 10);     // (1,1)
     press(c, "p");                          // for
@@ -931,10 +1027,10 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // Body batch: collect print, i and lay it at row 2, INDENT 1 (cols 2,3 — one tile in).
     press(c, "ArrowDown", 3);      // (5,4)
     press(c, "ArrowRight", 2);     // (7,4) print
-    press(c, "i");
+    press(c, "e");
     press(c, "ArrowRight");        // (8,4)
     press(c, "ArrowDown", 2);      // (8,6) i
-    press(c, "i");
+    press(c, "e");
     press(c, "ArrowUp", 4);        // (8,2)
     press(c, "ArrowLeft", 6);      // (2,2) — indent 1
     press(c, "p");                          // print

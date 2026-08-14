@@ -72,6 +72,10 @@ export interface MountedPuzzle {
   /** Extra in-room actions bound via keybindings (place, debug, dd/dw…). Return
    *  true if the module claims the action; false lets the engine handle it. */
   onAction?(actionId: string): boolean;
+  /** Does the module hold something on `cell` (a placed token, a Build/Run control,
+   *  a board tile)? The engine asks before dropping a token there, so a Q-drop never
+   *  lands on top of module furniture. Omitted ⇒ the module claims no cells. */
+  occupies?(cell: Cell): boolean;
   /** Rebuild the module's own layers at the current tile size. */
   relayout(): void;
   /** Non-DOM cleanup (the engine also clears the room DOM wholesale). */

@@ -684,6 +684,44 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
+/* DROPPED token (Q): a loose item lying on the floor, not part of any puzzle — the
+   Minecraft item-entity read. Deliberately unlike .tile-placed: small rather than
+   tile-filling, floating rather than seated, and neutral rather than amber, so "this is
+   just lying here" is legible at a glance. Walking over it picks it back up; it despawns
+   on its own, and spends its last stretch in .expiring so that is never silent. */
+.room-dropped-layer { position: absolute; top: 0; left: 0; }
+.room-dropped {
+  position: absolute;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; /* gameplay is keyboard-only (Rule 4) — never a click target */
+  animation: dropped-bob 1.6s ease-in-out infinite;
+}
+/* The item itself is a small chip inside the cell box, so the cell stays walkable-looking. */
+.room-dropped-label {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-weight: 600; line-height: 1;
+  max-width: 74%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  padding: 2px 5px; border-radius: 5px;
+  color: #f4e4c1; background: rgba(38, 28, 20, 0.82);
+  border: 1px solid rgba(244, 228, 193, 0.28);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.34);
+}
+@keyframes dropped-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-13%); }
+}
+/* Last DROP_WARN_MS before despawn: blink out so it reads as "about to go". */
+.room-dropped.expiring { animation: dropped-bob 1.6s ease-in-out infinite, dropped-expire 0.5s ease-in-out infinite; }
+@keyframes dropped-expire {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.25; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Keep the meaning (it is fading), drop the movement. */
+  .room-dropped { animation: none; }
+  .room-dropped.expiring { animation: none; opacity: 0.45; }
+}
+
 /* Placed token: dropped into the coding area — brighter amber + a snap pop (3i). */
 .room-placed-layer { position: absolute; top: 0; left: 0; }
 .tile-placed {
@@ -1132,6 +1170,19 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   55% { transform: translate(0, 0) scale(1); }
   62% { transform: translate(0, 0) scale(1.15); }
   70%, 100% { transform: translate(0, 0) scale(1); }
+}
+
+/* drop (Q): the chip is THROWN out of the slot and lands in front, then bobs — the
+   reverse arc of `place`, which snaps inward into a slot. */
+.tdemo-drop { gap: 16px; }
+.tdemo-drop-chip { animation: tdemo-toss 2.2s ease-in-out infinite; }
+@keyframes tdemo-toss {
+  0%      { transform: translate(-34px, 0) scale(0.8); opacity: 0; }
+  15%     { transform: translate(-34px, 0) scale(0.9); opacity: 1; }
+  45%     { transform: translate(0, -14px) scale(1); }
+  60%     { transform: translate(0, 0) scale(1); }
+  75%     { transform: translate(0, -5px) scale(1); }
+  90%, 100% { transform: translate(0, 0) scale(1); }
 }
 
 /* build: a chunky button depresses, then a checkmark flashes. */

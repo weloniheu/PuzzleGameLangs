@@ -24,7 +24,7 @@ export const COMMON_ACTIONS: ActionDef[] = [
   { id: "right", label: "Move right" },
   { id: "pickup", label: "Pick up / inventory" },
   { id: "place", label: "Place token" },
-  { id: "discard", label: "Discard held token" },
+  { id: "drop", label: "Drop held token" },
   { id: "interact", label: "Interact (Build / Run / Talk)" },
   { id: "undo", label: "Undo move" },
   { id: "reset", label: "Reset puzzle" },
@@ -48,18 +48,18 @@ export function defaultBindings(scheme: SchemeId): Bindings {
     return {
       up: [["k"]], down: [["j"]], left: [["h"]], right: [["l"]],
       pickup: [["d", 'w']], place: [["p"]], interact: [["Enter"]], debug: [["`"]],
-      undo: [["u"]], reset: [["r"]], help: [["?"]], task: [["t"]],
-      // `x` is vim's delete-under-cursor and already means deleteToken (a token on the
-      // BOARD), so inventory-discard joins the d-operator family instead: dd / dw / dx.
-      discard: [["d", "x"]],
+      undo: [["u"]], reset: [["r"]], help: [["?"]], task: [["t"]], drop: [["q"]],
       clearLine: [["d", "d"]], deleteToken: [["x"]],
     };
   }
+  // Minecraft's vocabulary, since the HUD is already a hotbar: E opens the inventory,
+  // Q throws the held token onto the floor. (Digits 1-9 select a slot too, but those
+  // are a FIXED convention handled in systems/inputDispatch — not rebindable, same as Esc.)
   return {
     up: [["ArrowUp"], ["w"]], down: [["ArrowDown"], ["s"]],
     left: [["ArrowLeft"], ["a"]], right: [["ArrowRight"], ["d"]],
-    pickup: [["i"]], place: [["p"]], interact: [["Enter"]], debug: [["`"]],
-    undo: [["u"]], reset: [["r"]], help: [["?"]], task: [["t"]], discard: [["x"]],
+    pickup: [["e"]], place: [["p"]], interact: [["Enter"]], debug: [["`"]],
+    undo: [["u"]], reset: [["r"]], help: [["?"]], task: [["t"]], drop: [["q"]],
   };
 }
 

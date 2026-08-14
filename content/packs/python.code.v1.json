@@ -268,9 +268,17 @@
             {
               "id": "ctut-2",
               "speaker": "narrator",
-              "text": "Walk up to a word on the floor and press I to pick it up.",
+              "text": "Walk up to a word on the floor and press E to pick it up.",
               "trigger": "guided_tutorial",
               "waitFor": "pickup"
+            },
+            {
+              "id": "ctut-2b",
+              "speaker": "narrator",
+              "text": "Words you carry sit in the bar at the bottom. Press a number key to choose which slot you are holding.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false,
+              "demo": "pickup"
             },
             {
               "id": "ctut-3",
@@ -278,6 +286,13 @@
               "text": "Walk to an empty tile and press P to place it down.",
               "trigger": "guided_tutorial",
               "waitFor": "place"
+            },
+            {
+              "id": "ctut-3b",
+              "speaker": "narrator",
+              "text": "Changed your mind? Press Q to toss a word onto the floor in front of you. Walk over it to take it back — but leave it too long and it disappears.",
+              "trigger": "guided_tutorial",
+              "waitFor": "drop"
             },
             {
               "id": "ctut-4",

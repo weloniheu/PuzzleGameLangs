@@ -69,6 +69,7 @@ export const codingModule: RoomPuzzleModule = {
     return {
       onInteract: (cell) => area.onInteract(cell),
       onAction: (actionId) => area.onAction(actionId),
+      occupies: (cell) => area.occupies(cell),
       relayout: () => {
         area.relayout();
         terminal?.clampAndPlace(); // keep a popped window on-screen after resize

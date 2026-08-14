@@ -25,7 +25,7 @@ describe("decide — dialogue focus state (highest precedence)", () => {
 
   it("suppresses ALL gameplay keys (movement doesn't leak through)", () => {
     expect(decide(dlgCtx, "ArrowUp", [], standard)).toEqual({ kind: "swallow" });
-    expect(decide(dlgCtx, "i", [], standard)).toEqual({ kind: "swallow" });
+    expect(decide(dlgCtx, "e", [], standard)).toEqual({ kind: "swallow" });
   });
 
   it("outranks the destination menu", () => {
@@ -54,7 +54,7 @@ describe("decide — task overlay open (board frozen)", () => {
 
   it("suppresses everything else — movement doesn't leak through a frozen board", () => {
     expect(decide(taskCtx, "ArrowUp", [], standard)).toEqual({ kind: "swallow" });
-    expect(decide(taskCtx, "i", [], standard)).toEqual({ kind: "swallow" });
+    expect(decide(taskCtx, "e", [], standard)).toEqual({ kind: "swallow" });
     expect(decide(taskCtx, "Enter", [], standard)).toEqual({ kind: "swallow" });
   });
 
@@ -94,17 +94,17 @@ describe("decide — destination menu focus state", () => {
   });
 
   it("a REBOUND movement key navigates the menu; its replaced default no longer does", () => {
-    // Rebind standard's wasd-up slot from "w" to "e".
-    const res = rebind(standard, "up", 1, ["e"]);
+    // Rebind standard's wasd-up slot from "w" to "z" (a key no default claims).
+    const res = rebind(standard, "up", 1, ["z"]);
     expect(res.ok).toBe(true);
     if (res.ok) {
-      expect(decide(destCtx, "e", [], res.bindings)).toEqual({ kind: "dest-move", delta: -1 });
+      expect(decide(destCtx, "z", [], res.bindings)).toEqual({ kind: "dest-move", delta: -1 });
       expect(decide(destCtx, "w", [], res.bindings)).toEqual({ kind: "swallow" });
     }
   });
 
   it("suppresses everything else (gameplay keys don't reach the room)", () => {
-    expect(decide(destCtx, "i", [], standard)).toEqual({ kind: "swallow" });
+    expect(decide(destCtx, "e", [], standard)).toEqual({ kind: "swallow" });
     expect(decide(destCtx, "p", [], standard)).toEqual({ kind: "swallow" });
   });
 });
@@ -117,7 +117,7 @@ describe("decide — esc + bindings (room focus)", () => {
   it("a bound single key fires its action (normalized: 'W' → up)", () => {
     expect(decide(roomCtx, "ArrowUp", [], standard)).toEqual({ kind: "fire", action: "up" });
     expect(decide(roomCtx, "W", [], standard)).toEqual({ kind: "fire", action: "up" });
-    expect(decide(roomCtx, "i", [], standard)).toEqual({ kind: "fire", action: "pickup" });
+    expect(decide(roomCtx, "e", [], standard)).toEqual({ kind: "fire", action: "pickup" });
   });
 
   it("an unbound key passes through", () => {
@@ -129,29 +129,42 @@ describe("decide — esc + bindings (room focus)", () => {
     expect(first).toEqual({ kind: "pending", pending: ["d"] });
     expect(decide(roomCtx, "d", ["d"], vim)).toEqual({ kind: "fire", action: "clearLine" });
     expect(decide(roomCtx, "w", ["d"], vim)).toEqual({ kind: "fire", action: "pickup" }); // dw
-    expect(decide(roomCtx, "x", ["d"], vim)).toEqual({ kind: "fire", action: "discard" }); // dx
-  });
-
-  it("the whole d-operator family stays distinct — dd / dw / dx never shadow each other", () => {
-    // They diverge at the SECOND key, so each is reachable and none is a prefix of another.
-    const fired = ["d", "w", "x"].map((k) => decide(roomCtx, k, ["d"], vim));
-    expect(fired).toEqual([
-      { kind: "fire", action: "clearLine" },
-      { kind: "fire", action: "pickup" },
-      { kind: "fire", action: "discard" },
-    ]);
-    // Bare `x` is still vim's delete-under-cursor, NOT the inventory discard.
-    expect(decide(roomCtx, "x", [], vim)).toEqual({ kind: "fire", action: "deleteToken" });
   });
 
   it("a broken sequence RESTARTS from the pressed key", () => {
-    // pending "d", then "p": ["d","p"] matches nothing → restart from ["p"] → place
-    expect(decide(roomCtx, "p", ["d"], vim)).toEqual({ kind: "fire", action: "place" });
+    // pending "d", then "x": ["d","x"] matches nothing → restart from ["x"] → deleteToken
+    expect(decide(roomCtx, "x", ["d"], vim)).toEqual({ kind: "fire", action: "deleteToken" });
     // pending "d", then an unbound key: restart also finds nothing → pass
     expect(decide(roomCtx, "z", ["d"], vim)).toEqual({ kind: "pass" });
   });
 
-  it("standard binds the inventory discard to a bare 'x' (no vim operator prefix)", () => {
-    expect(decide(roomCtx, "x", [], standard)).toEqual({ kind: "fire", action: "discard" });
+  it("Minecraft vocabulary: E opens the inventory, Q drops the held token", () => {
+    expect(decide(roomCtx, "e", [], standard)).toEqual({ kind: "fire", action: "pickup" });
+    expect(decide(roomCtx, "q", [], standard)).toEqual({ kind: "fire", action: "drop" });
+    expect(decide(roomCtx, "q", [], vim)).toEqual({ kind: "fire", action: "drop" });
+  });
+});
+
+describe("decide — hotbar digits are a FIXED convention, not a rebindable action", () => {
+  it("1-9 select that slot (0-based), in both schemes", () => {
+    expect(decide(roomCtx, "1", [], standard)).toEqual({ kind: "slot", index: 0 });
+    expect(decide(roomCtx, "5", [], standard)).toEqual({ kind: "slot", index: 4 });
+    expect(decide(roomCtx, "9", [], vim)).toEqual({ kind: "slot", index: 8 });
+  });
+
+  it("0 is not a slot key (the hotbar is numbered from 1)", () => {
+    expect(decide(roomCtx, "0", [], standard)).toEqual({ kind: "pass" });
+  });
+
+  it("a digit outranks the bindings — no scheme can quietly claim one", () => {
+    const res = rebind(standard, "place", 0, ["3"]);
+    // Even if a player somehow bound an action to "3", the slot convention wins.
+    if (res.ok) expect(decide(roomCtx, "3", [], res.bindings)).toEqual({ kind: "slot", index: 2 });
+  });
+
+  it("a digit does NOT leak through a blocking surface (dialogue / menus swallow it)", () => {
+    expect(decide(dlgCtx, "2", [], standard)).toEqual({ kind: "swallow" });
+    expect(decide(destCtx, "2", [], standard)).toEqual({ kind: "swallow" });
+    expect(decide(taskCtx, "2", [], standard)).toEqual({ kind: "swallow" });
   });
 });

@@ -176,15 +176,23 @@ async function bootHub() {
   roomManager.enter("hub");
 }
 
-// TEMP dev switcher: 1 = the code game (hub world); 2–4 = the card games. Switching to a
-// card tears the room world down first so no room listeners/timers survive the swap.
-window.addEventListener("keydown", (e) => {
-  const n = Number(e.key);
-  if (!Number.isInteger(n) || n < 1 || n > DEV_PACKS.length) return;
-  if (n === 1) { bootHub(); return; }
-  roomManager?.teardown();
-  loadAndShow(DEV_PACKS[n - 1]);
-});
+// TEMP dev switcher: Alt+1 = the code game (hub world); Alt+2–4 = the card games. Switching
+// to a card tears the room world down first so no room listeners/timers survive the swap.
+//
+// DEV-ONLY, and Alt-modified, for one reason: the bare digits are GAMEPLAY now — 1-9 select
+// an inventory slot (systems/inputDispatch). This listener is on `window` and ignored focus,
+// so in the shipped build a player pressing "2" for their second hotbar slot mid-puzzle
+// silently tore down the room and loaded a different game.
+if (import.meta.env.DEV) {
+  window.addEventListener("keydown", (e) => {
+    if (!e.altKey) return;
+    const n = Number(e.key);
+    if (!Number.isInteger(n) || n < 1 || n > DEV_PACKS.length) return;
+    if (n === 1) { bootHub(); return; }
+    roomManager?.teardown();
+    loadAndShow(DEV_PACKS[n - 1]);
+  });
+}
 
 // --- title screen (STYLE 3a "Dawn grove"): morning sky, the mascot, the menu ---
 // Pure chrome over the boot: ▶ Start tears it down and enters the hub; 🏆 Achievements

@@ -45,6 +45,24 @@ describe("defaults", () => {
     expect(actionsFor("vim").some((a) => a.id === "clearLine")).toBe(true);
     expect(actionsFor("vim").some((a) => a.id === "deleteToken")).toBe(true);
   });
+
+  // The hotbar HUD draws slot numbers and the game reads as Minecraft-adjacent, so the
+  // inventory/drop keys follow that vocabulary rather than inventing their own.
+  it("borrows Minecraft's inventory vocabulary: E opens the inventory, Q drops", () => {
+    const std = defaultBindings("standard");
+    expect(std.pickup).toEqual([["e"]]);
+    expect(std.drop).toEqual([["q"]]);
+    expect(defaultBindings("vim").drop).toEqual([["q"]]);
+  });
+
+  // Digits are NOT here on purpose: 1-9 are a fixed slot-select convention handled in
+  // systems/inputDispatch, so no scheme may bind them and no rebind can steal them.
+  it("binds no digit in either scheme (slot select is a fixed convention)", () => {
+    for (const scheme of ["standard", "vim"] as const) {
+      const all = Object.values(defaultBindings(scheme)).flat().flat();
+      expect(all.filter((k) => /^[0-9]$/.test(k))).toEqual([]);
+    }
+  });
 });
 
 describe("findConflict", () => {
@@ -92,11 +110,11 @@ describe("reserved keys", () => {
 describe("rebind", () => {
   it("applies a valid rebind to the chosen slot without mutating the input", () => {
     const std = defaultBindings("standard");
-    const res = rebind(std, "pickup", 0, ["e"]);
+    const res = rebind(std, "pickup", 0, ["z"]);
     expect(res.ok).toBe(true);
     if (res.ok) {
-      expect(res.bindings.pickup).toEqual([["e"]]);
-      expect(std.pickup).toEqual([["i"]]); // original untouched
+      expect(res.bindings.pickup).toEqual([["z"]]);
+      expect(std.pickup).toEqual([["e"]]); // original untouched (E is the default)
     }
   });
 

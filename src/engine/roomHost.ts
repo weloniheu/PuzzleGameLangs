@@ -14,7 +14,7 @@
 // ---------------------------------------------------------------------------
 
 import type { DialogueBeat, DialogueConfig, DialogueSpeaker, Puzzle, TutorialBlock } from "../schema/types";
-import { parseRoom, step, pileAt, MOVE, type Cell, type Direction } from "./core/room";
+import { parseRoom, step, pileAt, isWalkable, MOVE, type Cell, type Direction } from "./core/room";
 import {
   resetCodex, getUnlocksSet, getTestMode, setTestMode,
   hasSeenTutorial, markTutorialSeen, resetSeenTutorials,
@@ -43,6 +43,8 @@ const HUD_GAP = 10;          // consistent gap between the HUD and its lower nei
                              // (the docked panel's top edge, or the window's bottom edge).
 const SIDE_RESERVE = 8;      // px breathing room so the room never butts against the window edge
 const RESIZE_DEBOUNCE = 120; // ms
+const DROP_TTL_MS = 8000;    // a dropped token despawns this long after it lands
+const DROP_WARN_MS = 2000;   // ...and spends its last stretch visibly fading out first
 
 /** A door transition target, or a solved-puzzle notification, bubbled up to the manager. */
 export interface RoomCallbacks {
@@ -188,6 +190,10 @@ export function mountRoom(
   markerLayer.className = "room-marker-layer";
   const pileLayer = document.createElement("div");
   pileLayer.className = "room-pile-layer";
+  // Q-dropped tokens (transient, auto-repickup, self-despawning) — their own layer so a
+  // relayout can reposition them without disturbing piles or the module's placed tokens.
+  const droppedLayer = document.createElement("div");
+  droppedLayer.className = "room-dropped-layer";
   const slime = createSlime();
 
   viewport.appendChild(world);
@@ -287,7 +293,7 @@ export function mountRoom(
   // Order matters for stacking; module layers slot in around these (see addLayer).
   world.append(tileLayer, portals.doorLayer);
   if (portals.menuPortalEl) world.append(portals.menuPortalEl); // below the slime, which spawns on top of it
-  world.append(markerLayer, pileLayer, slime);
+  world.append(markerLayer, pileLayer, droppedLayer, slime);
 
   // --- the puzzle-type MODULE: looked up by registry, mounted with engine services ---
   let mounted: MountedPuzzle | null = null;
@@ -391,6 +397,7 @@ export function mountRoom(
     portals.buildMenuPortal();
     dialogue.buildMarker(tile);
     buildPiles();
+    drawDropped();
     mounted?.relayout(); // module layers (zone, controls, placed, panel clamp)
     applyViewport();
   }
@@ -475,8 +482,12 @@ export function mountRoom(
   // Gameplay actions (bindings-driven; see systems/inputDispatch for the routing)
   // -------------------------------------------------------------------------
 
-  /** Facing drives the eye rule (3j): down = 2 dots, left/right = 1 offset, up = 0. */
+  /** Facing drives the eye rule (3j): down = 2 dots, left/right = 1 offset, up = 0.
+   *  Kept as DATA too (not just the dataset attribute) because the Q drop throws the
+   *  token at the cell in front of the slime — see dropTargetCell(). */
+  let facing: Direction = MOVE.down; // rooms spawn the slime facing the camera
   function faceDirection(dir: Direction) {
+    facing = dir;
     slime.dataset.facing =
       dir.dx < 0 ? "left" : dir.dx > 0 ? "right" : dir.dy < 0 ? "up" : "down";
   }
@@ -525,6 +536,7 @@ export function mountRoom(
       if (pos.x !== before.x || pos.y !== before.y) {
         squishForStep();
         puffDust(before);
+        autoPickupAt(pos); // walked onto a dropped token → it comes back with you
         dialogue.notify("move");
       }
     }
@@ -548,17 +560,99 @@ export function mountRoom(
     if (inv.focused()) { exitInventory(); } else { inv.enterFocus(); }
   }
 
-  /** Throw the held token away — the same slot choice `place` makes (inventory focus →
-   *  the SELECTED slot, room focus → the FIFO front), minus the placing: the token is
-   *  simply gone. Generic to any room that declares an inventory, so it lives here and
-   *  not in a module — no puzzle type needs to know the action exists.
+  // --- DROPPED ITEMS (Q): transient tokens lying on the floor ------------------
+  //
+  // Distinct from a PLACED token (which is a module's business — permanent, and inside a
+  // coding area it counts as code). A dropped token is engine-level and temporary: it
+  // lands on the cell the slime FACES, is picked back up just by walking over it, and
+  // despawns on its own after DROP_TTL_MS so a room can't silt up with abandoned tokens.
+  //
+  // Nothing here is scarce — piles are infinite sources (tryPickup never consumes one) —
+  // so a despawn can't strand a level. If piles ever become finite, this timer becomes a
+  // soft-lock risk and should be revisited.
+  interface DroppedItem { token: string; x: number; y: number; timer: number; el: HTMLElement; }
+  const dropped: DroppedItem[] = [];
+
+  const droppedAt = (x: number, y: number) => dropped.find((d) => d.x === x && d.y === y) ?? null;
+
+  /** Remove a dropped item from the world (its timer + its element). */
+  function clearDropped(d: DroppedItem) {
+    clearTimeout(d.timer);
+    d.el.remove();
+    const i = dropped.indexOf(d);
+    if (i >= 0) dropped.splice(i, 1);
+  }
+
+  /** The cell a Q-drop targets: one step in the direction the slime faces. Must be free
+   *  floor — a wall, a pile, a door, a control, another dropped item or the hint giver all
+   *  block it, and the drop simply doesn't happen (the token stays in hand rather than
+   *  vanishing into something). The module owns placed tokens, so it is asked too. */
+  function dropTargetCell(): Cell | null {
+    const t = { x: pos.x + facing.dx, y: pos.y + facing.dy };
+    if (!isWalkable(room, t.x, t.y)) return null;
+    if (pileAt(room, t.x, t.y) || droppedAt(t.x, t.y)) return null;
+    if (portals.doorAt(t.x, t.y) || portals.onMenuPortal(t.x, t.y)) return null;
+    if (dialogue.onHintGiver(t.x, t.y)) return null;
+    if (mounted?.occupies?.(t)) return null; // e.g. a placed token / Build / Run control
+    return t;
+  }
+
+  /** Throw the held token onto the floor in front of the slime. Same slot the `place`
+   *  action uses (the selected hotbar slot), but it lands in the world instead of the
+   *  puzzle, and it is recoverable — walk back over it before it despawns.
    *
-   *  Deliberately inert while the full-inventory drop prompt is up: that prompt already
-   *  owns the discard decision (Enter on an empty slot throws the pending token away),
-   *  and removing a slot underneath it would free space the prompt never notices. */
-  function pressDiscard() {
+   *  Inert while the full-inventory prompt is up: that prompt already owns the decision. */
+  function pressDrop() {
     if (!inv || inv.hasPendingDrop()) return;
-    inv.removeAt(inv.focused() ? inv.selected() : 0); // out-of-range slot ⇒ no-op
+    const index = inv.selected();
+    if (inv.itemAt(index) === undefined) return; // empty slot → nothing in hand
+    const cell = dropTargetCell();
+    if (!cell) return;                           // blocked → keep the token, don't eat it
+    const token = inv.removeAt(index)!;
+    spawnDropped(token, cell);
+    dialogue.notify("drop");                     // GUIDED TUTORIAL: satisfies a "drop" step
+  }
+
+  /** Put `token` on the floor at `cell` and start its despawn countdown. */
+  function spawnDropped(token: string, cell: Cell) {
+    const el = document.createElement("div");
+    el.className = "room-dropped";
+    const label = document.createElement("span");
+    label.className = "room-dropped-label";
+    label.textContent = token;
+    el.appendChild(label);
+    droppedLayer.appendChild(el);
+    const d: DroppedItem = { token, x: cell.x, y: cell.y, timer: 0, el };
+    // Warn before it goes: the last stretch fades/blinks so a despawn is never a silent
+    // disappearance the player only notices afterwards.
+    const warn = window.setTimeout(() => el.classList.add("expiring"), DROP_TTL_MS - DROP_WARN_MS);
+    d.timer = window.setTimeout(() => { clearTimeout(warn); clearDropped(d); }, DROP_TTL_MS);
+    dropped.push(d);
+    drawDropped();
+  }
+
+  /** Position every dropped item at the current tile size (also called from relayout). */
+  function drawDropped() {
+    for (const d of dropped) {
+      d.el.style.width = `${tile}px`;
+      d.el.style.height = `${tile}px`;
+      d.el.style.transform = `translate(${d.x * tile}px, ${d.y * tile}px)`;
+      const label = d.el.firstElementChild as HTMLElement | null;
+      if (label) label.style.fontSize = `${Math.round(tile * 0.22)}px`;
+    }
+  }
+
+  /** Walking onto a dropped token picks it back up — no keypress. A FULL inventory simply
+   *  leaves it lying there (it keeps counting down); the drop/cancel prompt is for a
+   *  DELIBERATE pickup, and firing it on a walk-over would ambush the player mid-stride. */
+  function autoPickupAt(cell: Cell) {
+    const d = droppedAt(cell.x, cell.y);
+    if (!d || !inv || inv.isFull()) return;
+    clearDropped(d);
+    inv.pickupToken(d.token, null);
+    sparkleAt(cell);
+    dialogue.notify("pickup");
+    dialogue.fireFirstTime("first_pickup");
   }
 
   function doInteract() {
@@ -599,7 +693,7 @@ export function mountRoom(
     if (mounted?.onAction?.(action)) return;
     if (MOVE[action]) { moveOrCursor(MOVE[action]); return; }
     if (action === "pickup") { pressPickup(); return; }
-    if (action === "discard") { pressDiscard(); return; }
+    if (action === "drop") { pressDrop(); return; }
     if (action === "interact") doInteract();
   }
 
@@ -620,6 +714,7 @@ export function mountRoom(
     onDestMove: (delta) => portals.moveDestSel(delta),
     onEscape: () => handleEscape(),
     onTaskClose: () => closeTask(),
+    onSlot: (index) => inv?.selectSlot(index), // hotbar 1-9; no inventory ⇒ nothing to select
     onAction: dispatchAction,
   });
   viewport.addEventListener("keydown", input.onKeydown);
@@ -695,6 +790,7 @@ export function mountRoom(
     if (resizeTimer) { clearTimeout(resizeTimer); resizeTimer = 0; }
     clearTimeout(moveSquishTimer);        // pending move-squish relax
     clearTimeout(arriveTimer);            // pending arrival-pop cleanup
+    for (const d of [...dropped]) clearDropped(d); // dropped-token despawn timers
     settings.cancelCapture();             // drop any pending rebind-capture timer
   });
   teardown.add(() => {

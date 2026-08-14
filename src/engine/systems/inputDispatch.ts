@@ -32,6 +32,7 @@ export type Decision =
   | { kind: "dest-move"; delta: -1 | 1 }
   | { kind: "escape" }
   | { kind: "task-close" }
+  | { kind: "slot"; index: number }   // 1-9 → select that inventory slot (0-based index)
   | { kind: "fire"; action: string }
   | { kind: "pending"; pending: Key[] }
   | { kind: "pass" };                 // unbound key — let it pass through
@@ -75,6 +76,11 @@ export function decide(ctx: DispatchContext, rawKey: string, pending: Key[], bin
     return { kind: "swallow" };
   }
   if (rawKey === "Escape") return { kind: "escape" }; // reserved: esc ladder
+  // Digits 1-9 select an inventory slot — a FIXED convention, not a rebindable action:
+  // the hotbar draws those numbers on the slots themselves, so the mapping is already
+  // promised on screen and there is nothing for a player to gain by remapping it. Checked
+  // before the bindings resolve so no scheme can quietly claim a digit.
+  if (rawKey >= "1" && rawKey <= "9") return { kind: "slot", index: Number(rawKey) - 1 };
 
   const key = normalizeKey(rawKey);
   let buf = [...pending, key];
@@ -101,6 +107,7 @@ export interface InputDispatchDeps {
   onDestMove(delta: -1 | 1): void;
   onEscape(): void;
   onTaskClose(): void;
+  onSlot(index: number): void;
   onAction(action: string): void;
 }
 
@@ -135,6 +142,7 @@ export function createInputDispatch(deps: InputDispatchDeps): InputDispatch {
       case "dest-move": e.preventDefault(); deps.onDestMove(d.delta); return;
       case "escape": e.preventDefault(); deps.onEscape(); return;
       case "task-close": e.preventDefault(); deps.onTaskClose(); return;
+      case "slot": e.preventDefault(); deps.onSlot(d.index); return;
       case "fire":
         e.preventDefault();
         clearPending();

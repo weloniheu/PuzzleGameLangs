@@ -55,7 +55,7 @@ describe("which picture a step draws", () => {
   // a legal value must never get an empty box.
   it("renders a non-empty picture for every kind in the closed set", () => {
     const kinds: TutorialDemo[] = [
-      "move", "interact", "pickup", "place", "build", "run", "enter_door", "push", "combine",
+      "move", "interact", "pickup", "place", "drop", "build", "run", "enter_door", "push", "combine",
       "prefilled", "loop", "indent", "function", "argument", "shuffle", "lowlight",
     ];
     for (const kind of kinds) {

@@ -335,6 +335,8 @@ export type DialogueTrigger =
  *  from these — it never invents a new one. */
 export type TutorialWaitFor =
   | "move" | "interact" | "pickup" | "place" | "build" | "run"
+  /** threw a held token onto the floor (the Q drop — a transient, auto-repickup item) */
+  | "drop"
   /** an OPEN door transition — stricter than "interact" (blocked doors / hint giver don't count) */
   | "enter_door"
   // CARD-GAME kinds (fired via systems/tutorialOverlay.ts; see content/TUTORIAL_SCRIPTS.md):

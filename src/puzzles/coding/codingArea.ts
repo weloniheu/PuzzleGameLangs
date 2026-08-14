@@ -118,6 +118,9 @@ export interface CodingAreaDeps {
 export interface CodingArea {
   /** Interact on a Build/Run control → activate. False when not on a control. */
   onInteract(cell: Cell): boolean;
+  /** Is a placed token or a Build/Run control sitting on this cell? (The engine asks
+   *  before dropping a token there — see MountedPuzzle.occupies.) */
+  occupies(cell: Cell): boolean;
   /** place / pickup(placed token) / debug / clearLine / deleteToken. */
   onAction(actionId: string): boolean;
   /** Rebuild the zone/controls/placed layers at the current tile size. */
@@ -341,9 +344,12 @@ export function createCodingArea(deps: CodingAreaDeps): CodingArea {
     dialogue.fireFirstTime("first_place");
   }
 
-  /** 'p': inventory focus → place SELECTED slot; room focus → place FIFO (front). */
+  /** 'p': place the SELECTED slot — the one the hotbar marks as held, in room focus or
+   *  inventory focus alike (digits 1-9 pick it; it defaults to slot 1, so the plain
+   *  "collect three, place three" flow is still front-to-back FIFO as it always was).
+   *  The Q drop reads the same slot, so both verbs act on whatever you're holding. */
   function pressPlace() {
-    placeToken(ctx.inventory?.focused() ? ctx.inventory.selected() : 0);
+    placeToken(ctx.inventory?.selected() ?? 0);
   }
 
   function vimClearLine() {            // dd — clear the player's CURRENT row only (any column,
@@ -364,6 +370,9 @@ export function createCodingArea(deps: CodingAreaDeps): CodingArea {
   }
 
   return {
+    occupies(cell) {
+      return !!(placedAt(cell.x, cell.y) || controlAt(cell.x, cell.y));
+    },
     onInteract(cell) {
       const c = controlAt(cell.x, cell.y); // stand on Build / Run → activate
       if (!c) return false;

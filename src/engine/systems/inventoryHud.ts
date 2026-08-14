@@ -56,6 +56,15 @@ export function moveCursor(s: InvState, delta: -1 | 1): InvState {
   return { ...s, sel };
 }
 
+/** Select a slot outright (the hotbar's 1-9 keys). Out of range ⇒ unchanged, so a room
+ *  with 5 slots simply ignores a 7. Deliberately does NOT enter inventory focus: the
+ *  selection is the "held" slot, exactly like a Minecraft hotbar, and stealing focus
+ *  would hand the arrow keys to the cursor when the player still wants to walk. */
+export function selectSlot(s: InvState, index: number): InvState {
+  if (index < 0 || index >= s.slots) return s;
+  return { ...s, sel: index };
+}
+
 /** Resolve the drop prompt: a FILLED selected slot is dropped and the pending token
  *  takes its place at the back (FIFO); an EMPTY selected slot discards the pending
  *  token. Either way the prompt resolves and focus returns to the room. */
@@ -98,6 +107,8 @@ export interface InventoryHud {
   enterFocus(): void;
   exitFocus(): void;
   moveCursor(delta: -1 | 1): void;
+  /** Select a slot outright (hotbar 1-9). Out of range ⇒ no-op; never enters focus. */
+  selectSlot(index: number): void;
   confirmDrop(): void;
   draw(): void;
   /** Anchor the strip (set by the host's camera pass). */
@@ -121,7 +132,9 @@ export function createInventoryHud(container: HTMLElement, slots: number): Inven
     for (let s = 0; s < state.slots; s++) {
       const slot = document.createElement("span");
       const filled = s < state.items.length;
-      const selected = state.focused && s === state.sel;
+      // The selected slot is the HELD one — what place/drop act on — so it stays marked
+      // even out of inventory focus (focus brightens the whole strip on top of this).
+      const selected = s === state.sel;
       slot.className = `room-inventory-slot${filled ? "" : " empty"}${selected ? " selected" : ""}`;
       slot.textContent = filled ? state.items[s] : "";
       const num = document.createElement("span"); // fixed slot number (1a hotbar)
@@ -166,6 +179,10 @@ export function createInventoryHud(container: HTMLElement, slots: number): Inven
     },
     moveCursor(delta) {
       state = moveCursor(state, delta);
+      draw();
+    },
+    selectSlot(index) {
+      state = selectSlot(state, index);
       draw();
     },
     confirmDrop() {

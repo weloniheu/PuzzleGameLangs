@@ -42,7 +42,7 @@ Step mechanics (both mechanisms):
 
 - `waitFor: <TutorialWaitFor>` — the step stays until the player actually performs
   the action; gameplay stays live meanwhile. Closed engine set: `move`, `interact`,
-  `pickup`, `place`, `build`, `run`, `enter_door`, `push`, `combine`.
+  `pickup`, `place`, `drop`, `build`, `run`, `enter_door`, `push`, `combine`.
 - No `waitFor` — informational: stays until Enter, with an "Enter ▸" cue. (Room-world
   beats additionally need `autoAdvance: false` for this; the card-game bar always
   Enter-gates informational steps.)
@@ -66,7 +66,7 @@ just used delays the actual new idea and reads as distrust.
 
 **Control-restating rule:** baseline movement (arrows/WASD) and the generic idea of
 Enter-to-interact are taught once, in the hub — never restated. Every puzzle-specific
-use of a control (push-by-walking, Enter-to-drop-in-bowl, I/P, R-to-reset) IS restated
+use of a control (push-by-walking, Enter-to-drop-in-bowl, E/P/Q, R-to-reset) IS restated
 in that puzzle's own tutorial, even when it overlaps another puzzle's controls.
 
 ---
@@ -90,8 +90,12 @@ someone who never saw step 1. Escape ends the whole unit at once.
 1. "This is a code puzzle. Let's learn how it works." — Enter
 2. "Press T any time to see your task. The board freezes while it's open — press T
    again (or Escape) to get back to it." — Enter
-3. "Walk up to a word on the floor and press I to pick it up." — `waitFor: pickup`
-4. "Walk to an empty tile and press P to place it down." — `waitFor: place`
+3. "Walk up to a word on the floor and press E to pick it up." — `waitFor: pickup`
+4. "Words you carry sit in the bar at the bottom. Press a number key to choose which slot
+   you are holding." — Enter, `demo: pickup`
+5. "Walk to an empty tile and press P to place it down." — `waitFor: place`
+6. "Changed your mind? Press Q to toss a word onto the floor in front of you. Walk over it
+   to take it back — but leave it too long and it disappears." — `waitFor: drop`
 5. "Stand on Build and press Enter to compile your line." — `waitFor: build`
 6. "Stand on Run and press Enter to see what your line does." — `waitFor: run`
 
