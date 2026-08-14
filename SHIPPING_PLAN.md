@@ -231,7 +231,14 @@ later config change instead of a refactor under release pressure.
 
 ---
 
-## Phase 3 — Steam
+## Phase 3 — Steam ⏸ ON HOLD — no money spent until the game is ready
+
+Phase 0 and Phase 2 are merged into `main`. Everything past this point costs real
+money (Steam Direct's $100, Apple Developer's $99/yr) and paperwork you can't get
+back if the game isn't ready yet — holding off until there's a clearer read on
+scope (Q2 below) and real player feedback is the right call, not a stall. Phase 1
+(itch.io) is still free and still the natural next step whenever you want it; none
+of it requires spending anything.
 
 ### The money and the calendar
 
@@ -317,15 +324,18 @@ None of these are required to ship. A game can go live with zero Steamworks API 
 ## Sequence and effort
 
 ```
-Phase 0  Fix the build            ✅ DONE   ← was blocking everything
-Phase 1  Ship on itch.io          ½ day    ← real players, real feedback, $0
-Phase 2  Electron wrapper         ✅ code done ← needs a human to run + sign
-Phase 3  Steam paperwork + store  3-4 weeks wall-clock, mostly waiting + art
-Phase 4  Achievements / Cloud     after launch
+Phase 0  Fix the build            ✅ DONE     ← was blocking everything
+Phase 1  Ship on itch.io          ½ day, $0   ← still open, still free
+Phase 2  Electron wrapper         ✅ merged   ← full playthrough + signing still to do
+Phase 3  Steam paperwork + store  ⏸ ON HOLD  ← costs money, waiting on Q2 + player feedback
+Phase 4  Achievements / Cloud     after Phase 3
 ```
 
-Phase 0 is merged; moving through Phases 1-3 now rather than pausing to collect
-itch.io feedback first.
+Phases 0 and 2 are merged into `main`. Phase 3 (and everything downstream of it,
+including Phase 4 — Steamworks features need an app that exists, which means the
+Direct fee) is on hold until the game's in a good spot and you've decided to spend
+the money. Phase 1 stays open in the meantime: it's free, and it's the thing most
+likely to inform whether Phase 3 is worth doing at all.
 
 ## Open questions
 
