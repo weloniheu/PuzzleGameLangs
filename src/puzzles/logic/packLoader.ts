@@ -61,11 +61,29 @@ export function validateLogicPack(pack: LogicPack): string[] {
   return errors;
 }
 
-/** Fetch + validate a pack from a URL. Throws with the joined errors on invalid data. */
+// Bundled, not fetched — same reasoning as engine/packLoader.ts: "/content/..."
+// is never copied into dist/, and fetch() is blocked over file:// in a desktop
+// build. The logic rule packs are a separate set from the engine's, so they need
+// their own glob.
+const BUNDLED = import.meta.glob<LogicPack>("../../../content/packs/logic.rules.*.json", {
+  eager: true,
+  import: "default",
+});
+const BY_FILE = new Map<string, LogicPack>(
+  Object.entries(BUNDLED).map(([spec, pack]) => [spec.slice(spec.lastIndexOf("/") + 1), pack])
+);
+
+/** Look up + validate a pack by URL. Throws with the joined errors on invalid data. */
 export async function loadLogicPack(url: string): Promise<LogicPack> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`failed to load ${url}: ${res.status}`);
-  const pack = (await res.json()) as LogicPack;
+  const bundled = BY_FILE.get(url.slice(url.lastIndexOf("/") + 1));
+  if (!bundled) {
+    throw new Error(
+      `failed to load ${url}: not bundled. Available: ${[...BY_FILE.keys()].sort().join(", ")}`
+    );
+  }
+  // Fresh copy per call — the shared module object must not accumulate the
+  // board mutations a played level makes.
+  const pack = structuredClone(bundled);
   const errors = validateLogicPack(pack);
   if (errors.length) throw new Error(`invalid logic pack:\n- ${errors.join("\n- ")}`);
   return pack;

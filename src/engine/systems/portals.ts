@@ -16,6 +16,7 @@ import type { PuzzleType, RoomDoor } from "../../schema/types";
 import type { Cell, Room } from "../core/room";
 import { doorReaction, effectiveDoorState } from "../core/doors";
 import { portalFlashColor } from "../core/portalColors";
+import { assetUrl } from "../core/assetUrl";
 import { HUB_ID } from "../core/progression";
 import {
   languageRung, mechanicRung, levelRung, ladderPath,
@@ -151,7 +152,7 @@ export function createPortals(deps: PortalsDeps): Portals {
     if (icon) {
       const img = document.createElement("img");
       img.className = "tile-portal-img";
-      img.src = icon;
+      img.src = assetUrl(icon);
       img.alt = "";
       disc.appendChild(img);
     } else {
