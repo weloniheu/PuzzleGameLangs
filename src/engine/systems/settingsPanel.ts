@@ -5,9 +5,10 @@
 // Owns: the gear button, the overlay (menu / Controls / Display tabs), the rebind capture
 // machine, terminal-font control, and the session-persistent `roomSettings`.
 //
-// Boundaries (injected, not entangled): `relayout`, `applyTermFont`, `resetCodex`, and
-// the focus/esc hooks (`onBeforeOpen` = drop room focus, `onClose` = refocus room,
-// `onEscape` = the esc ladder). The panel never reaches into roomRenderer internals.
+// Boundaries (injected, not entangled): `relayout`, `applyTermFont`, `resetCodex`,
+// `resetSeenTutorials`, and the focus/esc hooks (`onBeforeOpen` = drop room focus,
+// `onClose` = refocus room, `onEscape` = the esc ladder). The panel never reaches into
+// roomRenderer internals.
 // ---------------------------------------------------------------------------
 
 import {
@@ -109,6 +110,9 @@ export interface SettingsPanelDeps {
   relayout: () => void;       // Display "Room size" change re-tiles
   applyTermFont: () => void;  // push the terminal font size onto the terminal
   resetCodex: () => void;     // "Reset all progress"
+  resetSeenTutorials: () => void; // "Replay Tutorials" — re-shows tutorials, keeps progress
+  getTestMode: () => boolean; // QA: is "unlock everything" currently on?
+  setTestMode: (on: boolean) => void;
   /** The ACHIEVEMENTS tracker's rows, recomputed on every open (a key earned this
    *  session shows immediately). Omitted ⇒ the Achievements entry isn't offered. */
   achievements?: () => AchievementGroup[];
@@ -261,6 +265,33 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
     msg.textContent = captureMsg || "Esc is reserved for the menu and can't be bound.";
     settingsCard.appendChild(msg);
 
+    // Test Mode — QA toggle: shows every hub portal and every level as unlocked,
+    // without earning them. Independent of Reset (below): flip it off to see real
+    // progress again, or reset progress while leaving Test Mode as-is.
+    const testRow = document.createElement("div");
+    testRow.className = "room-settings-schemes";
+    for (const [val, text] of [[true, "On"], [false, "Off"]] as [boolean, string][]) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = `room-scheme-btn${deps.getTestMode() === val ? " active" : ""}`;
+      b.textContent = text;
+      b.onclick = () => { deps.setTestMode(val); render(); };
+      testRow.appendChild(b);
+    }
+    settingsCard.append(settingsLabel("Test Mode — unlock every level"), testRow);
+
+    // Replay Tutorials: tutorials now play ONCE (persisted — core/codex.ts) and stay
+    // quiet after that. This is the deliberate way back in — re-shows every tutorial on
+    // next entry WITHOUT touching earned progress, so it needs no confirm (unlike Reset
+    // below, nothing here is destructive).
+    const replay = document.createElement("button");
+    replay.type = "button";
+    replay.className = "room-settings-toggle";
+    replay.textContent = "📖 Replay Tutorials";
+    replay.title = "Every tutorial plays again on next entry — earned progress is untouched";
+    replay.onclick = () => deps.resetSeenTutorials();
+    settingsCard.appendChild(replay);
+
     const reset = document.createElement("button");
     reset.type = "button";
     reset.className = "room-settings-reset";
@@ -274,8 +305,6 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
       if (ok) deps.resetCodex();
     };
     settingsCard.appendChild(reset);
-    // (No "Replay tutorials" button: tutorials replay on every room entry by themselves,
-    //  so a control promising to make them replay would have nothing to do.)
   }
 
   /** The ACHIEVEMENTS tab — the same tracker the title screen shows, rendered by the

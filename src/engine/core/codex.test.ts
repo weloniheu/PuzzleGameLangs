@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
   getUnlocks, hasUnlock, addUnlock, resetCodex, discover, getCodex,
+  hasSeenTutorial, markTutorialSeen, resetSeenTutorials,
 } from "./codex";
 
 // codex.ts reads/writes localStorage lazily inside its functions, so a tiny in-memory
@@ -43,19 +44,47 @@ describe("Codex unlocks — persistence round-trip", () => {
   });
 });
 
-// (Tutorials have no persisted seen-flags: they play on every entry and the player skips
-//  with Escape, so the codex has nothing to remember about them.)
+describe("seen tutorials — persistence round-trip", () => {
+  it("starts unseen", () => {
+    expect(hasSeenTutorial("tier:mixed")).toBe(false);
+  });
 
-describe("resetCodex — wipes ALL progress (commands AND unlocks)", () => {
-  it("clears both the discovered commands and the earned unlocks", () => {
+  it("markTutorialSeen persists and survives a re-read", () => {
+    markTutorialSeen("tier:mixed");
+    expect(hasSeenTutorial("tier:mixed")).toBe(true);
+    expect(hasSeenTutorial("concept:loops")).toBe(false); // independent ids
+  });
+
+  it("markTutorialSeen is idempotent and ignores an empty id", () => {
+    markTutorialSeen("tier:mixed");
+    markTutorialSeen("tier:mixed");
+    markTutorialSeen("");
+    expect(hasSeenTutorial("tier:mixed")).toBe(true);
+    expect(hasSeenTutorial("")).toBe(false);
+  });
+
+  it("resetSeenTutorials clears seen state WITHOUT touching earned progress", () => {
+    markTutorialSeen("tier:mixed");
+    addUnlock("puzzle1.cleared");
+    resetSeenTutorials();
+    expect(hasSeenTutorial("tier:mixed")).toBe(false);
+    expect(getUnlocks()).toEqual(["puzzle1.cleared"]); // untouched
+  });
+});
+
+describe("resetCodex — wipes ALL progress (commands, unlocks, AND seen tutorials)", () => {
+  it("clears discovered commands, earned unlocks, and seen-tutorial state", () => {
     discover([{ name: "print", note: "shows text" }]);
     addUnlock("puzzle1.cleared");
+    markTutorialSeen("tier:mixed");
     expect(getCodex().length).toBe(1);
     expect(getUnlocks()).toEqual(["puzzle1.cleared"]);
+    expect(hasSeenTutorial("tier:mixed")).toBe(true);
 
     resetCodex();
 
     expect(getCodex()).toEqual([]);
     expect(getUnlocks()).toEqual([]);
+    expect(hasSeenTutorial("tier:mixed")).toBe(false);
   });
 });

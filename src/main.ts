@@ -9,7 +9,7 @@ import {
   buildAchievements, groupAchievements, renderAchievements,
   type AchievementGroup, type AchievementSource,
 } from "./engine/core/achievements";
-import { getUnlocks } from "./engine/core/codex";
+import { getUnlocksSet } from "./engine/core/codex";
 import { resolve as resolveBinding, normalizeKey } from "./engine/core/keybindings";
 import { roomSettings } from "./engine/systems/settingsPanel";
 
@@ -156,7 +156,7 @@ function achievementGroups(): AchievementGroup[] {
     levels: ladder.levels,
   }));
   const defs = buildAchievements(sources, (id) => roomRegistry.get(id)?.room?.grants_unlock);
-  return groupAchievements(defs, new Set(getUnlocks()));
+  return groupAchievements(defs, getUnlocksSet());
 }
 
 async function bootHub() {

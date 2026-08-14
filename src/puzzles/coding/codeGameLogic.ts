@@ -17,7 +17,22 @@ export interface AnswerLine {
 }
 
 export type CheckReason = "build-first" | "wrong-order" | "wrong-indent" | "wrong-word" | "extra-code";
-export type CheckResult = { ok: true } | { ok: false; reason: CheckReason };
+
+/** Enough about the mistake to DESCRIBE it without describing the fix. Only ever names
+ *  what the PLAYER placed — never an expected/missing word, never the target indent.
+ *  Naming those would make the error a hint, and hints are the hint giver's job. */
+export interface CheckDetail {
+  /** 0-based index of the offending line. */
+  line?: number;
+  /** A token the player placed that the answer has no room for (wrong-word only). */
+  token?: string;
+  /** Every placed token was wanted, there just aren't enough of them. Says "something
+   *  is missing" WITHOUT saying what — naming the missing token would be the answer. */
+  incomplete?: boolean;
+  /** wrong-indent: which way their line is off. Direction only, never the depth. */
+  indent?: "deep" | "shallow";
+}
+export type CheckResult = { ok: true } | { ok: false; reason: CheckReason; detail?: CheckDetail };
 
 /** One concrete line read off the board: content tokens (in order) + its indent. Same
  *  shape as AnswerLine, but this is what the PLAYER placed, not the expected answer. */
@@ -143,10 +158,37 @@ export function checkLine(
   const got = normalizeContent(placedContent, requirePunctuation);
   const want = normalizeContent(line.content, requirePunctuation);
   if (sameOrder(got, want)) {
-    return actualIndent === line.indent ? { ok: true } : { ok: false, reason: "wrong-indent" };
+    if (actualIndent === line.indent) return { ok: true };
+    return {
+      ok: false,
+      reason: "wrong-indent",
+      detail: { indent: actualIndent > line.indent ? "deep" : "shallow" },
+    };
   }
   if (sameMultiset(got, want)) return { ok: false, reason: "wrong-order" };
-  return { ok: false, reason: "wrong-word" };
+  const token = unexpectedToken(got, want);
+  // No unexpected token ⇒ nothing is WRONG, there just isn't enough of it. Reporting an
+  // "unknown word" here would be a false diagnosis (the classic case: the player left the
+  // parentheses off, so every token they placed is correct). Flag it as incomplete —
+  // which word is missing stays unsaid, because that would be the answer.
+  return {
+    ok: false,
+    reason: "wrong-word",
+    detail: token ? { token } : { incomplete: true },
+  };
+}
+
+/** The first token the player placed that the answer has no room for. Multiset-aware,
+ *  so a legitimately repeated word is never blamed for a later duplicate. */
+function unexpectedToken(got: string[], want: string[]): string | null {
+  const budget = new Map<string, number>();
+  for (const w of want) budget.set(w, (budget.get(w) ?? 0) + 1);
+  for (const g of got) {
+    const left = budget.get(g) ?? 0;
+    if (left <= 0) return g;
+    budget.set(g, left - 1);
+  }
+  return null;
 }
 
 /**
@@ -157,11 +199,12 @@ export function checkLine(
  * A missing expected line is checked as an empty line, which falls out as wrong-word.
  */
 export function checkProgram(lines: CodeLine[], answer: AnswerLine[], requirePunctuation = false): CheckResult {
-  if (lines.length > answer.length) return { ok: false, reason: "extra-code" };
+  // The first unexpected row is the one past the end of the answer.
+  if (lines.length > answer.length) return { ok: false, reason: "extra-code", detail: { line: answer.length } };
   for (let i = 0; i < answer.length; i++) {
     const got = lines[i] ?? { content: [], indent: answer[i].indent };
     const res = checkLine(got.content, got.indent, answer[i], requirePunctuation);
-    if (!res.ok) return res;
+    if (!res.ok) return { ...res, detail: { ...res.detail, line: i } };
   }
   return { ok: true };
 }

@@ -128,6 +128,11 @@ export function validatePuzzle(p: unknown): { ok: boolean; errors: string[] } {
     if (typeof pay?.pack_url !== "string" || !pay.pack_url) errors.push(`logic_rules payload needs a pack_url`);
     if (typeof pay?.board_id !== "string" || !pay.board_id) errors.push(`logic_rules payload needs a board_id`);
     if (!o.room) errors.push(`logic_rules puzzles are room-only: "room" is required`);
+    // No goalSpec: this is Baba-style rule manipulation — the rule tiles ON THE FLOOR are
+    // the goal (e.g. "FLAG IS WIN"). A goalSpec banner would spell out in English what the
+    // tiles already say, spoiling the puzzle's entire point. (It shipped once, by accident —
+    // see the room's hint_giver + dialogue.hints for the intended, OPTIONAL framing instead.)
+    if (o.mechanics?.goalSpec) errors.push(`logic_rules puzzles must not declare mechanics.goalSpec — the rule tiles ARE the goal`);
   }
 
   // grammar_build: room-only push game; the frame, word bank (with positions), and

@@ -4,8 +4,9 @@ import { mountGuidedTutorial } from "./tutorialOverlay";
 import type { DialogueBeat, Puzzle } from "../../schema/types";
 
 // The CARD-GAME tutorial driver (match / combine / sentence_build). It owns its own key
-// handling rather than going through the room's input dispatch, so the two promises the
-// authoring spec makes — plays every time, Escape always leaves — need pinning here too.
+// handling rather than going through the room's input dispatch, so the promise the
+// authoring spec makes — plays ONCE per puzzle TYPE (ever, persisted), Escape always
+// leaves and counts as "seen" too — needs pinning here.
 
 if (!globalThis.requestAnimationFrame) {
   globalThis.requestAnimationFrame = ((cb: FrameRequestCallback) =>
@@ -32,15 +33,54 @@ const key = (k: string) =>
   container.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true }));
 const showing = () => container.querySelector(".tutorial-card")?.textContent ?? "";
 
-describe("card-game tutorial: always plays, always escapable", () => {
-  it("plays again on a later mount — there is no seen-flag to consume", () => {
+describe("card-game tutorial: plays once per puzzle TYPE, always escapable", () => {
+  it("does not replay for a LATER mount of the same puzzle before this one ever finished", () => {
     mountGuidedTutorial(container, puzzle()).notify("push");
     expect(showing()).toContain("step one");
 
-    // A fresh mount of the same puzzle type: it teaches again rather than staying silent.
+    // Still mid-run (never finished/skipped) — nothing has been marked seen yet.
     const second = document.createElement("div");
     document.body.appendChild(second);
     mountGuidedTutorial(second, puzzle());
+    expect(second.querySelector(".tutorial-card")?.textContent).toContain("step one");
+  });
+
+  it("a FINISHED run does not replay on a later mount of the same puzzle_type", () => {
+    const t = mountGuidedTutorial(container, puzzle());
+    key("Enter");        // step 1 → step 2 (waitFor push)
+    t.notify("push");    // step 2 → step 3
+    key("Enter");         // step 3 → finish()
+    expect(container.querySelector(".tutorial-card")).toBeNull();
+
+    // A later mount, even a DIFFERENT puzzle id, of the SAME puzzle_type stays silent.
+    const second = document.createElement("div");
+    document.body.appendChild(second);
+    const t2 = mountGuidedTutorial(second, { ...puzzle(), id: "haw-match-001" });
+    expect(t2.active()).toBe(false);
+    expect(second.querySelector(".tutorial-card")).toBeNull();
+  });
+
+  it("Escape-skipping counts as seen too — a later mount of the same type stays silent", () => {
+    mountGuidedTutorial(container, puzzle());
+    key("Escape");
+    expect(container.querySelector(".tutorial-card")).toBeNull();
+
+    const second = document.createElement("div");
+    document.body.appendChild(second);
+    const t2 = mountGuidedTutorial(second, puzzle());
+    expect(t2.active()).toBe(false);
+    expect(second.querySelector(".tutorial-card")).toBeNull();
+  });
+
+  it("seen-tracking is per puzzle_type — a DIFFERENT type still plays", () => {
+    const t = mountGuidedTutorial(container, puzzle());
+    key("Enter"); t.notify("push"); key("Enter"); // finish "match"
+
+    const second = document.createElement("div");
+    document.body.appendChild(second);
+    const combinePuzzle = { ...puzzle(), puzzle_type: "combine" } as unknown as Puzzle;
+    const t2 = mountGuidedTutorial(second, combinePuzzle);
+    expect(t2.active()).toBe(true);
     expect(second.querySelector(".tutorial-card")?.textContent).toContain("step one");
   });
 

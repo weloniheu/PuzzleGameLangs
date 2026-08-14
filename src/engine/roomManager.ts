@@ -14,7 +14,7 @@
 
 import type { Puzzle, PuzzleType, TutorialBlock } from "../schema/types";
 import { mountRoom, type RoomHandle } from "./roomHost";
-import { addUnlock, getUnlocks } from "./core/codex";
+import { addUnlock, getUnlocksSet } from "./core/codex";
 import { HUB_ID } from "./core/progression";
 import type { LadderData, LadderLevel, LockedLanguage } from "./core/ladder";
 import type { AchievementGroup } from "./core/achievements";
@@ -77,7 +77,7 @@ export function createRoomManager(
     return {
       levels: levels.map((lv) => ({ ...lv, flashColor: flashFor(lv.id) })),
       lockedLanguages,
-      unlocks: new Set(getUnlocks()),
+      unlocks: getUnlocksSet(),
       currentId,
     };
   }

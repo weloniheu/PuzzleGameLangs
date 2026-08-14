@@ -57,7 +57,7 @@ describe("explicit tier is actually enforced (py-code-explicit-000)", () => {
   });
 
   it("dropping the parentheses FAILS under the punctuation tier", () => {
-    expect(run(built(), withoutParens, answer, true)).toEqual({ ok: false, reason: "wrong-word" });
+    expect(run(built(), withoutParens, answer, true)).toMatchObject({ ok: false, reason: "wrong-word" });
   });
 
   it("the very same tokens would PASS in guided mode — the tier is what enforces it", () => {

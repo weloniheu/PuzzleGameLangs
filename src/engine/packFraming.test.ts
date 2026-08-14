@@ -1,9 +1,16 @@
 // Every BOARD level must frame itself. The room HUD renders exactly two content
-// fields — `metadata.concept` (title) and `mechanics.goalSpec` (goal line) — and the
-// only in-room help is a `hint_giver` cell plus `dialogue.hints`. Before this guard
-// nine consecutive logic levels shipped titled "rule manipulation", with no goal line
+// fields — `metadata.concept` (title) and `mechanics.goalSpec` (the on-demand task
+// prompt, opened with the "task" action — see systems/taskOverlay.ts) — and the only
+// in-room help is a `hint_giver` cell plus `dialogue.hints`. Before this guard nine
+// consecutive logic levels shipped titled "rule manipulation", with no task prompt
 // and no hint giver anywhere outside the Python pack, so the authored `prompt` and the
 // logic pack's per-board `hint` never reached the screen at all.
+//
+// `logic_rules` (Baba-style rule manipulation) is the one exception to the goalSpec
+// requirement, and deliberately so: its rule tiles ON THE FLOOR (e.g. "FLAG IS WIN")
+// ARE the goal, so a goalSpec banner would spell out in English what the puzzle itself
+// already says — it shipped once, by accident, and got walked back (see
+// validateRepair.ts's matching guard). Title + hint giver + hints still apply there.
 //
 // This is a CONTENT lint, not an engine test: it fails when a level is authored
 // without the framing the room is able to show.
@@ -37,11 +44,17 @@ describe.each(BOARD_PACKS)("%s — every level frames itself", (rel) => {
   });
 
   it.each(pack.puzzles.map((p): [string, Puzzle] => [p.id, p]))(
-    "%s: goal line, hint giver on a free floor cell, and escalating hints",
+    "%s: task prompt (except Baba-style logic_rules), hint giver on a free floor cell, and escalating hints",
     (_id, p) => {
-      // The HUD goal line the player actually reads.
-      const desc = p.mechanics?.goalSpec?.description;
-      expect(desc && desc.trim().length > 0).toBe(true);
+      if (p.puzzle_type === "logic_rules") {
+        // The rule tiles ARE the goal — a goalSpec here would spoil the puzzle by
+        // spelling out in English what the floor already says (see validateRepair.ts).
+        expect(p.mechanics?.goalSpec).toBeUndefined();
+      } else {
+        // The task prompt (opened with T) the player actually reads.
+        const desc = p.mechanics?.goalSpec?.description;
+        expect(desc && desc.trim().length > 0).toBe(true);
+      }
 
       // Declaring a goalSpec must NOT claim a mechanic tier — that would collapse the
       // ladder's Shuffled/Shrouded rungs into "Base" (see ladder.resolveMechanic).
@@ -63,6 +76,32 @@ describe.each(BOARD_PACKS)("%s — every level frames itself", (rel) => {
       const hints = dialogueOf(p)?.hints ?? [];
       expect(hints.length).toBeGreaterThanOrEqual(2);
       expect(hints.every((h) => h.text.trim().length > 0)).toBe(true);
+    },
+  );
+});
+
+// The CODING pack can't join BOARD_PACKS above: that loop asserts `mechanics.tier`
+// is undefined, and coding levels legitimately carry tiers (base/mixed/explicit).
+// It gets its own narrower lint — which is exactly why it drifted: four levels once
+// shipped a single hint whose text was the finished program, so the first press of
+// the "?" handed over the answer with no ladder in between.
+describe("content/packs/python.code.v1.json — hints must be a LADDER, not the answer", () => {
+  const pack = load("content/packs/python.code.v1.json");
+
+  it.each(pack.puzzles.map((p): [string, Puzzle] => [p.id, p]))(
+    "%s: a reachable hint giver and at least three escalating hints",
+    (_id, p) => {
+      const giver = p.room?.hint_giver;
+      expect(giver).toBeTruthy();
+      const { x, y } = giver!.pos;
+      expect(p.room!.tiles[y]?.[x]).toBe("."); // a floor cell, not a wall and not off-grid
+
+      const hints = dialogueOf(p)?.hints ?? [];
+      // Nudge → structure → answer. Fewer than three means the ladder collapsed.
+      expect(hints.length).toBeGreaterThanOrEqual(3);
+      expect(hints.every((h) => h.text.trim().length > 0)).toBe(true);
+      // Every rung distinct — a repeated line is a rung that teaches nothing.
+      expect(new Set(hints.map((h) => h.text)).size).toBe(hints.length);
     },
   );
 });

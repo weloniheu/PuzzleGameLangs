@@ -84,11 +84,6 @@
           },
           "marker": "❓"
         }
-      },
-      "mechanics": {
-        "goalSpec": {
-          "description": "ʻO ʻOE KA LIMU. LANAKILA KA HAE. Walk to the hae."
-        }
       }
     },
     {
@@ -172,11 +167,6 @@
             "y": 9
           },
           "marker": "❓"
-        }
-      },
-      "mechanics": {
-        "goalSpec": {
-          "description": "PAHU KA PŌHAKU — the rock can be shoved. Straight at the hae, it jams."
         }
       }
     },
@@ -264,11 +254,6 @@
           },
           "marker": "❓"
         }
-      },
-      "mechanics": {
-        "goalSpec": {
-          "description": "PAʻA KA PĀ seals the room. Take the sentence apart."
-        }
       }
     },
     {
@@ -354,11 +339,6 @@
             "y": 11
           },
           "marker": "❓"
-        }
-      },
-      "mechanics": {
-        "goalSpec": {
-          "description": "___ KA HAE. The rule about the flag is missing its first word."
         }
       }
     },
@@ -446,11 +426,6 @@
       "modifiers": [
         "randomized"
       ],
-      "mechanics": {
-        "goalSpec": {
-          "description": "ʻO ʻOE KA LIMU. LANAKILA KA HAE. Walk to the hae. Everything loose starts somewhere different every visit."
-        }
-      },
       "tutorial_refs": [
         "tier:shuffled"
       ]
@@ -540,11 +515,6 @@
         "randomized",
         "lowlight"
       ],
-      "mechanics": {
-        "goalSpec": {
-          "description": "ʻO ʻOE KA LIMU. LANAKILA KA HAE. Walk to the hae. Rearranged, and you can only see what is close."
-        }
-      },
       "tutorial_refs": [
         "tier:shrouded"
       ]
@@ -635,11 +605,6 @@
       "modifiers": [
         "randomized"
       ],
-      "mechanics": {
-        "goalSpec": {
-          "description": "PAHU KA PŌHAKU — the rock can be shoved. Straight at the hae, it jams. Everything loose starts somewhere different every visit."
-        }
-      },
       "tutorial_refs": [
         "tier:shuffled"
       ]
@@ -731,11 +696,6 @@
         "randomized",
         "lowlight"
       ],
-      "mechanics": {
-        "goalSpec": {
-          "description": "PAHU KA PŌHAKU — the rock can be shoved. Straight at the hae, it jams. Rearranged, and you can only see what is close."
-        }
-      },
       "tutorial_refs": [
         "tier:shrouded"
       ]
@@ -828,11 +788,6 @@
       "modifiers": [
         "randomized"
       ],
-      "mechanics": {
-        "goalSpec": {
-          "description": "PAʻA KA PĀ seals the room. Take the sentence apart. Everything loose starts somewhere different every visit."
-        }
-      },
       "tutorial_refs": [
         "tier:shuffled"
       ]
@@ -926,11 +881,6 @@
         "randomized",
         "lowlight"
       ],
-      "mechanics": {
-        "goalSpec": {
-          "description": "PAʻA KA PĀ seals the room. Take the sentence apart. Rearranged, and you can only see what is close."
-        }
-      },
       "tutorial_refs": [
         "tier:shrouded"
       ]
@@ -1023,11 +973,6 @@
       "modifiers": [
         "randomized"
       ],
-      "mechanics": {
-        "goalSpec": {
-          "description": "___ KA HAE. The rule about the flag is missing its first word. Everything loose starts somewhere different every visit."
-        }
-      },
       "tutorial_refs": [
         "tier:shuffled"
       ]
@@ -1121,11 +1066,6 @@
         "randomized",
         "lowlight"
       ],
-      "mechanics": {
-        "goalSpec": {
-          "description": "___ KA HAE. The rule about the flag is missing its first word. Rearranged, and you can only see what is close."
-        }
-      },
       "tutorial_refs": [
         "tier:shrouded"
       ]

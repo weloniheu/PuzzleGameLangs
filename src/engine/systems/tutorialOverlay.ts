@@ -14,9 +14,11 @@
 //     "dialogue blocks input" rule the room world uses. No reading-speed timers.
 //   • Escape ends the run from any step; the card shows that cue.
 //
-// The sequence plays EVERY time the puzzle is mounted — there is no "seen" flag. A
-// tutorial is a standing offer rather than a one-shot you can miss, and the player who
-// already knows the mechanic pays one keypress to leave. See roomHost's equivalent note.
+// The sequence plays ONCE per puzzle TYPE, ever (persisted — core/codex.ts's seen-tutorial
+// store, keyed `type:<puzzle_type>`) — the first match puzzle the player ever meets teaches
+// it, and no LATER match puzzle (any language pack) replays it. Watching it to the end OR
+// Escape-skipping it both count as "seen" (finish() marks it either way). "Replay Tutorials"
+// in Settings is the deliberate way back in. See roomHost's equivalent note (room world).
 //
 // Content stays in the pack (`payload.guided_tutorial`, the same DialogueBeat
 // shape the room world uses — `speaker` is ignored here); the enum of waitFor
@@ -25,6 +27,7 @@
 
 import type { DialogueBeat, Puzzle, TutorialWaitFor } from "../../schema/types";
 import { paintTutorialCard, removeTutorialCard, tutorialModuleMeta } from "./tutorialCard";
+import { hasSeenTutorial, markTutorialSeen } from "../core/codex";
 
 export interface TutorialOverlay {
   /** Report that `kind` actually happened. Advances a step waiting on exactly it. */
@@ -55,6 +58,8 @@ export function mountGuidedTutorial(container: HTMLElement, puzzle: Puzzle): Tut
 
   const beats: DialogueBeat[] = (puzzle.payload as { guided_tutorial?: DialogueBeat[] }).guided_tutorial ?? [];
   if (!beats.length) return NOOP;
+  const typeKey = `type:${puzzle.puzzle_type}`;
+  if (hasSeenTutorial(typeKey)) return NOOP;
 
   const module = tutorialModuleMeta(puzzle.puzzle_type, puzzle.id);
 
@@ -82,6 +87,7 @@ export function mountGuidedTutorial(container: HTMLElement, puzzle: Puzzle): Tut
     removeTutorialCard(container);
     container.removeEventListener("keydown", onKeydown, true);
     if (activeTeardown === teardown) activeTeardown = null;
+    markTutorialSeen(typeKey); // whether watched in full or Escape-skipped — both are "seen"
   }
 
   // Escape ends the whole run from ANY step — including a waitFor step, where it is the

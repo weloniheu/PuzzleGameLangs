@@ -15,7 +15,10 @@
 
 import type { DialogueBeat, DialogueConfig, DialogueSpeaker, Puzzle, TutorialBlock } from "../schema/types";
 import { parseRoom, step, pileAt, MOVE, type Cell, type Direction } from "./core/room";
-import { resetCodex, getUnlocks } from "./core/codex";
+import {
+  resetCodex, getUnlocksSet, getTestMode, setTestMode,
+  hasSeenTutorial, markTutorialSeen, resetSeenTutorials,
+} from "./core/codex";
 import { createTeardown } from "./core/teardown";
 import { resolveFeatures, resolveInventorySlots } from "./core/roomFeatures";
 import type { LadderData } from "./core/ladder";
@@ -25,6 +28,7 @@ import { renderTileLayer } from "./systems/tileLayer";
 import { computeTile, computeViewport } from "./systems/camera";
 import { cameraOffset, createSlime, drawPlayer } from "./systems/player";
 import { createDialogue } from "./systems/dialogue";
+import { paintTaskOverlay, removeTaskOverlay } from "./systems/taskOverlay";
 import { createSettingsPanel, roomSettings } from "./systems/settingsPanel";
 import { createInventoryHud } from "./systems/inventoryHud";
 import { createPortals } from "./systems/portals";
@@ -129,7 +133,7 @@ export function mountRoom(
   // Doors: stand-on-and-interact objects. Their reaction is resolved against the
   // player's earned unlocks, read ONCE at mount (fresh each time the room loads).
   const doors = layout.doors ?? [];
-  const unlocks = new Set(getUnlocks());
+  const unlocks = getUnlocksSet();
 
   const invSlots = resolveInventorySlots(layout.inventory_slots, puzzle.puzzle_type);
 
@@ -153,16 +157,16 @@ export function mountRoom(
   topbar.appendChild(hudTitle);
   // Goal display (CONTENT): the desired output / plain-language description — NEVER the target
   // code (no tier reveals the answer; see MechanicsConfig.goalSpec). Generic: any room puzzle
-  // may declare a goalSpec; the engine never branches on type. Omitted ⇒ no goal line.
+  // may declare a goalSpec; the engine never branches on type. Omitted ⇒ the "task" action
+  // (default key T) is a no-op — this is how the Baba-style logic_rules rooms end up with NO
+  // task prompt at all: the rule tiles ARE the goal, so their packs never set goalSpec.
+  //
+  // Shown as an on-demand PROMPT (task overlay), not a persistent HUD line: it used to be a
+  // topbar chip, but a single-line ellipsis truncated every description longer than ~40
+  // chars, and the coding levels genuinely need both a description AND the target output
+  // shown clearly — there was no room for that in the old chip. See systems/taskOverlay.ts.
   const goalSpec = puzzle.mechanics?.goalSpec;
-  if (goalSpec && (goalSpec.description || goalSpec.output)) {
-    const goalEl = document.createElement("div");
-    goalEl.className = "room-hud-goal";
-    goalEl.textContent = goalSpec.description
-      ? `🎯 ${goalSpec.description}`
-      : `🎯 Output: ${goalSpec.output}`;
-    topbar.appendChild(goalEl);
-  }
+  const hasTask = !!(goalSpec && (goalSpec.description || goalSpec.output));
   container.appendChild(topbar);
 
   // --- stage (centers the viewport in the available space) → viewport → world ---
@@ -226,6 +230,9 @@ export function mountRoom(
     relayout: () => relayout(),
     applyTermFont: () => mounted?.panel?.applyFont?.(),
     resetCodex,
+    resetSeenTutorials,
+    getTestMode,
+    setTestMode,
     achievements: callbacks.achievements,
     onBeforeOpen: () => dropFocusToRoom(), // clear inventory/panel focus before opening
     onClose: focusRoom,
@@ -554,7 +561,25 @@ export function mountRoom(
     if (hintHere) dialogue.talkToHint();
   }
 
+  // TASK overlay (systems/taskOverlay.ts) — the goalSpec prompt. Its own concern, not
+  // the mounted module's, so it's checked BEFORE the module gets first claim below: no
+  // module needs to know the "task" action exists. Opening/closing repaints the same
+  // scrim; the board-freeze is a SEPARATE flag (taskOverlayOpen) fed to inputDispatch,
+  // same mechanism dialogue.blocksInput() already uses (see systems/inputDispatch.ts).
+  let taskOpen = false;
+  function openTask() {
+    if (!hasTask || taskOpen) return;
+    taskOpen = true;
+    paintTaskOverlay(container, { description: goalSpec!.description, output: goalSpec!.output });
+  }
+  function closeTask() {
+    if (!taskOpen) return;
+    taskOpen = false;
+    removeTaskOverlay(container);
+  }
+
   function dispatchAction(action: string) {
+    if (action === "task") { openTask(); return; }
     // The module gets FIRST CLAIM on every action — a board module claims movement
     // (the player drives the board, not the slime), coding claims place/dd/dw and a
     // pickup on a placed token. A declined action falls through to the engine.
@@ -572,6 +597,7 @@ export function mountRoom(
       dialogueBlocks: dialogue.blocksInput(),
       dialogueCanSkip: dialogue.canSkip(),
       destMenuOpen: portals.isDestMenuOpen(),
+      taskOverlayOpen: taskOpen,
     }),
     onDialogueAdvance: () => dialogue.advance(),
     onDialogueSkip: () => dialogue.end(),
@@ -579,6 +605,7 @@ export function mountRoom(
     onDestSelect: () => portals.selectDestination(),
     onDestMove: (delta) => portals.moveDestSel(delta),
     onEscape: () => handleEscape(),
+    onTaskClose: () => closeTask(),
     onAction: dispatchAction,
   });
   viewport.addEventListener("keydown", input.onKeydown);
@@ -605,25 +632,40 @@ export function mountRoom(
   // Entering a room NEVER auto-opens the menu — the auto-menu is a solve-time reward
   // (see ctx.onSolved), so the first room plays normally.
   //
-  // Teaching plays EVERY time the room is entered — a tutorial is a standing offer, not a
-  // one-shot you can miss. Coming back to a room you half-remember should re-teach it, and
-  // the player who does remember spends one keypress (Escape) to skip past. That is why
-  // there is no "seen" flag here: the skip IS the memory.
+  // Teaching plays ONCE per tutorial, ever (persisted — see core/codex.ts's seen-tutorial
+  // store), then stays quiet: a SHARED tutorial (tutorial_refs id) is seen once across the
+  // whole game; the room's OWN guided_tutorial is seen once for that room (`room:<id>`).
+  // Either way, watching it to the end OR skipping it with Escape both count as "seen" —
+  // dialogue.end() fires onComplete on both paths (see systems/dialogue.ts). The story
+  // on_enter beats are NOT gated this way — they're flavor, not teaching, and replay every
+  // visit. "Replay Tutorials" in Settings (resetSeenTutorials) is the deliberate way back in.
   //
-  // WHOLE-UNIT (always the same, never partial): each SHARED tutorial the level references
-  // (in order), then the room's own guided_tutorial.
+  // WHOLE-UNIT for whatever's left to show (always the same, never partial): the UNSEEN
+  // shared tutorials the level references (in order), then the room's own guided_tutorial
+  // if that hasn't been seen either — never a tutorial cut short partway through.
   //
   // `guarded` (not `skippable: false`) is what protects the run: an interjection — an error
   // beat, a blocked door, a hint — stashes over it and the tutorial resumes at the same step,
   // while Escape still belongs to the player.
   const teaching: DialogueBeat[] = [];
+  const unseenRefIds: string[] = [];
   for (const refId of puzzle.tutorial_refs ?? []) {
+    if (hasSeenTutorial(refId)) continue;
     const block = callbacks.tutorialFor?.(refId);
-    if (block?.dialogue?.length) teaching.push(...block.dialogue);
+    if (block?.dialogue?.length) { teaching.push(...block.dialogue); unseenRefIds.push(refId); }
   }
-  teaching.push(...guidedTutorialBeats);
+  const roomTutorialId = `room:${puzzle.id}`;
+  const showRoomOwnTutorial = guidedTutorialBeats.length > 0 && !hasSeenTutorial(roomTutorialId);
+  if (showRoomOwnTutorial) teaching.push(...guidedTutorialBeats);
   if (teaching.length) {
-    dialogue.play([...onEnterBeats, ...teaching], { guarded: true, skippable: true });
+    dialogue.play([...onEnterBeats, ...teaching], {
+      guarded: true,
+      skippable: true,
+      onComplete: () => {
+        for (const refId of unseenRefIds) markTutorialSeen(refId);
+        if (showRoomOwnTutorial) markTutorialSeen(roomTutorialId);
+      },
+    });
   } else if (onEnterBeats.length) {
     dialogue.play(onEnterBeats); // greeting slides in on enter
   }

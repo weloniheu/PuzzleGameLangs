@@ -2,9 +2,12 @@ import { describe, it, expect } from "vitest";
 import { decide, type DispatchContext } from "./inputDispatch";
 import { defaultBindings, rebind } from "../core/keybindings";
 
-const roomCtx: DispatchContext = { dialogueBlocks: false, dialogueCanSkip: true, destMenuOpen: false };
+const roomCtx: DispatchContext = {
+  dialogueBlocks: false, dialogueCanSkip: true, destMenuOpen: false, taskOverlayOpen: false,
+};
 const dlgCtx: DispatchContext = { ...roomCtx, dialogueBlocks: true };
 const destCtx: DispatchContext = { ...roomCtx, destMenuOpen: true };
+const taskCtx: DispatchContext = { ...roomCtx, taskOverlayOpen: true };
 const standard = defaultBindings("standard");
 const vim = defaultBindings("vim");
 
@@ -27,6 +30,42 @@ describe("decide — dialogue focus state (highest precedence)", () => {
 
   it("outranks the destination menu", () => {
     expect(decide({ ...dlgCtx, destMenuOpen: true }, "Enter", [], standard)).toEqual({ kind: "dialogue-advance" });
+  });
+});
+
+describe("decide — task overlay open (board frozen)", () => {
+  it("Escape closes it", () => {
+    expect(decide(taskCtx, "Escape", [], standard)).toEqual({ kind: "task-close" });
+  });
+
+  it("the bound 'task' key (t, by default) closes it too — same key that opened it", () => {
+    expect(decide(taskCtx, "t", [], standard)).toEqual({ kind: "task-close" });
+    expect(decide(taskCtx, "t", [], vim)).toEqual({ kind: "task-close" });
+  });
+
+  it("a rebound 'task' key closes it under its new binding, not the old default", () => {
+    const res = rebind(standard, "task", 0, ["y"]);
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(decide(taskCtx, "y", [], res.bindings)).toEqual({ kind: "task-close" });
+      expect(decide(taskCtx, "t", [], res.bindings)).toEqual({ kind: "swallow" });
+    }
+  });
+
+  it("suppresses everything else — movement doesn't leak through a frozen board", () => {
+    expect(decide(taskCtx, "ArrowUp", [], standard)).toEqual({ kind: "swallow" });
+    expect(decide(taskCtx, "i", [], standard)).toEqual({ kind: "swallow" });
+    expect(decide(taskCtx, "Enter", [], standard)).toEqual({ kind: "swallow" });
+  });
+
+  it("outranks the destination menu (can't both be open, but the check order still matters)", () => {
+    expect(decide({ ...taskCtx, destMenuOpen: true }, "Escape", [], standard)).toEqual({ kind: "task-close" });
+  });
+});
+
+describe("decide — room focus fires 'task' like any other bound action (opens the overlay)", () => {
+  it("the default 't' key fires the task action", () => {
+    expect(decide(roomCtx, "t", [], standard)).toEqual({ kind: "fire", action: "task" });
   });
 });
 

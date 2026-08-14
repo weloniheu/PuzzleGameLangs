@@ -8,15 +8,15 @@ is no fork, no second codebase, and no engine rewrite.
 
 ## 0. Where the project actually stands
 
-Verified on 2026-08-10, branch `progression-update` (clean tree):
+Verified on 2026-08-14, branch `main` (clean tree):
 
 | | |
 |---|---|
 | Stack | plain TypeScript + Vite 5, **zero runtime dependencies**, DOM rendering (no canvas, no framework) |
-| Build | `npm run build` — green, 315ms |
-| Tests | `npm test` — **538 passing / 36 files**, including a full hub→level→solve→back smoke test |
-| Output | `dist/` = 1.2 MB · JS 121 KB (39 KB gzip) · CSS 48 KB (10 KB gzip) |
-| Save data | `localStorage`, 4 non-test call sites |
+| Build | `npm run build` — green, ~560ms |
+| Tests | `npm test` — **547 passing / 38 files**, including a full hub→level→solve→back smoke test |
+| Output | `dist/` = 832 KB (Phase 0's self-contained build; see below) |
+| Save data | `storage.ts` adapter (`localStorage` on web, a real JSON file via Electron IPC on desktop) — see Phase 2 |
 | Input | keyboard-only by design (CLAUDE.md Rule 4) |
 
 **This is a genuinely good position to ship from.** No runtime dependencies means
@@ -149,21 +149,33 @@ by running `npm run dev` and `npm run build && npm run preview` directly.
 
 ---
 
-## Phase 1 — Playable online *(recommended first release)*
+## Phase 1 — Playable online ✅ LIVE as a draft
 
-After Phase 0 the game is a static site. Hosting it is nearly free work.
+Uploaded 2026-08-14: `weloniheu.itch.io/slime`, kind **HTML**, "played in the
+browser" checked, pricing **No payments**, visibility **Draft** (secret-URL only —
+not listed, not public yet). Confirmed working end-to-end: the title screen
+("SLIME — a puzzle grove"), slime, and Start/Achievements buttons all render and
+the embed loads cleanly. Embed viewport bumped from itch's 640×360 default to
+1000×800 (matches the Electron window default) — the small default made the game
+hard to see. Flip visibility to **Public** on the project's Edit page whenever
+you're ready for it to be findable/listed — that's a one-click, one-person
+decision, intentionally left undone here.
 
-**Recommend itch.io.** It is the natural home for an indie web game: free, hosts
-HTML5 builds directly (upload a zip of `dist/`, tick "This file will be played in
-the browser"), gives you a real page with screenshots and a devlog, and provides an
-audience that plays experimental puzzle games and leaves feedback. That feedback is
-worth a great deal *before* you spend $100 and two weeks of lead time on Steam.
+**itch.io's embed "Fullscreen button" is incompatible with this keyboard-only
+game — leave it OFF.** Tried enabling it (itch's "Frame options → Fullscreen
+button", adds a button in the embed's corner). Clicking it steals DOM focus onto
+that button in the *parent* itch.io page and never hands it back to the game
+iframe, even though `document.activeElement` still (misleadingly) reports the
+iframe as focused. Since gameplay is 100% keyboard (CLAUDE.md Rule 4), the result
+is a game that looks fine but accepts zero input — and clicking back inside the
+game canvas does NOT recover it; only a full page reload does. Reproduced twice.
+Removed the setting; the bigger fixed viewport above is its own fix for
+visibility, no fullscreen escape hatch needed.
 
-Alternatives if you'd rather self-host: Cloudflare Pages, Netlify, or GitHub Pages —
-all free for a static site, all connect to the GitHub repo and rebuild on push.
-There's no reason not to do both; itch for reach, a Pages deploy for a stable URL.
-
-**Effort: an afternoon.** This should be your first release regardless of Steam.
+Alternatives if you'd rather also self-host: Cloudflare Pages, Netlify, or GitHub
+Pages — all free for a static site, all connect to the GitHub repo and rebuild on
+push. There's no reason not to do both; itch for reach, a Pages deploy for a stable
+URL. Not done as part of this pass.
 
 ---
 
@@ -176,10 +188,12 @@ things are NOT done, on purpose rather than by oversight:
 
 - **App icons.** No source art exists to build `.icns`/`.ico` from — this needs real
   design work, not a placeholder I'd generate from the snake portraits.
-- **Actually launching it.** `npm install` completed, but Electron's ~150 MB binary
-  download failed — this sandbox's Bash tool can reach `npm`'s registry but not
-  GitHub, where that binary is hosted. Run `npm run electron` (builds, then
-  launches) yourself to get the binary and see the window for the first time.
+- **Actually launching it.** The Electron binary now downloads fine (`node_modules/electron`
+  has it) and `npm run electron` should work. What's still unverified: nobody has run
+  `npm run electron:package` (no `release/` directory exists yet) or watched the packaged
+  app actually open and play through a level — this sandbox can build headlessly but can't
+  see a GUI window. Run `npm run electron` yourself for a dev-binary check, and
+  `npm run electron:package` for a real packaged build, to confirm both for the first time.
 
 ### Recommendation: Electron
 
@@ -218,15 +232,15 @@ solo project with no other Rust in it.
 - **macOS: build a universal binary** (`electron-builder --universal`) so one build
   covers Intel and Apple Silicon rather than maintaining two depots.
 
-### Save data — do the small refactor now
+### Save data — done ✅
 
-`localStorage` works in Electron and persists per-user, so it ships fine as-is. But
-**Steam Cloud sync requires saves as real files on disk**, which `localStorage` is
-not. There are only 4 non-test call sites (`src/engine/core/codex.ts` and
-`src/puzzles/{grammar,logic,vocab}/index.ts`). Putting them behind a tiny
-`storage.ts` adapter now — web backend writes `localStorage`, desktop backend writes
-JSON under `app.getPath("userData")` — is maybe an hour of work and makes Cloud a
-later config change instead of a refactor under release pressure.
+`src/engine/core/storage.ts` is that adapter: web backend calls real `localStorage`,
+desktop backend calls `window.electronStorage` (wired in `electron/preload.cjs`,
+backed by `electron/main.cjs` reading/writing a JSON file under
+`app.getPath("userData")`). All 4 former `localStorage` call sites
+(`src/engine/core/codex.ts` and `src/puzzles/{grammar,logic,vocab}/index.ts`) go
+through it now — zero direct `localStorage` calls left outside `storage.ts` itself.
+Steam Cloud is a config change away, not a refactor, whenever Phase 3 happens.
 
 **Effort: 2-4 days**, most of it window sizing and first-time signing setup.
 
@@ -326,17 +340,18 @@ None of these are required to ship. A game can go live with zero Steamworks API 
 
 ```
 Phase 0  Fix the build            ✅ DONE     ← was blocking everything
-Phase 1  Ship on itch.io          ½ day, $0   ← still open, still free
-Phase 2  Electron wrapper         ✅ merged   ← full playthrough + signing still to do
+Phase 1  Ship on itch.io          ✅ DRAFT LIVE ← weloniheu.itch.io/slime, flip Public when ready
+Phase 2  Electron wrapper         ✅ merged   ← full playthrough + icons + signing still to do
 Phase 3  Steam paperwork + store  ⏸ ON HOLD  ← costs money, waiting on Q2 + player feedback
 Phase 4  Achievements / Cloud     after Phase 3
 ```
 
-Phases 0 and 2 are merged into `main`. Phase 3 (and everything downstream of it,
-including Phase 4 — Steamworks features need an app that exists, which means the
-Direct fee) is on hold until the game's in a good spot and you've decided to spend
-the money. Phase 1 stays open in the meantime: it's free, and it's the thing most
-likely to inform whether Phase 3 is worth doing at all.
+Phases 0 and 2 are merged into `main`, and Phase 1 is up as a draft. Phase 3 (and
+everything downstream of it, including Phase 4 — Steamworks features need an app
+that exists, which means the Direct fee) is on hold until the game's in a good spot
+and you've decided to spend the money. The itch.io draft is exactly the kind of
+signal that should inform that call: share the secret URL for feedback, then flip
+it Public whenever you want it listed.
 
 ## Open questions
 
@@ -348,8 +363,12 @@ likely to inform whether Phase 3 is worth doing at all.
 2. **How much play time is in the game right now?** The four tracks in
    `PROGRESSION.md` look substantial on paper, but I have not timed a playthrough.
    Steam buyers judge this hard; itch players are far more forgiving of a short game.
-3. **Is the Hawaiian-language content reviewed by a speaker?** Not a technical gate,
-   but it is a public release of ʻōlelo Hawaiʻi teaching material — worth being
-   deliberate about before it ships under a Purple Maiʻa-adjacent name.
+3. **Is the Hawaiian-language content reviewed by a speaker?** Checked directly against
+   `metadata.reviewed` in the packs: **no, not yet.** The entire Hawaiian logic pack
+   (`content/packs/logic.room.haw.v1.json`) is `reviewed: false` on every level, and
+   `vocab.room.haw.v1.json` has several Shuffled/Shrouded batches still `false` too (the
+   base Hawaiian vocab levels ARE marked reviewed). Not a technical gate, but it is a
+   public release of ʻōlelo Hawaiʻi teaching material — worth being deliberate about
+   before it ships under a Purple Maiʻa-adjacent name.
 4. **Steam Deck a goal?** If yes, Phase 4's controller config moves up, because
    keyboard-only is a hard blocker for Deck playability.

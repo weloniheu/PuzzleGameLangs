@@ -16,6 +16,14 @@ const KEY = "codex.discovered.v1";
 // Hub/room unlocks live alongside the Codex under the SAME save system (one place to
 // persist, one place to reset). Stored as a flat list of earned unlock keys.
 const UNLOCK_KEY = "codex.unlocks.v1";
+// A QA toggle, not player progress — deliberately NOT touched by resetCodex(), and
+// stored under its own key so it survives a "Reset all progress".
+const TEST_MODE_KEY = "codex.testMode.v1";
+// Which guided tutorials have already played to the end (or been Escape-skipped) at
+// least once. Real player state, so IS wiped by resetCodex() (a fresh start re-teaches
+// everything) — but also has its own standalone reset for "Replay Tutorials" in
+// Settings, which re-shows tutorials WITHOUT touching earned progress.
+const TUTORIALS_SEEN_KEY = "codex.tutorialsSeen.v1";
 
 export interface CodexEntry {
   /** the command name, e.g. "print" */
@@ -106,15 +114,99 @@ export function addUnlock(key: string): boolean {
   return true;
 }
 
-/** Wipe ALL saved progress — discovered commands and room unlocks. */
+/** Wipe ALL saved progress — discovered commands, room unlocks, and seen-tutorial state
+ *  (a fresh start re-teaches everything; see resetSeenTutorials() for a narrower reset
+ *  that replays tutorials WITHOUT touching earned progress). */
 export function resetCodex(): void {
   write([]);
   writeUnlocks([]);
+  writeSeenTutorials([]);
 }
 
-// NOTE: tutorials have no persisted "seen" flags. They play on EVERY entry and the player
-// skips with Escape (see systems/tutorialOverlay.ts + roomHost's teaching block), so there
-// is nothing to remember and nothing for a "replay" control to clear.
+// --- test mode (QA: view every level/portal without earning it) ------------
+
+export function getTestMode(): boolean {
+  try {
+    return getItem(TEST_MODE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function setTestMode(on: boolean): void {
+  try {
+    setItem(TEST_MODE_KEY, on ? "1" : "0");
+  } catch {
+    /* storage unavailable (private mode / tests) — degrade silently */
+  }
+}
+
+/** A read-only view whose `.has()` always answers yes — every gate that checks
+ *  unlocks this way sees "everything earned" without the engine ever having to
+ *  enumerate content's arbitrary unlock keys (CLAUDE.md Rule 1). */
+class AllUnlockedSet extends Set<string> {
+  has(): boolean {
+    return true;
+  }
+}
+
+/** The unlocks every gated surface (hub doors, in-track ladder, achievements) should
+ *  read. Normally the player's real earned keys; under test mode, everything. */
+export function getUnlocksSet(): ReadonlySet<string> {
+  return getTestMode() ? new AllUnlockedSet() : new Set(readUnlocks());
+}
+
+// --- seen tutorials (persisted: a tutorial plays once, then stays quiet) ---------
+//
+// Each SHARED tutorial (a `pack.tutorials` entry, e.g. "tier:mixed") is tracked under
+// its own id — global, so once it's been shown in ANY level that references it, it
+// won't replay in another. Each ROOM's own inline `guided_tutorial` is tracked under
+// `room:<puzzle id>`, since that content is unique to that one room. Both kinds are
+// marked seen the moment their playback ends — whether the player watched the whole
+// thing or skipped it with Escape (see systems/dialogue.ts's `play(seq, { onComplete })`;
+// `end()` fires `onComplete` on both paths, so a skip counts as "seen" too).
+//
+// Card-game tutorials (match/combine/sentence_build, systems/tutorialOverlay.ts) use
+// the SAME storage under the same "room:<puzzle id>" id scheme — one seen-tutorial
+// system for both delivery mechanisms (see content/TUTORIAL_SCRIPTS.md).
+
+function readSeenTutorials(): string[] {
+  try {
+    const raw = getItem(TUTORIALS_SEEN_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as string[]).filter((k) => typeof k === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeSeenTutorials(ids: string[]): void {
+  try {
+    setItem(TUTORIALS_SEEN_KEY, JSON.stringify(ids));
+  } catch {
+    /* storage unavailable (private mode / tests) — degrade silently */
+  }
+}
+
+export function hasSeenTutorial(id: string): boolean {
+  return readSeenTutorials().includes(id);
+}
+
+/** Marks a tutorial seen if it wasn't already (idempotent — safe to call every playback end). */
+export function markTutorialSeen(id: string): void {
+  if (!id) return;
+  const current = readSeenTutorials();
+  if (current.includes(id)) return;
+  current.push(id);
+  writeSeenTutorials(current);
+}
+
+/** "Replay Tutorials" (Settings): clears ONLY the seen-tutorial state, so every tutorial
+ *  plays again on next entry — without touching earned progress (unlocks/Codex). */
+export function resetSeenTutorials(): void {
+  writeSeenTutorials([]);
+}
 
 /** Renders (or re-renders) the Codex panel into `el`. */
 export function renderCodexPanel(el: HTMLElement): void {

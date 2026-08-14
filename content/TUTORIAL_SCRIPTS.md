@@ -1,13 +1,24 @@
 # Guided tutorial scripts
 
-One script per puzzle type / room, played **every time** that room is entered. Tone:
-cut-and-dry, no character voice, all ages.
+One script per puzzle type / room. Tone: cut-and-dry, no character voice, all ages.
 
-**Always-on, always skippable.** There are no "seen" flags and no replay button. A
-tutorial is a standing offer rather than a one-shot you can miss: coming back to a room
-you half-remember re-teaches it, and the player who does remember presses **Escape** once
-to leave. Every card advertises that on every step ("Esc — skip"), and Escape ends the
-whole opening sequence — greeting included — in a single press.
+**Plays once, ever, then stays quiet — always skippable while it's up.** Persisted (see
+`core/codex.ts`'s seen-tutorial store), not a per-session or per-mount flag: a ROOM's own
+`guided_tutorial` is seen once for that room (`room:<puzzle id>`); a SHARED tutorial
+(`tutorial_refs`) is seen once **across the whole game**, so teaching a concept in one
+level means it never replays in another that references the same id; a CARD-GAME tutorial
+is seen once **per puzzle TYPE**, so the first match puzzle the player ever meets teaches
+it and no later match puzzle (any language pack) replays it. Watching a tutorial to the
+end and Escape-skipping it both count as "seen" — either way it won't play again on its
+own. **"Replay Tutorials" in Settings** is the deliberate way back in: it clears the seen
+state (without touching earned progress) so every tutorial plays again on next entry.
+
+Every card still advertises the way out on every step ("Esc — skip"), and Escape ends the
+whole opening sequence — greeting included — in a single press, whether the player is
+skipping something new or something they'd already seen before a "Replay Tutorials" reset.
+
+The `on_enter` story/greeting beats (snake dialogue, room flavor) are NOT part of this —
+those are content, not teaching, and play on every entry same as always.
 
 Escape reaches the tutorial through the room's **esc ladder** (`systems/focus.ts`), as the
 last rung before "open settings". Nearer claims on Escape still win: a `waitFor` step
@@ -24,7 +35,8 @@ that first and skips the tutorial on the next press.
   `guarded` is independent of `skippable` — the game cannot clobber a tutorial, but the
   player can always leave it.
 - **Card games** (match, combine, sentence_build): `payload.guided_tutorial`, played
-  by the lightweight bar (`systems/tutorialOverlay.ts`), which handles its own Escape.
+  by the lightweight bar (`systems/tutorialOverlay.ts`), which handles its own Escape
+  and its own seen-check (keyed `type:<puzzle_type>` — see above).
 
 Step mechanics (both mechanisms):
 
@@ -76,10 +88,19 @@ each plays its full sequence, every entry — a partial replay would teach step 
 someone who never saw step 1. Escape ends the whole unit at once.
 
 1. "This is a code puzzle. Let's learn how it works." — Enter
-2. "Walk up to a word on the floor and press I to pick it up." — `waitFor: pickup`
-3. "Walk to an empty tile and press P to place it down." — `waitFor: place`
-4. "Stand on Build and press Enter to compile your line." — `waitFor: build`
-5. "Stand on Run and press Enter to see what your line does." — `waitFor: run`
+2. "Press T any time to see your task. The board freezes while it's open — press T
+   again (or Escape) to get back to it." — Enter
+3. "Walk up to a word on the floor and press I to pick it up." — `waitFor: pickup`
+4. "Walk to an empty tile and press P to place it down." — `waitFor: place`
+5. "Stand on Build and press Enter to compile your line." — `waitFor: build`
+6. "Stand on Run and press Enter to see what your line does." — `waitFor: run`
+
+Step 2 (the task prompt) is a GENERIC control, not specific to coding: any room puzzle
+that declares `mechanics.goalSpec` gets it for free (see `systems/taskOverlay.ts`), and
+it is taught here — once, in the controls tutorial — rather than restated per track,
+matching the control-restating rule below. Baba-style `logic_rules` rooms never set
+`goalSpec` (their rule tiles ARE the goal), so pressing T there is a no-op and the
+tutorial never mentions it in that track.
 
 Shared tier/concept tutorials live in the pack's `tutorials` map and are pulled
 in by a level's `tutorial_refs` (e.g. the `mixed` level references `tier:mixed`).

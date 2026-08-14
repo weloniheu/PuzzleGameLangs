@@ -175,6 +175,8 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     expect(text(c, ".room-dialogue")).toContain("Welcome to the practice pod");
     press(c, "Enter", 2); // through the on_enter beats → tutorial step 1
     expect(speech(c)).toContain("code puzzle");
+    press(c, "Enter");    // → the task-prompt step (teaches T)
+    expect(speech(c)).toContain("Press T");
     press(c, "Enter");    // → waits for pickup
 
     // Pick up print / hello / world (FIFO), from spawn (6,7).
@@ -249,14 +251,13 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "ArrowDown", 4);      // Python → … → ⌂ Return to hub (always the last row)
     press(c, "Enter");             // select ⌂ → teleport away
 
-    // --- BACK IN THE HUB: fresh mount, and the tutorial GREETS AGAIN (no seen-flag —
-    // teaching is a standing offer on every entry), so the returning player skips it. ---
+    // --- BACK IN THE HUB: fresh mount, but the tutorial does NOT greet again — it already
+    // played to completion earlier in this very run, and a guided tutorial is seen ONCE ever
+    // (persisted — core/codex.ts). No Escape needed: there's nothing on screen to dismiss. ---
     expect(c.querySelectorAll(".room-world")).toHaveLength(1); // no stacked rooms
     expect(c.querySelectorAll(".room-door-layer .tile-portal")).toHaveLength(4);
     expect(c.querySelector(".room-terminal")).toBeNull(); // hub declares no terminal
     expect((c.querySelector(".room-narrator") as HTMLElement).hidden).toBe(true);
-    expect(speech(c)).toContain("Welcome to Puzzle Patch");
-    press(c, "Escape");
     expect(c.querySelector(".tutorial-card")).toBeNull();
 
     // Movement still single-fires after two transitions (no leaked listeners).
@@ -697,7 +698,81 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "ArrowRight", 3);     // (5,7) Run
     press(c, "Enter");
     expect(c.querySelector(".room-terminal-body")!.classList.contains("term-success")).toBe(false);
-    expect(text(c, ".room-terminal-body")).toContain("no output");
+    // The error must name the actual mistake. Every token placed here IS correct — the
+    // parens are just absent — so this is "something is missing", never "unknown word".
+    expect(text(c, ".room-terminal-body")).toContain("something is missing");
+    manager.teardown();
+  });
+
+  // The ERROR channel, end to end. What this pins: wrong-order used to render as the
+  // catch-all "(no output)" — three distinct mistakes wearing one non-message — even
+  // though the checker knew exactly which one had happened.
+  it("coding tutorial: a wrong ORDER names the mistake instead of '(no output)'", async () => {
+    const { container: c, manager } = world;
+    manager.enter("py-code-tutorial-000");
+    await vi.waitFor(() => expect(c.querySelector(".room-world")).toBeTruthy());
+    press(c, "Escape"); // skip the opening + guided beats
+
+    // Pick up in the WRONG order — inventory is FIFO, so: hello, then print, then world.
+    press(c, "ArrowUp");        // (6,6)
+    press(c, "ArrowRight", 4);  // (10,6) hello
+    press(c, "i");
+    press(c, "ArrowLeft");      // (9,6) print
+    press(c, "i");
+    press(c, "ArrowRight", 2);  // (11,6) world
+    press(c, "i");
+
+    // Place all three at indent 0 → "hello print world": the right words, wrong order.
+    press(c, "ArrowUp", 5);     // (11,1)
+    press(c, "ArrowLeft", 10);  // (1,1) — the coding area's left edge
+    press(c, "p");
+    press(c, "ArrowRight"); press(c, "p");
+    press(c, "ArrowRight"); press(c, "p");
+    expect(c.querySelectorAll(".tile-placed")).toHaveLength(3);
+
+    // Confirm the setup really is a reorder (same words), not a wrong word.
+    press(c, "`");
+    expect(text(c, ".room-debug")).toContain("[hello, print, world]");
+    press(c, "`");
+
+    press(c, "ArrowDown", 6);   // (3,1) → (3,7)
+    press(c, "ArrowLeft");      // (2,7) Build
+    press(c, "Enter");
+    press(c, "ArrowRight", 3);  // (5,7) Run
+    press(c, "Enter");
+
+    const term = text(c, ".room-terminal-body");
+    expect(term).toContain("right words, wrong order");
+    expect(term).not.toContain("no output");
+    expect(c.querySelector(".room-terminal-body")!.classList.contains("term-success")).toBe(false);
+    manager.teardown();
+  });
+
+  // The HINT LADDER (content). What this pins: the first press of "?" used to hand over
+  // the finished program, so there was nothing to climb — ask once, get the answer. Each
+  // rung must be distinct, and the ANSWER must not surface before the last one.
+  it("coding tutorial: the hint giver serves three ESCALATING hints, answer last", async () => {
+    const { container: c, manager } = world;
+    manager.enter("py-code-tutorial-000");
+    await vi.waitFor(() => expect(c.querySelector(".room-world")).toBeTruthy());
+    press(c, "Escape"); // skip the room's opening + guided beats
+
+    // Walk spawn (6,7) → the "?" giver at (11,4). Column 11 is clear the whole way.
+    press(c, "ArrowRight", 5);
+    press(c, "ArrowUp", 3);
+
+    const rungs: string[] = [];
+    for (let i = 0; i < 3; i++) {
+      press(c, "Enter");        // standing on "?" → serve the next hint
+      rungs.push(speech(c));
+      press(c, "Enter");        // dismiss it (dialogue outranks interact)
+    }
+
+    expect(new Set(rungs).size).toBe(3);                  // three DIFFERENT rungs
+    expect(rungs[0]).toContain("list of steps");          // rung 1 = the idea
+    expect(rungs[0]).not.toContain('print("hello"');      // …and NOT the answer
+    expect(rungs[1]).not.toContain('print("hello"');      // rung 2 = shape, still not the answer
+    expect(rungs[2]).toContain('print("hello", "world")'); // rung 3 = the answer, last resort
     manager.teardown();
   });
 
@@ -706,8 +781,15 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     manager.enter("py-code-base-001");
     skipTeaching(c);
 
-    // The goal chip shows the desired output/description — never the target code.
-    expect(text(c, ".room-hud-goal")).toContain("Store 5 in x");
+    // The task prompt (T) shows the desired output/description — never the target code —
+    // and freezes the board while it's open; T again closes it and gameplay resumes.
+    press(c, "t");
+    expect(text(c, ".task-overlay-desc")).toContain("Store 5 in x");
+    const before = slimeAt(c);
+    press(c, "ArrowRight"); // swallowed — the board is frozen behind the prompt
+    expect(slimeAt(c)).toBe(before);
+    press(c, "t");
+    expect(c.querySelector(".task-overlay-scrim")).toBeNull();
 
     // Batch 1: collect x, =, 5 and lay line 0 "x = 5" at row 1.
     press(c, "ArrowRight", 5);  // (6,7) → (11,7)
@@ -876,7 +958,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     manager.teardown();
   });
 
-  it("shared tutorial: a level's tutorial_refs play on EVERY entry, and Escape skips them", () => {
+  it("shared tutorial: a level's tutorial_refs play ONCE ever (persisted, per ref id)", () => {
     const { container: c, manager } = world;
     manager.enter("py-code-mixed-000");
     press(c, "Enter"); // past the snake on_enter greeting → into the shared tier tutorial
@@ -886,18 +968,56 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     expect(c.querySelector(".tdemo-prefilled")).toBeTruthy();
     // Every step advertises the way out, on the card itself.
     expect(text(c, ".tutorial-card-skip")).toBe("Esc — skip");
-    press(c, "Enter"); // finish it the long way
+    press(c, "Enter"); // finish it the long way → marks "tier:mixed" seen
     manager.teardown();
 
-    // Second visit: it plays AGAIN. A tutorial is a standing offer, not a one-shot — there
-    // is no seen-flag, so returning to a room you half-remember re-teaches it.
+    // Second visit: it does NOT replay — "tier:mixed" was already seen (core/codex.ts),
+    // so only the snake's on_enter greeting shows, same as any other return visit.
     manager.enter("py-code-mixed-000");
-    press(c, "Enter");
-    expect(speech(c)).toContain("Some tiles come already placed");
-    // ...and the player who does remember pays exactly one keypress to leave.
-    press(c, "Escape");
     expect(speech(c)).not.toContain("Some tiles come already placed");
     expect(c.querySelector(".tutorial-card")).toBeNull();
+    manager.teardown();
+  });
+
+  it("shared tutorial: Escape-skipping it ALSO marks it seen — not just a full playthrough", () => {
+    const { container: c, manager } = world;
+    manager.enter("py-code-mixed-000");
+    press(c, "Enter"); // past on_enter → into the shared tier tutorial
+    expect(speech(c)).toContain("Some tiles come already placed");
+    press(c, "Escape"); // the player who already knows it leaves early
+    expect(c.querySelector(".tutorial-card")).toBeNull();
+    manager.teardown();
+
+    // A later visit stays quiet too — skipping counted as "seen", same as finishing it.
+    manager.enter("py-code-mixed-000");
+    expect(speech(c)).not.toContain("Some tiles come already placed");
+    expect(c.querySelector(".tutorial-card")).toBeNull();
+    manager.teardown();
+  });
+
+  it("Settings → Replay Tutorials clears seen state, WITHOUT touching earned progress", () => {
+    const { container: c, manager } = world;
+    // See the hub tutorial once, then Escape-skip it — marks "room:hub" seen.
+    manager.enter("hub");
+    press(c, "Enter"); // step 1 → step 2 (waitFor move)
+    press(c, "Escape"); // skips the rest — counts as "seen" same as finishing it
+    manager.teardown();
+
+    manager.enter("hub");
+    expect(c.querySelector(".tutorial-card")).toBeNull(); // confirmed seen: silent by default
+    press(c, "Escape"); // → open settings
+    pressPanel(c, "ArrowDown"); // Achievements → Controls
+    pressPanel(c, "Enter");     // drill into Controls
+    const replayBtn = [...c.querySelectorAll("button")].find((b) => b.textContent!.includes("Replay Tutorials"))!;
+    expect(replayBtn).toBeTruthy();
+    replayBtn.click(); // Settings is a documented mouse-allowed surface (CLAUDE.md Rule 4)
+    pressPanel(c, "Escape"); // → menu
+    pressPanel(c, "Escape"); // → closed, focus back to the room
+    manager.teardown();
+
+    // A fresh hub entry teaches again — the seen-flag was cleared.
+    manager.enter("hub");
+    expect(speech(c)).toContain("Welcome to Puzzle Patch");
     manager.teardown();
   });
 
@@ -919,20 +1039,44 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     manager.teardown();
   });
 
-  // BOARD rooms (logic/grammar/vocab) declare no terminal and no inventory, so the HUD
-  // goal line and the hint-giver marker are the only framing they get. Both render
+  // BOARD rooms (logic/grammar/vocab) declare no terminal and no inventory, so the task
+  // prompt (T) and the hint-giver marker are the only framing they get. Both render
   // through generic roomHost paths — this pins that a board room actually gets them
   // (packFraming.test.ts pins that every level supplies the content).
-  it.each(["logic-rules-003", "grammar-build-002", "vocab-match-005", "vocab-en-001"])(
-    "%s: renders its goal line and its hint-giver marker",
+  it.each(["grammar-build-002", "vocab-match-005", "vocab-en-001"])(
+    "%s: T opens its task prompt (freezing the board), and its hint-giver marker renders",
     async (id) => {
       const { container: c, manager } = world;
       manager.enter(id);
-      await vi.waitFor(() => expect(c.querySelector(".room-hud-goal")).toBeTruthy());
-      expect(text(c, ".room-hud-goal").length).toBeGreaterThan(10);
+      await vi.waitFor(() => expect(c.querySelector(".room-world")).toBeTruthy());
+      press(c, "Escape"); // skip the on_enter greeting (+ guided tutorial, where present)
+      expect(c.querySelector(".task-overlay-scrim")).toBeNull(); // closed by default
+      press(c, "t");
+      expect(text(c, ".task-overlay-desc").length).toBeGreaterThan(10);
+      press(c, "t"); // close again — leaves the room in its normal state
+      expect(c.querySelector(".task-overlay-scrim")).toBeNull();
       expect(text(c, ".room-hud-title").length).toBeGreaterThan(0);
       expect(c.querySelectorAll(".room-marker-layer .tile-hint-marker")).toHaveLength(1);
       manager.teardown();
     },
   );
+
+  // Baba-style logic_rules is the one puzzle type that gets NO task prompt: the rule
+  // tiles ON THE FLOOR are the goal, so pressing T is a no-op there (see
+  // validateRepair.ts's guard and packFraming.test.ts). Its hint giver still works —
+  // that framing is optional, walked-to, never forced on screen.
+  it("logic-rules-003: T is a no-op (Baba-style — the rule tiles are the goal), hint-giver marker still renders", async () => {
+    const { container: c, manager } = world;
+    manager.enter("logic-rules-003");
+    await vi.waitFor(() => expect(c.querySelector(".room-world")).toBeTruthy());
+    press(c, "Escape"); // skip the on_enter greeting
+    const before = slimeAt(c);
+    press(c, "t");
+    expect(c.querySelector(".task-overlay-scrim")).toBeNull();
+    press(c, "ArrowRight"); // confirms the board never froze — T truly did nothing
+    expect(slimeAt(c)).not.toBe(before);
+    expect(text(c, ".room-hud-title").length).toBeGreaterThan(0);
+    expect(c.querySelectorAll(".room-marker-layer .tile-hint-marker")).toHaveLength(1);
+    manager.teardown();
+  });
 });

@@ -18,6 +18,9 @@ export interface DispatchContext {
   /** Escape may cut the current dialogue sequence short. */
   dialogueCanSkip: boolean;
   destMenuOpen: boolean;
+  /** The TASK overlay (goalSpec prompt, toggled by the "task" action) is showing →
+   *  the board is frozen. Only the "task" action or Escape gets through, to close it. */
+  taskOverlayOpen: boolean;
 }
 
 export type Decision =
@@ -28,6 +31,7 @@ export type Decision =
   | { kind: "dest-select" }
   | { kind: "dest-move"; delta: -1 | 1 }
   | { kind: "escape" }
+  | { kind: "task-close" }
   | { kind: "fire"; action: string }
   | { kind: "pending"; pending: Key[] }
   | { kind: "pass" };                 // unbound key — let it pass through
@@ -36,16 +40,26 @@ export type Decision =
  * Decide what one keydown does, given the current focus context and the pending
  * sequence buffer. Mirrors the original handler exactly:
  *   • dialogue showing → advance on Enter/Space, skip on Esc (if skippable), swallow the rest
+ *   • task overlay open → Esc or the "task" action closes it (whatever it's bound to,
+ *     so a rebind stays consistent between open and close); swallow the rest — the
+ *     board stays frozen while the prompt is up
  *   • destination menu open → the ACTIVE scheme's movement bindings move the cursor
  *     (arrows/WASD, hjkl, or whatever the player rebound), Enter/Space selects,
  *     Esc escapes, swallow the rest
  *   • Escape → the esc ladder
  *   • otherwise resolve buffer+key against bindings; a broken sequence RESTARTS from this key
+ *     (this is also how the task overlay OPENS: "task" fires like any other action)
  */
 export function decide(ctx: DispatchContext, rawKey: string, pending: Key[], bindings: Bindings): Decision {
   if (ctx.dialogueBlocks) {
     if (rawKey === "Enter" || rawKey === " " || rawKey === "Spacebar") return { kind: "dialogue-advance" };
     if (rawKey === "Escape" && ctx.dialogueCanSkip) return { kind: "dialogue-skip" };
+    return { kind: "swallow" };
+  }
+  if (ctx.taskOverlayOpen) {
+    if (rawKey === "Escape") return { kind: "task-close" };
+    const r = resolve(bindings, [normalizeKey(rawKey)]);
+    if (r.kind === "fire" && r.action === "task") return { kind: "task-close" };
     return { kind: "swallow" };
   }
   if (ctx.destMenuOpen) {
@@ -86,6 +100,7 @@ export interface InputDispatchDeps {
   onDestSelect(): void;
   onDestMove(delta: -1 | 1): void;
   onEscape(): void;
+  onTaskClose(): void;
   onAction(action: string): void;
 }
 
@@ -119,6 +134,7 @@ export function createInputDispatch(deps: InputDispatchDeps): InputDispatch {
       case "dest-select": e.preventDefault(); deps.onDestSelect(); return;
       case "dest-move": e.preventDefault(); deps.onDestMove(d.delta); return;
       case "escape": e.preventDefault(); deps.onEscape(); return;
+      case "task-close": e.preventDefault(); deps.onTaskClose(); return;
       case "fire":
         e.preventDefault();
         clearPending();

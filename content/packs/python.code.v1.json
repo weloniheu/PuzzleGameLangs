@@ -241,16 +241,13 @@
           ],
           "hints": [
             {
-              "text": "Pick up print, \"hello\" and \"world\" from the floor.",
-              "tag": "intro"
+              "text": "A program is a list of steps, run top to bottom. This one is a single step."
             },
             {
-              "text": "Place print first, then the words, starting against the left wall.",
-              "tag": "after:wrong-order"
+              "text": "Start with the command, then give it the words you want it to show."
             },
             {
-              "text": "Try building: print(\"hello\", \"world\")",
-              "tag": "after:wrong-word"
+              "text": "Build: print(\"hello\", \"world\")"
             }
           ],
           "guided_tutorial": [
@@ -258,6 +255,13 @@
               "id": "ctut-1",
               "speaker": "narrator",
               "text": "This is a code puzzle. Let's learn how it works.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            },
+            {
+              "id": "ctut-1b",
+              "speaker": "narrator",
+              "text": "Press T any time to see your task. The board freezes while it's open — press T again (or Escape) to get back to it.",
               "trigger": "guided_tutorial",
               "autoAdvance": false
             },
@@ -490,12 +494,13 @@
           ],
           "hints": [
             {
-              "text": "First line: x = 5. Second line: print x.",
-              "tag": "intro"
+              "text": "A variable stores a value under a name so you can use the name later."
             },
             {
-              "text": "Watch out for look-alikes on the floor (prnt, y, 3) — they're traps.",
-              "tag": "after:wrong-word"
+              "text": "One line makes the name and gives it a value; the next shows what is in it. Some things on the floor are near-misses, not the real words."
+            },
+            {
+              "text": "Build: x = 5, then print(x)"
             }
           ],
           "guided_tutorial": [
@@ -751,8 +756,13 @@
           ],
           "hints": [
             {
-              "text": "Build print ( \"hello world\" to the LEFT of the provided ).",
-              "tag": "intro"
+              "text": "The closing bracket is already placed for you — everything else goes before it."
+            },
+            {
+              "text": "A command takes the words it acts on inside brackets: the name, then an opening bracket, then the words."
+            },
+            {
+              "text": "Build: print ( \"hello world\" — the closing ) is already there."
             }
           ]
         }
@@ -914,7 +924,11 @@
       "difficulty": 2,
       "tutorial": true,
       "mechanics": {
-        "tier": "explicit"
+        "tier": "explicit",
+        "goalSpec": {
+          "output": "hello world",
+          "description": "Same message — but this time place the parentheses yourself."
+        }
       },
       "prompt": "Same words — but this time you place the parentheses too.",
       "payload": {
@@ -977,12 +991,13 @@
           ],
           "hints": [
             {
-              "text": "A print needs ( ) around its words. Both parens are on the floor now.",
-              "tag": "intro"
+              "text": "Nothing is placed for you this time. The brackets are yours to find."
             },
             {
-              "text": "Order: print ( \"hello world\" )",
-              "tag": "after:wrong-order"
+              "text": "The words a command acts on sit between an opening and a closing bracket."
+            },
+            {
+              "text": "Build: print ( \"hello world\" )"
             }
           ]
         }
@@ -1211,12 +1226,13 @@
           ],
           "hints": [
             {
-              "text": "Header: for i in range 3. Body (indented): print \"hi\".",
-              "tag": "intro"
+              "text": "A loop repeats whatever belongs to it."
             },
             {
-              "text": "The body must sit one tile to the RIGHT of the for.",
-              "tag": "after:wrong-indent"
+              "text": "The header comes first. The line it repeats sits one tile further right, so the loop knows it belongs to it."
+            },
+            {
+              "text": "Build: for i in range(3), then print(\"hi\") one tile to the right of it."
             }
           ]
         }
@@ -1488,8 +1504,13 @@
           ],
           "hints": [
             {
-              "text": "Body: print i (the counter), not \"i\" in quotes.",
-              "tag": "intro"
+              "text": "The loop counts as it goes, and it keeps that count in a name you can use."
+            },
+            {
+              "text": "Show the counter itself, not the letter that names it — quotes would turn it into just a letter."
+            },
+            {
+              "text": "Build: for i in range(3), then print(i) one tile to the right of it."
             }
           ]
         }
@@ -1744,12 +1765,13 @@
           ],
           "hints": [
             {
-              "text": "def greet — then an indented print \"hi\" — then greet on its own line.",
-              "tag": "intro"
+              "text": "Defining a function teaches a name. It does not run it yet."
             },
             {
-              "text": "The call 'greet' sits back at indent 0, below the body.",
-              "tag": "after:wrong-indent"
+              "text": "Define it first, indent what it does, then say the name on its own line to actually run it."
+            },
+            {
+              "text": "Build: def greet(), then print(\"hi\") indented under it, then greet() back at the left wall."
             }
           ]
         }
@@ -1990,8 +2012,13 @@
           ],
           "hints": [
             {
-              "text": "Two indented body lines (print hi, print bye), then greet at indent 0.",
-              "tag": "intro"
+              "text": "A function can do more than one thing when you call it."
+            },
+            {
+              "text": "Every line that belongs to the function sits at the same distance from the left."
+            },
+            {
+              "text": "Build: def greet(), then print(\"hi\") and print(\"bye\") both indented, then greet() at the left wall."
             }
           ]
         }
@@ -2242,12 +2269,13 @@
           ],
           "hints": [
             {
-              "text": "def greet name → print name (indented) → greet \"Sam\".",
-              "tag": "intro"
+              "text": "A function can take something in and then use it."
             },
             {
-              "text": "print name, not print \"name\" — the slot, not the literal word.",
-              "tag": "after:wrong-word"
+              "text": "Name the slot when you define the function, use that same name inside it, and fill the slot when you call it."
+            },
+            {
+              "text": "Build: def greet(name), then print(name) indented, then greet(\"Sam\")."
             }
           ]
         }
@@ -2507,8 +2535,13 @@
           ],
           "hints": [
             {
-              "text": "def greet first last → print first → print last → greet \"Sam\" \"Lee\".",
-              "tag": "intro"
+              "text": "A function can take in more than one thing."
+            },
+            {
+              "text": "Two slots, used inside in the order you named them, and filled in that same order when you call it."
+            },
+            {
+              "text": "Build: def greet(first, last), then print(first) and print(last) indented, then greet(\"Sam\", \"Lee\")."
             }
           ]
         }

@@ -20,6 +20,8 @@ import {
   evaluatedLines,
   type AnswerLine,
   type CheckResult,
+  type CheckReason,
+  type CheckDetail,
 } from "./codeGameLogic";
 import type { TermState } from "./terminal";
 
@@ -35,6 +37,42 @@ export interface RunFeedback {
   beatReason: string;
 }
 
+/** How a failed Run reads in the terminal: WHAT THE PLAYER DID WRONG, never what to do
+ *  instead. Guidance is the hint giver's job (the room's `?` marker) — keeping the two
+ *  apart is the whole point: an error diagnoses, a hint leads.
+ *
+ *  Deliberately language-agnostic — no Python-specific error names — so any future code
+ *  pack inherits this wording with zero changes (CLAUDE.md Rule 1). */
+export function describeError(
+  reason: CheckReason,
+  detail: CheckDetail | undefined,
+  opts: { multiLine?: boolean; empty?: boolean } = {},
+): string {
+  // Not-built is the gate they actually hit; report it even when the area is also empty.
+  if (reason === "build-first") return "error: nothing built yet";
+  if (opts.empty) return "error: no code placed";
+  // A line number only helps when there's more than one line to confuse.
+  const at = opts.multiLine && detail?.line !== undefined ? ` on line ${detail.line + 1}` : "";
+  switch (reason) {
+    case "wrong-word":
+      // Two different mistakes wear the same reason: a word that doesn't belong, versus
+      // a line that's simply unfinished. Calling the second one "unknown word" would be
+      // a false diagnosis — every word the player placed there was correct.
+      if (detail?.token) return `error: unknown word '${detail.token}'${at}`;
+      if (detail?.incomplete) return `error: something is missing${at}`;
+      return `error: unknown word${at}`;
+    case "wrong-order":
+      return `error: right words, wrong order${at}`;
+    case "wrong-indent": {
+      const dir = detail?.indent === "deep" ? " (too far right)"
+        : detail?.indent === "shallow" ? " (too far left)" : "";
+      return `error: wrong indent${at}${dir}`;
+    }
+    case "extra-code":
+      return `error: unexpected extra code${at}`;
+  }
+}
+
 /** Route a Run result: the terminal transcript (flavor) + which beat should speak.
  *  A first-time teaching beat (run-before-build, or the first wrong order) takes
  *  precedence the FIRST time it happens; afterwards the normal reason beat plays. */
@@ -42,13 +80,12 @@ export function runFeedback(
   res: CheckResult,
   termCmds: { run: string },
   output: string,
+  opts: { multiLine?: boolean; empty?: boolean } = {},
 ): RunFeedback {
   if (res.ok) {
     return { term: { lines: [termCmds.run, output], state: "success" }, firstTrigger: null, beatReason: "success" };
   }
-  const err =
-    res.reason === "build-first" ? "error: nothing built" :
-    res.reason === "extra-code" ? "error: unexpected extra code" : "(no output)";
+  const err = describeError(res.reason, res.detail, opts);
   const firstTrigger =
     res.reason === "build-first" ? "first_run_no_build" :
     res.reason === "wrong-order" ? "first_wrong_order" : null;
@@ -240,9 +277,14 @@ export function createCodingArea(deps: CodingAreaDeps): CodingArea {
 
   function doRun() {
     dialogue.notify("run"); // GUIDED TUTORIAL: satisfies a step waiting on "run" (any attempt)
-    const res = runProgram(buildState, currentProgram(), accepted, deps.requirePunctuation);
-    // Terminal = pretend shell transcript (flavor); the SNAKE portrait delivers the beat.
-    const fb = runFeedback(res, termCmds, deps.output);
+    const program = currentProgram();
+    const res = runProgram(buildState, program, accepted, deps.requirePunctuation);
+    // Terminal = the ERROR channel: what went wrong, in the player's own placed terms.
+    // A line number only earns its place when the level has more than one line.
+    const fb = runFeedback(res, termCmds, deps.output, {
+      multiLine: accepted.some((variant) => variant.length > 1),
+      empty: program.length === 0,
+    });
     deps.termWrite(fb.term.lines, fb.term.state);
     if (res.ok) {
       ctx.onSolved(); // may earn an unlock (e.g. open the next door in the hub)

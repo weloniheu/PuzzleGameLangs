@@ -434,13 +434,6 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   display: block; font-family: "IBM Plex Mono", monospace; font-weight: 400;
   font-size: 10px; color: #c9a877;
 }
-/* Goal chip (base tier: show desired output/description, never the target code). */
-.room-hud-goal {
-  flex: 0 0 auto; max-width: 42%;
-  font-family: "IBM Plex Mono", monospace; font-size: 11px; color: #ffe8b0;
-  background: rgba(0, 0, 0, 0.22); border-radius: 6px; padding: 3px 8px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
 .room-hint { color: #c9a877; font-size: 0.85rem; }
 .room-gear {
   flex: none; cursor: pointer;
@@ -1027,6 +1020,44 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   color: var(--amber-ink); background: linear-gradient(#f2c66b, var(--amber));
   border: 2px solid #b07d2a; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35);
   padding: 6px 12px; border-radius: 8px; animation: cue-nudge 1s ease-in-out infinite;
+}
+
+/* TASK overlay (systems/taskOverlay.ts) — the goalSpec prompt, toggled by the "task"
+   action (T by default). Same center-dominant, dimmed-scrim language as the guided
+   tutorial card above, own scoped classes: no dot progress, no mini-demo. Sits at the
+   same layer as the tutorial card (both freeze the board; they never show at once). */
+.task-overlay-scrim {
+  position: fixed; inset: 0; z-index: 58;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(20, 16, 23, 0.68); backdrop-filter: blur(1.5px);
+  pointer-events: none; opacity: 0; transition: opacity 0.18s ease;
+}
+.task-overlay-scrim.shown { opacity: 1; }
+.task-overlay-card {
+  width: min(360px, 88vw);
+  background: linear-gradient(var(--wood-light), var(--wood));
+  border: 3px solid var(--wood-dark); border-radius: 16px;
+  padding: 18px; box-shadow: 0 16px 34px rgba(0, 0, 0, 0.5);
+  font-family: "Fredoka", system-ui, sans-serif; color: var(--parchment);
+}
+.task-overlay-head {
+  font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--panel-muted);
+  margin-bottom: 10px;
+}
+.task-overlay-desc { font-size: 0.95rem; line-height: 1.5; margin: 0 0 12px; }
+.task-overlay-output-label {
+  font-family: "IBM Plex Mono", monospace; font-size: 0.7rem; color: var(--panel-muted);
+  margin-bottom: 4px;
+}
+.task-overlay-output {
+  font-family: "IBM Plex Mono", monospace; font-size: 0.85rem; color: #9fe1cb;
+  background: #14110d; border: 2px solid #4a3022; border-radius: 8px;
+  padding: 8px 10px; margin: 0 0 12px; white-space: pre-wrap; word-break: break-word;
+}
+.task-overlay-foot {
+  font-family: "IBM Plex Mono", monospace; font-size: 0.66rem; font-weight: 600;
+  letter-spacing: 0.04em; color: rgba(255, 246, 230, 0.45); text-align: right;
 }
 
 /* --- per-mechanic mini demos (closed TutorialWaitFor set; transform/opacity only) --- */

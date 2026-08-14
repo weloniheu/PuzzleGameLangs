@@ -30,16 +30,16 @@ describe("checkLine (order-checker)", () => {
   });
 
   it("flags reversed / wrong order", () => {
-    expect(checkLine(["hello", "print"], 0, LINE)).toEqual({ ok: false, reason: "wrong-order" });
+    expect(checkLine(["hello", "print"], 0, LINE)).toMatchObject({ ok: false, reason: "wrong-order" });
   });
 
   it("flags the correct tokens placed at the wrong indent", () => {
-    expect(checkLine(["print", "hello"], 1, LINE)).toEqual({ ok: false, reason: "wrong-indent" });
+    expect(checkLine(["print", "hello"], 1, LINE)).toMatchObject({ ok: false, reason: "wrong-indent" });
   });
 
   it("flags a valid-but-wrong word", () => {
-    expect(checkLine(["print", "goodbye"], 0, LINE)).toEqual({ ok: false, reason: "wrong-word" });
-    expect(checkLine(["write", "hello"], 0, LINE)).toEqual({ ok: false, reason: "wrong-word" });
+    expect(checkLine(["print", "goodbye"], 0, LINE)).toMatchObject({ ok: false, reason: "wrong-word" });
+    expect(checkLine(["write", "hello"], 0, LINE)).toMatchObject({ ok: false, reason: "wrong-word" });
   });
 
   it("ignores punctuation, quotes and parens (difficulty 1 = content order only)", () => {
@@ -50,10 +50,80 @@ describe("checkLine (order-checker)", () => {
 // Helper: a single placed line at indent 0.
 const oneLine = (content: string[], indent = 0): CodeLine[] => [{ content, indent }];
 
+// The DETAIL is what lets the terminal say what the player did wrong instead of
+// "(no output)". Its hard rule: it may name only what the PLAYER placed — never a
+// missing/expected word and never the target indent, or the error becomes a hint.
+describe("CheckDetail — enough to describe the mistake, never the fix", () => {
+  it("wrong-indent carries the DIRECTION only, never the expected depth", () => {
+    expect(checkLine(["print", "hello"], 2, LINE)).toMatchObject({
+      reason: "wrong-indent", detail: { indent: "deep" },
+    });
+    // The answer sits at indent 1 here, so indent 0 is too far LEFT.
+    expect(checkLine(["print", "hello"], 0, { content: ["print", "hello"], indent: 1 })).toMatchObject({
+      reason: "wrong-indent", detail: { indent: "shallow" },
+    });
+  });
+
+  it("wrong-word names the token the PLAYER placed", () => {
+    expect(checkLine(["prnt", "hello"], 0, LINE)).toMatchObject({
+      reason: "wrong-word", detail: { token: "prnt" },
+    });
+  });
+
+  it("a SHORT line is 'incomplete' and names nothing — the missing word is the answer", () => {
+    const res = checkLine(["print"], 0, LINE);
+    expect(res).toMatchObject({ ok: false, reason: "wrong-word", detail: { incomplete: true } });
+    expect((res as { detail?: { token?: string } }).detail?.token).toBeUndefined();
+  });
+
+  it("never blames a legitimately repeated word for a later duplicate", () => {
+    const twice: AnswerLine = { content: ["print", "print"], indent: 0 };
+    // Two prints are both wanted; the THIRD is the one with no room.
+    expect(checkLine(["print", "print", "print"], 0, twice)).toMatchObject({
+      reason: "wrong-word", detail: { token: "print" },
+    });
+    // …and a single print is short, so it reads as incomplete rather than naming a word.
+    expect(checkLine(["print"], 0, twice)).toMatchObject({ detail: { incomplete: true } });
+  });
+
+  it("checkProgram reports WHICH line failed (0-based)", () => {
+    const answer: AnswerLine[] = [
+      { content: ["for", "i"], indent: 0 },
+      { content: ["print", "hi"], indent: 1 },
+    ];
+    const body_at_zero: CodeLine[] = [
+      { content: ["for", "i"], indent: 0 },
+      { content: ["print", "hi"], indent: 0 },
+    ];
+    expect(checkProgram(body_at_zero, answer)).toMatchObject({
+      reason: "wrong-indent", detail: { line: 1, indent: "shallow" },
+    });
+  });
+
+  it("extra-code points at the first row past the answer", () => {
+    const twice: CodeLine[] = [
+      { content: ["print", "hello"], indent: 0 },
+      { content: ["print", "hello"], indent: 0 },
+    ];
+    expect(checkProgram(twice, ANSWER)).toMatchObject({ reason: "extra-code", detail: { line: 1 } });
+  });
+
+  it("checkProgramAny carries the CLOSEST variant's detail, not the first variant's", () => {
+    // Variant B is closer (wrong-indent outranks wrong-word), so its detail must win.
+    const accepted: AnswerLine[][] = [
+      [{ content: ["write", "hello"], indent: 0 }],
+      [{ content: ["print", "hello"], indent: 1 }],
+    ];
+    expect(checkProgramAny(oneLine(["print", "hello"]), accepted)).toMatchObject({
+      reason: "wrong-indent", detail: { indent: "shallow" },
+    });
+  });
+});
+
 describe("run (build/run state machine)", () => {
   it("refuses to run an unbuilt program → build-first", () => {
     const fresh = createBuildState();
-    expect(run(fresh, oneLine(["print", "hello"]), ANSWER)).toEqual({ ok: false, reason: "build-first" });
+    expect(run(fresh, oneLine(["print", "hello"]), ANSWER)).toMatchObject({ ok: false, reason: "build-first" });
   });
 
   it("runs once built and reports success for the correct program", () => {
@@ -63,14 +133,14 @@ describe("run (build/run state machine)", () => {
 
   it("once built, still reports the specific reason for a wrong line", () => {
     const built = markBuilt(createBuildState());
-    expect(run(built, oneLine(["hello", "print"]), ANSWER)).toEqual({ ok: false, reason: "wrong-order" });
+    expect(run(built, oneLine(["hello", "print"]), ANSWER)).toMatchObject({ ok: false, reason: "wrong-order" });
   });
 
   it("editing a built program re-dirties it → run fails build-first again", () => {
     let state = markBuilt(createBuildState());
     expect(run(state, oneLine(["print", "hello"]), ANSWER)).toEqual({ ok: true });
     state = markDirty(state); // simulate placing/removing a token after Build
-    expect(run(state, oneLine(["print", "hello"]), ANSWER)).toEqual({ ok: false, reason: "build-first" });
+    expect(run(state, oneLine(["print", "hello"]), ANSWER)).toMatchObject({ ok: false, reason: "build-first" });
   });
 });
 
@@ -84,7 +154,7 @@ describe("checkProgram — the coding area must hold EXACTLY the answer's lines"
       { content: ["print", "hello"], indent: 0 },
       { content: ["print", "hello"], indent: 0 },
     ];
-    expect(checkProgram(twice, ANSWER)).toEqual({ ok: false, reason: "extra-code" });
+    expect(checkProgram(twice, ANSWER)).toMatchObject({ ok: false, reason: "extra-code" });
   });
 
   it("rejects ANY extra line beyond the answer, even an unrelated stray → extra-code", () => {
@@ -92,15 +162,15 @@ describe("checkProgram — the coding area must hold EXACTLY the answer's lines"
       { content: ["print", "hello"], indent: 0 },
       { content: ["return"], indent: 0 },
     ];
-    expect(checkProgram(extra, ANSWER)).toEqual({ ok: false, reason: "extra-code" });
+    expect(checkProgram(extra, ANSWER)).toMatchObject({ ok: false, reason: "extra-code" });
   });
 
   it("still surfaces a single line's own error (order) before counting lines", () => {
-    expect(checkProgram(oneLine(["hello", "print"]), ANSWER)).toEqual({ ok: false, reason: "wrong-order" });
+    expect(checkProgram(oneLine(["hello", "print"]), ANSWER)).toMatchObject({ ok: false, reason: "wrong-order" });
   });
 
   it("an empty program falls out as wrong-word (nothing placed)", () => {
-    expect(checkProgram([], ANSWER)).toEqual({ ok: false, reason: "wrong-word" });
+    expect(checkProgram([], ANSWER)).toMatchObject({ ok: false, reason: "wrong-word" });
   });
 });
 
@@ -127,11 +197,11 @@ describe("punctuation tier — requirePunctuation keeps ( ) : , in the order-che
   });
 
   it("rejects a line MISSING required punctuation → wrong-word", () => {
-    expect(checkLine(["print", "hello"], 0, L, true)).toEqual({ ok: false, reason: "wrong-word" });
+    expect(checkLine(["print", "hello"], 0, L, true)).toMatchObject({ ok: false, reason: "wrong-word" });
   });
 
   it("flags punctuation placed in the wrong order → wrong-order", () => {
-    expect(checkLine(["print", ")", "hello", "("], 0, L, true)).toEqual({ ok: false, reason: "wrong-order" });
+    expect(checkLine(["print", ")", "hello", "("], 0, L, true)).toMatchObject({ ok: false, reason: "wrong-order" });
   });
 
   it("guided mode (default) still treats that punctuation as optional", () => {
@@ -143,7 +213,7 @@ describe("punctuation tier — requirePunctuation keeps ( ) : , in the order-che
     const good: CodeLine[] = [{ content: ["print", "(", "hello", ")"], indent: 0 }];
     const missing: CodeLine[] = [{ content: ["print", "hello"], indent: 0 }];
     expect(run(built, good, ANS, true)).toEqual({ ok: true });
-    expect(run(built, missing, ANS, true)).toEqual({ ok: false, reason: "wrong-word" });
+    expect(run(built, missing, ANS, true)).toMatchObject({ ok: false, reason: "wrong-word" });
     expect(run(built, missing, ANS, false)).toEqual({ ok: true }); // guided ignores punctuation
   });
 });
@@ -163,11 +233,11 @@ describe("checkProgramAny / runAny — multiple accepted solutions", () => {
   it("on no match, reports the CLOSEST variant's reason", () => {
     // line 0 reversed → wrong-order vs V1 (right words), only wrong-word vs V2 → wrong-order wins
     const reordered: CodeLine[] = [{ content: ["5", "=", "x"], indent: 0 }, { content: ["print", "x"], indent: 0 }];
-    expect(checkProgramAny(reordered, accepted)).toEqual({ ok: false, reason: "wrong-order" });
+    expect(checkProgramAny(reordered, accepted)).toMatchObject({ ok: false, reason: "wrong-order" });
   });
 
   it("runAny still requires a built program first", () => {
-    expect(runAny(createBuildState(), prog(V1), accepted)).toEqual({ ok: false, reason: "build-first" });
+    expect(runAny(createBuildState(), prog(V1), accepted)).toMatchObject({ ok: false, reason: "build-first" });
     expect(runAny(markBuilt(createBuildState()), prog(V1), accepted)).toEqual({ ok: true });
   });
 });
