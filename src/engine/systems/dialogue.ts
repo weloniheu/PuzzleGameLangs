@@ -17,6 +17,7 @@
 
 import type { DialogueBeat, DialogueSpeaker, HintBeat, PuzzleType, TutorialWaitFor } from "../../schema/types";
 import { paintTutorialCard, removeTutorialCard, tutorialModuleMeta } from "./tutorialCard";
+import { assetUrl } from "../core/assetUrl";
 
 // --- timing/threshold constants (moved from roomRenderer, unchanged) ---
 export const AUTO_LEN = 48;     // text shorter than this auto-advances when autoAdvance is unset
@@ -273,7 +274,7 @@ export function createDialogue(deps: DialogueDeps): Dialogue {
         img.alt = "";
         el.appendChild(img);
       }
-      img.src = frame;
+      img.src = assetUrl(frame);
     } else {
       el.textContent = frame;
     }

@@ -29,12 +29,8 @@ const loadPack = (rel: string): Pack => JSON.parse(readFileSync(join(ROOT, rel),
 if (typeof globalThis.requestAnimationFrame === "undefined") {
   globalThis.requestAnimationFrame = (cb: FrameRequestCallback) => window.setTimeout(() => cb(0), 0);
 }
-// Serve runtime fetches (the logic module loads its LOGIC pack by URL) from disk.
-globalThis.fetch = (async (url: unknown) =>
-  new Response(readFileSync(join(ROOT, String(url)), "utf8"), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  })) as typeof fetch;
+// (No fetch stub needed: packLoader bundles packs via import.meta.glob, so the
+// logic module's by-URL load resolves in-process with no network at all.)
 
 function bootWorld() {
   const hub = loadPack("content/packs/hub.test.v1.json");
