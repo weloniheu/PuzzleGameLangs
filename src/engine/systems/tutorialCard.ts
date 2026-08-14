@@ -16,6 +16,7 @@
 // ---------------------------------------------------------------------------
 
 import type { DialogueBeat, PuzzleType, TutorialDemo } from "../../schema/types";
+import { assetUrl } from "../core/assetUrl";
 
 export interface TutorialModuleMeta {
   label: string;
@@ -78,7 +79,7 @@ export function paintTutorialCard(container: HTMLElement, opts: TutorialCardOpti
   badge.className = "tutorial-card-badge";
   if (module.icon) {
     const img = document.createElement("img");
-    img.src = module.icon;
+    img.src = assetUrl(module.icon);
     img.alt = "";
     badge.appendChild(img);
   } else {

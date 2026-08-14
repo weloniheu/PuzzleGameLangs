@@ -1,15 +1,59 @@
 import type { Pack, Puzzle, Difficulty, PuzzleType } from "../schema/types";
 import { validatePuzzle } from "../generation/validateRepair";
 
+// ---------------------------------------------------------------------------
+// Packs are BUNDLED, not fetched.
+//
+// They used to be fetched from "/content/packs/*.json" at runtime. That only
+// ever worked in `npm run dev` (the dev server happens to serve the project
+// root) — `content/` lives outside `public/`, so Vite never copied it and every
+// production build 404'd on all seven packs before the game could start.
+//
+// Inlining them at build time fixes that everywhere at once, and is also the
+// only form that survives a desktop shell, where the page loads over file://
+// and fetch() is blocked outright. Costs ~400 KB in the bundle (~100 KB
+// gzipped) and removes seven round-trips from boot.
+//
+// Adding a language is still data-only (CLAUDE.md Rule 1): drop a JSON file in
+// content/packs/ and the glob picks it up — though the dev server may need a
+// restart to notice a brand-new file.
+// ---------------------------------------------------------------------------
+const BUNDLED = import.meta.glob<Pack>("../../content/packs/*.json", {
+  eager: true,
+  import: "default",
+});
+
+/** Glob keys are module specifiers ("../../content/packs/x.json") but callers
+ *  pass authored URLs ("/content/packs/x.json"). Key by filename so neither
+ *  side has to know about the other. */
+const BY_FILE = new Map<string, Pack>(
+  Object.entries(BUNDLED).map(([spec, pack]) => [spec.slice(spec.lastIndexOf("/") + 1), pack])
+);
+
+/** Every pack filename compiled into this build (for diagnostics + tests). */
+export function bundledPackFiles(): string[] {
+  return [...BY_FILE.keys()].sort();
+}
+
 /**
  * Loads a pack and validates EVERY puzzle on load (belt-and-suspenders: even
  * curated packs get re-checked, because the engine version may have changed).
  * Bad puzzles are dropped with a console warning rather than crashing the game.
+ *
+ * Stays async: the lookup is synchronous now, but every caller awaits this and
+ * keeping the signature means none of them had to change.
  */
 export async function loadPack(url: string): Promise<Pack> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed to load pack: ${url} (${res.status})`);
-  const pack = (await res.json()) as Pack;
+  const bundled = BY_FILE.get(url.slice(url.lastIndexOf("/") + 1));
+  if (!bundled) {
+    throw new Error(
+      `Failed to load pack: ${url} — not bundled. Available: ${bundledPackFiles().join(", ")}`
+    );
+  }
+  // Deep-copy: a bundled module is ONE shared object, where every fetch()
+  // previously produced a fresh parse. Handing out the shared instance would
+  // let any runtime mutation of a puzzle leak into later loads of the same pack.
+  const pack = structuredClone(bundled);
 
   const good: Puzzle[] = [];
   for (const p of pack.puzzles) {
