@@ -48,6 +48,9 @@ const SIDE_RESERVE = 8;      // px breathing room so the room never butts agains
 const RESIZE_DEBOUNCE = 120; // ms
 const DROP_TTL_MS = 8000;    // a dropped token despawns this long after it lands
 const DROP_WARN_MS = 2000;   // ...and spends its last stretch visibly fading out first
+const RICOCHET_MS = 400;     // flight time of a token with nowhere to land: thrown at a
+                             // wall, it comes back to where you were standing. Stay put
+                             // and you catch it; step away in time and it lands there.
 
 /** A door transition target, or a solved-puzzle notification, bubbled up to the manager. */
 export interface RoomCallbacks {
@@ -575,6 +578,9 @@ export function mountRoom(
   // soft-lock risk and should be revisited.
   interface DroppedItem { token: string; x: number; y: number; timer: number; el: HTMLElement; }
   const dropped: DroppedItem[] = [];
+  // Tokens mid-ricochet (thrown with nowhere to land). Tracked so teardown can cancel a
+  // flight that would otherwise resolve into a room that no longer exists.
+  const inFlight: { el: HTMLElement; timer: number }[] = [];
 
   const droppedAt = (x: number, y: number) => dropped.find((d) => d.x === x && d.y === y) ?? null;
 
@@ -608,17 +614,57 @@ export function mountRoom(
     const index = inv.selected();
     if (inv.itemAt(index) === undefined) return; // empty slot → nothing in hand
     const target = resolveDropTarget(room, pos, facing, freeForDrop);
-    if (target.kind === "blocked") return;       // nowhere for it to go → keep it
-    const token = inv.removeAt(index)!;
+    const token = inv.removeAt(index)!;          // it leaves your hand either way
     if (target.kind === "void") voidPuff();      // over the edge / into the pit — gone
+    else if (target.kind === "blocked") ricochet(token, { ...pos }); // nowhere to land
     else spawnDropped(token, target.cell);
     dialogue.notify("drop");                     // GUIDED TUTORIAL: satisfies a "drop" step
+  }
+
+  /** Walled in front AND behind: the token has nowhere to land, so it rebounds off the
+   *  wall back toward the cell it was thrown from. It is in the AIR for RICOCHET_MS —
+   *  stand your ground and you catch it back into the inventory (as if you had dropped
+   *  and re-taken it); step off that cell in time and it lands there instead, an ordinary
+   *  dropped token you can come back for. */
+  function ricochet(token: string, origin: Cell) {
+    const el = document.createElement("div");
+    el.className = "room-ricochet";
+    el.textContent = token;
+    el.style.left = `${(origin.x + 0.5) * tile}px`;
+    el.style.top = `${(origin.y + 0.5) * tile}px`;
+    el.style.fontSize = `${Math.round(tile * 0.2)}px`;
+    // How far, and which way, the token flies before rebounding (half a tile at the wall).
+    el.style.setProperty("--rx", `${facing.dx * tile * 0.5}px`);
+    el.style.setProperty("--ry", `${facing.dy * tile * 0.5}px`);
+    world.appendChild(el);
+
+    const timer = window.setTimeout(() => {
+      el.remove();
+      const i = inFlight.findIndex((f) => f.timer === timer);
+      if (i >= 0) inFlight.splice(i, 1);
+      land(token, origin);
+    }, RICOCHET_MS);
+    inFlight.push({ el, timer });
+  }
+
+  /** Where a ricocheting token ends up once its flight is over. Caught if the player
+   *  never left (and still has room); otherwise it drops onto the cell they vacated. The
+   *  last two fallbacks only fire if that cell got occupied mid-flight — vanishingly rare,
+   *  but the token should never silently evaporate. */
+  function land(token: string, origin: Cell) {
+    const stayedPut = pos.x === origin.x && pos.y === origin.y;
+    if (stayedPut && inv && !inv.isFull()) { inv.pickupToken(token, null); sparkleAt(origin); return; }
+    if (freeForDrop(origin)) { spawnDropped(token, origin); return; }
+    if (inv && !inv.isFull()) { inv.pickupToken(token, null); return; }
+    voidPuffAt(origin); // nowhere left at all
   }
 
   /** A token going into a pit or over the edge isn't just silently deleted — it gets the
    *  same courtesy the despawn fade does, a brief puff where it fell out of the world. */
   function voidPuff() {
-    const cell = { x: pos.x + facing.dx, y: pos.y + facing.dy };
+    voidPuffAt({ x: pos.x + facing.dx, y: pos.y + facing.dy });
+  }
+  function voidPuffAt(cell: Cell) {
     const el = document.createElement("div");
     el.className = "room-void-puff";
     el.style.left = `${(cell.x + 0.5) * tile}px`;
@@ -806,7 +852,9 @@ export function mountRoom(
     if (resizeTimer) { clearTimeout(resizeTimer); resizeTimer = 0; }
     clearTimeout(moveSquishTimer);        // pending move-squish relax
     clearTimeout(arriveTimer);            // pending arrival-pop cleanup
-    for (const d of [...dropped]) clearDropped(d); // dropped-token despawn timers
+    for (const d of [...dropped]) clearDropped(d);            // dropped-token despawn timers
+    for (const f of inFlight) { clearTimeout(f.timer); f.el.remove(); } // mid-air ricochets
+    inFlight.length = 0;
     settings.cancelCapture();             // drop any pending rebind-capture timer
   });
   teardown.add(() => {

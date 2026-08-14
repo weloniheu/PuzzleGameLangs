@@ -665,6 +665,29 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
    room boundary to imply it. The outer ring needs no rim — the room simply ends there. */
 .tile-pit.tile-void { box-shadow: inset 0 3px 9px rgba(0, 0, 0, 0.9), inset 0 0 0 2px rgba(196, 142, 74, 0.35); }
 
+/* A token with nowhere to land (wall in front AND behind): it flies at the wall and
+   rebounds to the cell it was thrown from. Visible for RICOCHET_MS, which is exactly the
+   window the player has to step aside — so the flight has to be legible, not a blink.
+   --rx/--ry carry the half-tile throw vector (set by roomHost.ricochet). */
+.room-ricochet {
+  position: absolute; z-index: 6; pointer-events: none;
+  font-family: "IBM Plex Mono", monospace; font-weight: 600; line-height: 1;
+  padding: 2px 5px; border-radius: 5px;
+  color: #f4e4c1; background: rgba(38, 28, 20, 0.82);
+  border: 1px solid rgba(244, 228, 193, 0.28);
+  animation: ricochet 0.4s ease-in-out forwards; /* keep in sync with RICOCHET_MS */
+}
+@keyframes ricochet {
+  0%   { transform: translate(-50%, -50%) scale(0.92); }
+  45%  { transform: translate(calc(-50% + var(--rx)), calc(-50% + var(--ry))) scale(1.04); }
+  100% { transform: translate(-50%, -50%) scale(0.92); }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* The token still has to be VISIBLE for the whole window — that is the tell that it is
+     in the air and can still be dodged — so only the travel is dropped, not the dwell. */
+  .room-ricochet { animation: none; transform: translate(-50%, -50%); }
+}
+
 /* A token pitched into a void: a brief puff where it left the world (see roomHost.voidPuff). */
 .room-void-puff {
   position: absolute; z-index: 6; pointer-events: none;

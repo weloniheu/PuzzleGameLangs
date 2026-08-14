@@ -765,6 +765,69 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     manager.teardown();
   });
 
+  // --- RICOCHET: thrown with nowhere to land at either end ---------------------
+  /** Walk to (7,2) boxed in: an interior wall ahead (7,3) and a token already lying
+   *  behind on (7,1). Leaves one token in hand and the slime facing the wall. */
+  const boxIn = (c: HTMLElement) => {
+    press(c, "ArrowUp");        // (6,6)
+    press(c, "ArrowRight", 3);  // (9,6) print pile
+    press(c, "e"); press(c, "e"); // piles are infinite → two prints
+    press(c, "ArrowUp", 5);     // (9,1)
+    press(c, "ArrowLeft");      // (8,1), facing left
+    press(c, "q");              // lands one on (7,1) — the cell that will be "behind"
+    press(c, "ArrowDown");      // (8,2)
+    press(c, "ArrowLeft");      // (7,2), facing left
+    press(c, "ArrowDown");      // wall at (7,3) blocks; slime stays put, now facing down
+  };
+
+  it("ricochet: walled both ways, standing your ground catches the token back", () => {
+    vi.useFakeTimers();
+    try {
+      const { container: c, manager } = world;
+      manager.enter("py-code-tutorial-000");
+      skipTeaching(c);
+      boxIn(c);
+      expect(filledSlots(c)).toHaveLength(1);
+
+      press(c, "q");
+      // In the air: out of the inventory, not yet on the floor.
+      expect(filledSlots(c)).toHaveLength(0);
+      expect(c.querySelector(".room-ricochet")).toBeTruthy();
+
+      vi.advanceTimersByTime(450);
+      expect(c.querySelector(".room-ricochet")).toBeNull();
+      expect(filledSlots(c)).toHaveLength(1);          // caught it
+      expect(droppedItems(c)).toEqual(["print"]);      // only the one from boxIn, on (7,1)
+      manager.teardown();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("ricochet: step off the cell in time and it lands where you were standing", () => {
+    vi.useFakeTimers();
+    try {
+      const { container: c, manager } = world;
+      manager.enter("py-code-tutorial-000");
+      skipTeaching(c);
+      boxIn(c);
+
+      press(c, "q");
+      press(c, "ArrowRight");   // dodge to (8,2) while it is still in the air
+      vi.advanceTimersByTime(450);
+
+      expect(filledSlots(c)).toHaveLength(0);          // NOT caught
+      // Two on the floor now: the boxIn token on (7,1) and this one on the vacated (7,2).
+      expect(droppedItems(c)).toEqual(["print", "print"]);
+      // ...and it is an ordinary dropped token — walk back and it comes with you.
+      press(c, "ArrowLeft");
+      expect(filledSlots(c)).toHaveLength(1);
+      manager.teardown();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("hotbar: digits select the slot that place/drop act on", () => {
     const { container: c, manager } = world;
     manager.enter("py-code-tutorial-000");
