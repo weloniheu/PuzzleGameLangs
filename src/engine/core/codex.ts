@@ -2,13 +2,15 @@
 // The Codex — the player's growing list of DISCOVERED commands/functions.
 //
 // When a player first uses a token that carries a `discovers` tag (e.g. `print`),
-// it gets recorded here and persists across puzzles via localStorage. Later
+// it gets recorded here and persists across puzzles via engine/core/storage. Later
 // puzzles can show "you already know: print, return …" so the learner builds a
 // vocabulary instead of re-deriving everything each level.
 //
 // This is intentionally tiny and language-agnostic in spirit; only the code_build
 // renderer writes to it today, but the panel can be reused by any puzzle type.
 // ---------------------------------------------------------------------------
+
+import { getItem, setItem } from "./storage";
 
 const KEY = "codex.discovered.v1";
 // Hub/room unlocks live alongside the Codex under the SAME save system (one place to
@@ -24,7 +26,7 @@ export interface CodexEntry {
 
 function read(): CodexEntry[] {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = getItem(KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? (parsed as CodexEntry[]) : [];
@@ -35,7 +37,7 @@ function read(): CodexEntry[] {
 
 function write(entries: CodexEntry[]): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify(entries));
+    setItem(KEY, JSON.stringify(entries));
   } catch {
     /* storage unavailable (private mode / tests) — degrade silently */
   }
@@ -68,7 +70,7 @@ export function discover(entries: CodexEntry[]): string[] {
 
 function readUnlocks(): string[] {
   try {
-    const raw = localStorage.getItem(UNLOCK_KEY);
+    const raw = getItem(UNLOCK_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? (parsed as string[]).filter((k) => typeof k === "string") : [];
@@ -79,7 +81,7 @@ function readUnlocks(): string[] {
 
 function writeUnlocks(keys: string[]): void {
   try {
-    localStorage.setItem(UNLOCK_KEY, JSON.stringify(keys));
+    setItem(UNLOCK_KEY, JSON.stringify(keys));
   } catch {
     /* storage unavailable (private mode / tests) — degrade silently */
   }

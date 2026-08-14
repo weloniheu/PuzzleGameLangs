@@ -15,6 +15,7 @@ import type { GrammarBuildPayload, Puzzle } from "../../schema/types";
 import type { EngineContext, MountedPuzzle, RoomPuzzleModule } from "../../engine/puzzleModule";
 import { floorOrigin } from "../../engine/core/room";
 import { mulberry32, randomSeed, shufflePositions } from "../../engine/core/shuffle";
+import { getItem, setItem } from "../../engine/core/storage";
 import { tryMove, DIRECTIONS, type Entity } from "../logic/ruleEngine";
 import { starsFor } from "../logic/index";
 import { checkSentence } from "./grammarCheck";
@@ -196,8 +197,8 @@ export const grammarModule: RoomPuzzleModule = {
         banner.append(starsEl, ` ${solvedText}`);
         try {
           const key = `grammar.stars.${puzzle.id}`;
-          const prev = Number(localStorage.getItem(key) ?? 0);
-          if (stars > prev) localStorage.setItem(key, String(stars));
+          const prev = Number(getItem(key) ?? 0);
+          if (stars > prev) setItem(key, String(stars));
         } catch { /* storage unavailable — the rating is a reward, not progress */ }
       } else {
         banner.textContent = solvedText;

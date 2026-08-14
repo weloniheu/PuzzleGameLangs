@@ -167,7 +167,22 @@ There's no reason not to do both; itch for reach, a Pages deploy for a stable UR
 
 ---
 
-## Phase 2 — Wrap it as a desktop app
+## Phase 2 — Wrap it as a desktop app ✅ CODE DONE, needs a human to run it
+
+`electron/main.cjs`, `electron/preload.cjs`, the `storage.ts` save-data seam and
+the `electron-builder` config in `package.json` are all written and committed. What
+they do and why is in the commit message (`git log -1` on this branch/file). Three
+things are NOT done, on purpose rather than by oversight:
+
+- **App icons.** No source art exists to build `.icns`/`.ico` from — this needs real
+  design work, not a placeholder I'd generate from the snake portraits.
+- **Window scale-to-fit.** Shipped a fixed 1000×800 default window instead of the
+  CSS `transform: scale()` approach below — smaller change, defers the harder
+  design call. Revisit if a maximized window still reads as broken.
+- **Actually launching it.** `npm install` completed, but Electron's ~150 MB binary
+  download failed — this sandbox's Bash tool can reach `npm`'s registry but not
+  GitHub, where that binary is hosted. Run `npm run electron` (builds, then
+  launches) yourself to get the binary and see the window for the first time.
 
 ### Recommendation: Electron
 
@@ -304,7 +319,7 @@ None of these are required to ship. A game can go live with zero Steamworks API 
 ```
 Phase 0  Fix the build            ✅ DONE   ← was blocking everything
 Phase 1  Ship on itch.io          ½ day    ← real players, real feedback, $0
-Phase 2  Electron wrapper         2-4 days
+Phase 2  Electron wrapper         ✅ code done ← needs a human to run + sign
 Phase 3  Steam paperwork + store  3-4 weeks wall-clock, mostly waiting + art
 Phase 4  Achievements / Cloud     after launch
 ```
