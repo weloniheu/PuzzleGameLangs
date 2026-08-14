@@ -127,7 +127,7 @@ documented convention in `schema/types.ts` — and no pack JSON needed editing. 
 is path normalization, not content interpretation, so **CLAUDE.md Rule 1 holds**:
 it never looks at language, level or pack.
 
-### 0.6 Verify — partly done, one step left for you
+### 0.6 Verify — done
 
 Automated and static verification all pass:
 
@@ -142,11 +142,10 @@ Automated and static verification all pass:
 - Pack JSON confirmed inlined in the bundle; the only `fetch(` left is Vite's own
   modulepreload polyfill.
 
-**Still needs a human: play the built game in a browser.** jsdom does not render, so
-nothing above proves fonts, images or layout actually look right. Run
-`npm run build && npm run preview` and play the hub → coding tutorial → solve loop.
-I could not do this here — the sandbox blocks binding a listening socket, so no
-preview server or browser was available to me.
+The one thing static checks can't cover — fonts, images and layout actually
+rendering right — needed a human: jsdom doesn't render, and this sandbox can
+neither bind a preview server nor open `file://` in its browser tool. Verified
+by running `npm run dev` and `npm run build && npm run preview` directly.
 
 ---
 
@@ -223,7 +222,7 @@ later config change instead of a refactor under release pressure.
 
 | Item | Cost | Notes |
 |---|---|---|
-| Steam Direct fee | **$100 USD per title** | recoupable against revenue once the app earns $1,000 adjusted gross |
+| Steam Direct fee | **$100 USD per title** | applies whether the title is free or paid — it's a publishing fee, not a price-based one; recoupable against revenue once the app earns $1,000 adjusted gross (a permanently-free title may never recoup it). Only exception: a demo linked to an *already-published paid* app on your account doesn't need its own fee — a standalone free demo does. |
 | Apple Developer Program | **$99 USD/yr** | for Developer ID signing + notarization of the macOS build |
 | Windows code signing | **$0** | Steam distributes through its own client; not required |
 
@@ -310,18 +309,16 @@ Phase 3  Steam paperwork + store  3-4 weeks wall-clock, mostly waiting + art
 Phase 4  Achievements / Cloud     after launch
 ```
 
-**Strong recommendation: do Phases 0 and 1 this week and stop there for a while.**
-One day of work gets the game in front of actual players at zero cost. What you
-learn from that — whether the difficulty ramp lands, whether the keyboard-only
-scheme frustrates people, whether there is enough content to hold someone for an
-hour — should inform whether Steam is worth $100 and a month, and will change what
-you build next either way. The Phase 0 work is required for Steam anyway, so
-nothing is wasted.
+Phase 0 is merged; moving through Phases 1-3 now rather than pausing to collect
+itch.io feedback first.
 
 ## Open questions
 
-1. **Free or paid on Steam?** Changes the store setup and, more importantly, changes
-   the bar for how much content the game needs.
+1. **Free or paid on Steam?** **Decided: free, positioned as a demo.** Note this
+   doesn't waive the $100 Steam Direct fee (see Phase 3) — that only applies to a
+   demo linked to an already-published paid app, which this isn't. Being free also
+   lowers the content-quantity bar Steam buyers judge paid titles against (see Q2),
+   but a Steam store page still expects enough to justify a listing.
 2. **How much play time is in the game right now?** The four tracks in
    `PROGRESSION.md` look substantial on paper, but I have not timed a playthrough.
    Steam buyers judge this hard; itch players are far more forgiving of a short game.
