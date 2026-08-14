@@ -652,6 +652,35 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   box-shadow: inset 0 0 0 2px #5e3b18, 0 0 8px rgba(0, 0, 0, 0.4);
 }
 
+/* VOID cells — an authored `pit` tile, and the room's outer wall ring (the lip of the
+   world). Both block movement exactly like a wall; the difference is that a token
+   THROWN at one falls in and is gone, where a wall bounces it back. That has to be
+   visible or losing a token reads as a bug — so a void reads as a hole rather than a
+   surface: near-black, sunk in, with no lit top edge to catch the eye. */
+.tile-void {
+  background: radial-gradient(ellipse at 50% 38%, #120c07 0%, #241708 62%, #3a2612 100%);
+  box-shadow: inset 0 3px 7px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(20, 12, 6, 0.9);
+}
+/* An INTERIOR pit gets a lit rim so the drop-off is legible mid-floor, where there is no
+   room boundary to imply it. The outer ring needs no rim — the room simply ends there. */
+.tile-pit.tile-void { box-shadow: inset 0 3px 9px rgba(0, 0, 0, 0.9), inset 0 0 0 2px rgba(196, 142, 74, 0.35); }
+
+/* A token pitched into a void: a brief puff where it left the world (see roomHost.voidPuff). */
+.room-void-puff {
+  position: absolute; z-index: 6; pointer-events: none;
+  transform: translate(-50%, -50%);
+  color: #c9a877; font-family: "IBM Plex Mono", monospace; font-weight: 700;
+  animation: void-puff 0.7s ease-out forwards;
+}
+@keyframes void-puff {
+  0%   { opacity: 0.95; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, 30%) scale(0.55); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .room-void-puff { animation: void-puff-fade 0.7s linear forwards; }
+  @keyframes void-puff-fade { to { opacity: 0; } }
+}
+
 /* Room SKINS (2b/2c/2d/2e) — keyed by the pack-declared `theme` token (a CLOSED set;
    the host stamps `.room-theme-<token>`). Content maps language/level → skin as DATA;
    the engine never derives a look from a language. Undeclared theme → the default

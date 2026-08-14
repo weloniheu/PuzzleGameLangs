@@ -40,6 +40,7 @@ const DEFAULT_LEGEND: Record<string, RoomTile | "spawn"> = {
   "#": "wall",
   ".": "floor",
   D: "door",
+  O: "pit",
   S: "spawn",
 };
 
@@ -120,10 +121,58 @@ export function tileAt(room: Room, x: number, y: number): RoomTile | null {
   return inBounds(room, x, y) ? room.grid[y][x] : null;
 }
 
-/** Only floor is walkable. Walls and doors (non-functional for now) block. Piles
+/** Only floor is walkable. Walls, pits and doors (non-functional for now) block. Piles
  *  sit ON floor and are walkable — you stand on a pile to interact with it. */
 export function isWalkable(room: Room, x: number, y: number): boolean {
   return tileAt(room, x, y) === "floor";
+}
+
+/** Does a cell swallow whatever is thrown into it? True for an authored `pit`, for
+ *  anything past the grid, and for the room's outermost WALL ring — the boundary is the
+ *  lip of the world, so a token pitched over it is gone rather than bouncing back.
+ *
+ *  A non-wall tile on that ring (a door, say) is deliberately NOT void: it is a real
+ *  surface, so it bounces like any other obstacle. Movement is unaffected either way —
+ *  see isWalkable; this only decides where a THROWN token ends up. */
+export function isVoid(room: Room, x: number, y: number): boolean {
+  if (!inBounds(room, x, y)) return true;
+  if (room.grid[y][x] === "pit") return true;
+  const onRing = x === 0 || y === 0 || x === room.width - 1 || y === room.height - 1;
+  return onRing && room.grid[y][x] === "wall";
+}
+
+/** Where a token thrown from `from` in direction `dir` ends up.
+ *   • void ahead      → gone (a pit, or over the room's edge)
+ *   • free floor ahead → it lands there
+ *   • something solid  → it BOUNCES back past the thrower and lands behind them…
+ *     …unless what's behind is itself void (bounced clean over the edge — also gone),
+ *     or is blocked too, in which case there is nowhere for it to go.
+ *
+ *  TERRAIN is this module's own business (walkability, pits, the edge ring); `isFree` is
+ *  injected only for the OCCUPANCY layer it cannot see — piles, doors, module furniture,
+ *  tokens already lying there. A cell has to pass both to hold a token. */
+export type DropTarget =
+  | { kind: "land"; cell: Cell }
+  | { kind: "bounce"; cell: Cell }
+  | { kind: "void" }
+  | { kind: "blocked" };
+
+export function resolveDropTarget(
+  room: Room,
+  from: Cell,
+  dir: Direction,
+  isFree: (cell: Cell) => boolean,
+): DropTarget {
+  const canRest = (c: Cell) => isWalkable(room, c.x, c.y) && isFree(c);
+
+  const ahead = { x: from.x + dir.dx, y: from.y + dir.dy };
+  if (isVoid(room, ahead.x, ahead.y)) return { kind: "void" };
+  if (canRest(ahead)) return { kind: "land", cell: ahead };
+
+  const behind = { x: from.x - dir.dx, y: from.y - dir.dy };
+  if (isVoid(room, behind.x, behind.y)) return { kind: "void" };
+  if (canRest(behind)) return { kind: "bounce", cell: behind };
+  return { kind: "blocked" };
 }
 
 /** One step: returns the new cell if walkable, otherwise the original (blocked). */

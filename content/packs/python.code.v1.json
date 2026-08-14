@@ -290,7 +290,7 @@
             {
               "id": "ctut-3b",
               "speaker": "narrator",
-              "text": "Changed your mind? Press Q to toss a word onto the floor in front of you. Walk over it to take it back — but leave it too long and it disappears.",
+              "text": "Changed your mind? Press Q to toss a word onto the floor in front of you. Walk over it to take it back — but leave it too long and it disappears. Throw it at a wall and it bounces back behind you; throw it into a pit or off the edge and it is gone.",
               "trigger": "guided_tutorial",
               "waitFor": "drop"
             },
@@ -350,7 +350,7 @@
           "#############",
           "#...........#",
           "#...........#",
-          "#....###....#",
+          "#....#O#....#",
           "#...........#",
           "#...........#",
           "#...........#",

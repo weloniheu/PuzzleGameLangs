@@ -95,7 +95,9 @@ someone who never saw step 1. Escape ends the whole unit at once.
    you are holding." — Enter, `demo: pickup`
 5. "Walk to an empty tile and press P to place it down." — `waitFor: place`
 6. "Changed your mind? Press Q to toss a word onto the floor in front of you. Walk over it
-   to take it back — but leave it too long and it disappears." — `waitFor: drop`
+   to take it back — but leave it too long and it disappears. Throw it at a wall and it
+   bounces back behind you; throw it into a pit or off the edge and it is gone." —
+   `waitFor: drop`
 5. "Stand on Build and press Enter to compile your line." — `waitFor: build`
 6. "Stand on Run and press Enter to see what your line does." — `waitFor: run`
 

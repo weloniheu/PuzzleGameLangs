@@ -442,8 +442,13 @@ export interface CodeBuildSolution {
 // --- Room (world layer) ---
 // OPTIONAL top-down room a puzzle can live in. Pure CONTENT: the engine reads the
 // tile grid from here and never hardcodes a layout. The default char legend is
-// '#' wall · '.' floor · 'D' door · 'S' spawn (override per-room with `legend`).
-export type RoomTile = "floor" | "wall" | "door";
+// '#' wall · '.' floor · 'D' door · 'O' pit · 'S' spawn (override per-room with `legend`).
+//
+// `pit` blocks movement exactly like a wall — the difference is what happens to a token
+// THROWN at it (see room.isVoid / resolveDropTarget): a wall bounces it back behind the
+// player, a pit swallows it. The room's outermost wall ring counts as a pit for that
+// purpose too — it is the lip of the world, not a solid surface.
+export type RoomTile = "floor" | "wall" | "door" | "pit";
 /** A word pile the player faces and presses pickup on. CONTENT: the engine never
  *  hardcodes which words exist. Piles are infinite for now (consumed on placement
  *  later, not on pickup). They occupy a cell and block movement (you stand and face). */

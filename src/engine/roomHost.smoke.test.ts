@@ -712,17 +712,56 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     }
   });
 
-  it("drop (q): blocked by a wall — the token stays in hand rather than vanishing", () => {
+  it("drop (q): thrown over the room's EDGE, the token is gone", () => {
     const { container: c, manager } = world;
     manager.enter("py-code-tutorial-000");
     skipTeaching(c);
     grabPrint(c);
 
-    // From (9,6) walk right to the east wall, then face into it.
-    press(c, "ArrowRight", 3); // clamps against the wall at (11,6), facing right
+    // From (9,6) walk right to the east wall, then face into it — the outer ring is
+    // the lip of the world, so the token goes over rather than bouncing.
+    press(c, "ArrowRight", 3); // clamps against the boundary at (11,6), facing right
     press(c, "q");
-    expect(droppedItems(c)).toHaveLength(0); // nothing landed
-    expect(filledSlots(c)).toHaveLength(1);  // and nothing was eaten
+    expect(filledSlots(c)).toHaveLength(0);  // left the inventory
+    expect(droppedItems(c)).toHaveLength(0); // ...and never landed anywhere
+    expect(c.querySelector(".room-void-puff")).toBeTruthy();
+    manager.teardown();
+  });
+
+  it("drop (q): thrown into a PIT, the token is gone (pits block movement like walls)", () => {
+    const { container: c, manager } = world;
+    manager.enter("py-code-tutorial-000");
+    skipTeaching(c);
+    grabPrint(c);
+
+    // The tutorial room carves a pit into its interior wall block at (6,3).
+    press(c, "ArrowUp", 4);    // (9,6) → (9,2)
+    press(c, "ArrowLeft", 3);  // (6,2), facing left
+    const atEdgeOfPit = slimeAt(c);
+    press(c, "ArrowDown");     // blocked by the pit at (6,3) — it stops you like a wall…
+    expect(slimeAt(c)).toBe(atEdgeOfPit); // …the slime did not fall in
+    press(c, "q");             // …but it swallows what is thrown into it
+    expect(filledSlots(c)).toHaveLength(0);
+    expect(droppedItems(c)).toHaveLength(0);
+    manager.teardown();
+  });
+
+  it("drop (q): thrown at an ordinary WALL, it bounces back behind the thrower", () => {
+    const { container: c, manager } = world;
+    manager.enter("py-code-tutorial-000");
+    skipTeaching(c);
+    grabPrint(c);
+
+    // (5,3) and (7,3) flank the pit and are plain interior wall — those bounce.
+    press(c, "ArrowUp", 4);    // (9,2)
+    press(c, "ArrowLeft", 2);  // (7,2), facing left
+    press(c, "ArrowDown");     // blocked by the wall at (7,3); still at (7,2) facing down
+    press(c, "q");
+    // Bounced back past the slime onto (7,1) — on the floor, still recoverable.
+    expect(droppedItems(c)).toEqual(["print"]);
+    expect(filledSlots(c)).toHaveLength(0);
+    press(c, "ArrowUp");       // walk onto (7,1) → picks it back up
+    expect(filledSlots(c)).toHaveLength(1);
     manager.teardown();
   });
 

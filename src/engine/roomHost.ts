@@ -14,7 +14,10 @@
 // ---------------------------------------------------------------------------
 
 import type { DialogueBeat, DialogueConfig, DialogueSpeaker, Puzzle, TutorialBlock } from "../schema/types";
-import { parseRoom, step, pileAt, isWalkable, MOVE, type Cell, type Direction } from "./core/room";
+import {
+  parseRoom, step, pileAt, isWalkable, resolveDropTarget, MOVE,
+  type Cell, type Direction,
+} from "./core/room";
 import {
   resetCodex, getUnlocksSet, getTestMode, setTestMode,
   hasSeenTutorial, markTutorialSeen, resetSeenTutorials,
@@ -583,34 +586,47 @@ export function mountRoom(
     if (i >= 0) dropped.splice(i, 1);
   }
 
-  /** The cell a Q-drop targets: one step in the direction the slime faces. Must be free
-   *  floor — a wall, a pile, a door, a control, another dropped item or the hint giver all
-   *  block it, and the drop simply doesn't happen (the token stays in hand rather than
-   *  vanishing into something). The module owns placed tokens, so it is asked too. */
-  function dropTargetCell(): Cell | null {
-    const t = { x: pos.x + facing.dx, y: pos.y + facing.dy };
-    if (!isWalkable(room, t.x, t.y)) return null;
-    if (pileAt(room, t.x, t.y) || droppedAt(t.x, t.y)) return null;
-    if (portals.doorAt(t.x, t.y) || portals.onMenuPortal(t.x, t.y)) return null;
-    if (dialogue.onHintGiver(t.x, t.y)) return null;
-    if (mounted?.occupies?.(t)) return null; // e.g. a placed token / Build / Run control
-    return t;
+  /** Can a thrown token come to rest on this cell? Floor with nothing already on it —
+   *  a pile, a door, the menu portal, the hint giver, another dropped token, or the
+   *  module's own furniture (a placed token, Build/Run) all rule it out. */
+  function freeForDrop(c: Cell): boolean {
+    if (!isWalkable(room, c.x, c.y)) return false;
+    if (pileAt(room, c.x, c.y) || droppedAt(c.x, c.y)) return false;
+    if (portals.doorAt(c.x, c.y) || portals.onMenuPortal(c.x, c.y)) return false;
+    if (dialogue.onHintGiver(c.x, c.y)) return false;
+    return !mounted?.occupies?.(c);
   }
 
-  /** Throw the held token onto the floor in front of the slime. Same slot the `place`
-   *  action uses (the selected hotbar slot), but it lands in the world instead of the
-   *  puzzle, and it is recoverable — walk back over it before it despawns.
+  /** Throw the held token — the selected hotbar slot, same one `place` uses — at the cell
+   *  the slime faces. Where it ends up is resolveDropTarget's call (see core/room):
+   *  open floor keeps it, a wall bounces it back behind you, a pit or the room's edge
+   *  eats it. Only "blocked" leaves the token in hand.
    *
    *  Inert while the full-inventory prompt is up: that prompt already owns the decision. */
   function pressDrop() {
     if (!inv || inv.hasPendingDrop()) return;
     const index = inv.selected();
     if (inv.itemAt(index) === undefined) return; // empty slot → nothing in hand
-    const cell = dropTargetCell();
-    if (!cell) return;                           // blocked → keep the token, don't eat it
+    const target = resolveDropTarget(room, pos, facing, freeForDrop);
+    if (target.kind === "blocked") return;       // nowhere for it to go → keep it
     const token = inv.removeAt(index)!;
-    spawnDropped(token, cell);
+    if (target.kind === "void") voidPuff();      // over the edge / into the pit — gone
+    else spawnDropped(token, target.cell);
     dialogue.notify("drop");                     // GUIDED TUTORIAL: satisfies a "drop" step
+  }
+
+  /** A token going into a pit or over the edge isn't just silently deleted — it gets the
+   *  same courtesy the despawn fade does, a brief puff where it fell out of the world. */
+  function voidPuff() {
+    const cell = { x: pos.x + facing.dx, y: pos.y + facing.dy };
+    const el = document.createElement("div");
+    el.className = "room-void-puff";
+    el.style.left = `${(cell.x + 0.5) * tile}px`;
+    el.style.top = `${(cell.y + 0.5) * tile}px`;
+    el.style.fontSize = `${Math.round(tile * 0.4)}px`;
+    el.textContent = "···";
+    world.appendChild(el);
+    window.setTimeout(() => el.remove(), 700);
   }
 
   /** Put `token` on the floor at `cell` and start its despawn countdown. */

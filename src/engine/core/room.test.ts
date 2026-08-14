@@ -8,6 +8,8 @@ import {
   inBounds,
   tileAt,
   isWalkable,
+  isVoid,
+  resolveDropTarget,
 } from "./room";
 
 // Movement vectors (the engine's Direction is just {dx,dy}); kept local so these
@@ -176,5 +178,124 @@ describe("inCodingArea", () => {
     const open = parseRoom(OPEN);
     expect(inCodingArea(open, 0, 0)).toBe(false);
     expect(inCodingArea(open, 1, 1)).toBe(false);
+  });
+});
+
+// --- pits, edges, and where a THROWN token lands (the Q drop) ------------------
+//
+// Movement treats a pit exactly like a wall; the whole difference is what happens to a
+// token thrown at one. A wall is a surface (bounce), a pit and the room's outer ring are
+// holes (gone). These pin that split, since it is invisible to `step`.
+
+//   row0  # # # # #
+//   row1  # . . . #
+//   row2  # . O . #   (O = an interior PIT at x2)
+//   row3  # # # # #
+const PIT_ROOM: RoomLayout = {
+  width: 5, height: 4,
+  tiles: ["#####", "#...#", "#.O.#", "#####"],
+};
+
+describe("pits", () => {
+  const room = parseRoom(PIT_ROOM);
+
+  it("parses 'O' as a pit tile", () => {
+    expect(room.grid[2][2]).toBe("pit");
+  });
+
+  it("blocks movement exactly like a wall", () => {
+    expect(isWalkable(room, 2, 2)).toBe(false);
+    expect(step(room, { x: 2, y: 1 }, DOWN)).toEqual({ x: 2, y: 1 }); // walked into it → stayed
+  });
+});
+
+describe("isVoid — what swallows a thrown token", () => {
+  const room = parseRoom(PIT_ROOM);
+
+  it("is true for an authored pit and for anything past the grid", () => {
+    expect(isVoid(room, 2, 2)).toBe(true);
+    expect(isVoid(room, -1, 1)).toBe(true);
+    expect(isVoid(room, 99, 1)).toBe(true);
+  });
+
+  it("is true for the room's outer WALL ring — the lip of the world", () => {
+    expect(isVoid(room, 0, 1)).toBe(true); // left edge
+    expect(isVoid(room, 4, 1)).toBe(true); // right edge
+    expect(isVoid(room, 2, 0)).toBe(true); // top edge
+    expect(isVoid(room, 2, 3)).toBe(true); // bottom edge
+  });
+
+  it("is false for plain floor", () => {
+    expect(isVoid(room, 1, 1)).toBe(false);
+  });
+
+  it("is false for a non-wall tile sitting on the ring (a door is a real surface)", () => {
+    // A door on the boundary bounces like any obstacle rather than reading as a hole.
+    const withDoor = parseRoom({ width: 5, height: 4, tiles: ["#####", "D...#", "#...#", "#####"] });
+    expect(withDoor.grid[1][0]).toBe("door");
+    expect(isVoid(withDoor, 0, 1)).toBe(false);
+  });
+
+  it("does NOT treat an interior wall as void — that one bounces", () => {
+    const inner = parseRoom(LAYOUT); // has an interior wall at (2,2)
+    expect(inner.grid[2][2]).toBe("wall");
+    expect(isVoid(inner, 2, 2)).toBe(false);
+  });
+});
+
+describe("resolveDropTarget — where a thrown token comes to rest", () => {
+  const room = parseRoom(PIT_ROOM);
+  const allFree = () => true;
+
+  it("lands on open floor ahead", () => {
+    expect(resolveDropTarget(room, { x: 1, y: 1 }, RIGHT, allFree))
+      .toEqual({ kind: "land", cell: { x: 2, y: 1 } });
+  });
+
+  it("is swallowed by a pit ahead", () => {
+    expect(resolveDropTarget(room, { x: 2, y: 1 }, DOWN, allFree)).toEqual({ kind: "void" });
+  });
+
+  it("is swallowed when thrown over the room's edge", () => {
+    expect(resolveDropTarget(room, { x: 1, y: 1 }, LEFT, allFree)).toEqual({ kind: "void" });
+  });
+
+  it("BOUNCES off an interior wall and lands behind the thrower", () => {
+    //   row1  # . . # .    interior wall at (3,1) — x=3 is not the ring (width-1 = 5)
+    const r = parseRoom({ width: 6, height: 4, tiles: ["######", "#..#.#", "#....#", "######"] });
+    expect(r.grid[1][3]).toBe("wall");
+    // At (2,1) facing right → the wall bounces it back past the thrower onto (1,1).
+    expect(resolveDropTarget(r, { x: 2, y: 1 }, RIGHT, allFree))
+      .toEqual({ kind: "bounce", cell: { x: 1, y: 1 } });
+  });
+
+  it("bouncing off a wall and straight over the room's edge still loses it", () => {
+    const inner = parseRoom(LAYOUT); // interior wall at (2,2)
+    // At (1,2) facing right into that wall → behind is (0,2), the left ring → gone.
+    expect(resolveDropTarget(inner, { x: 1, y: 2 }, RIGHT, allFree)).toEqual({ kind: "void" });
+  });
+
+  it("bouncing off a wall INTO a pit behind you also loses it", () => {
+    //   row2  # O . # . #   pit at (1,2), thrower at (2,2), interior wall at (3,2)
+    const r = parseRoom({ width: 6, height: 5, tiles: ["######", "#....#", "#O.#.#", "#....#", "######"] });
+    expect(r.grid[2][1]).toBe("pit");
+    expect(r.grid[2][3]).toBe("wall");
+    // Facing right: the wall rejects it, it flies back past the thrower — into the pit.
+    expect(resolveDropTarget(r, { x: 2, y: 2 }, RIGHT, allFree)).toEqual({ kind: "void" });
+  });
+
+  it("reports blocked when neither ahead nor behind can take it", () => {
+    const r = parseRoom({ width: 6, height: 4, tiles: ["######", "#..#.#", "#....#", "######"] });
+    // Same throw as above, but the cell behind is occupied (a pile, another token…).
+    const nothingFree = () => false;
+    expect(resolveDropTarget(r, { x: 2, y: 1 }, RIGHT, nothingFree)).toEqual({ kind: "blocked" });
+  });
+
+  it("respects the injected isFree — an occupied cell ahead bounces rather than stacking", () => {
+    const r = parseRoom({ width: 6, height: 4, tiles: ["######", "#....#", "#....#", "######"] });
+    // (3,1) is floor but occupied; (1,1) behind is free → bounce past the thrower.
+    const occupied = (c: { x: number; y: number }) => !(c.x === 3 && c.y === 1);
+    expect(resolveDropTarget(r, { x: 2, y: 1 }, RIGHT, occupied))
+      .toEqual({ kind: "bounce", cell: { x: 1, y: 1 } });
   });
 });

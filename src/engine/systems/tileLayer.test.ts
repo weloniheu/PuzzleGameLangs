@@ -6,28 +6,33 @@ import { parseRoom } from "../core/room";
 // pre-extraction inline `buildTiles`. Pure (no jsdom) — it asserts the per-cell
 // descriptor (count + class + px/transform), which is the behavior-relevant part the
 // thin DOM applier then mirrors 1:1. If the extracted math drifts, this fails.
+//
+// The one addition since extraction: a VOID cell (an authored pit, or a wall on the
+// room's outer ring) also carries `tile-void`, because it swallows a thrown token where
+// an ordinary wall bounces it — see room.isVoid.
 
 describe("tileCells — byte-identical to the old inline buildTiles", () => {
   // 3×2 room: row0 "#.." → wall,floor,floor ; row1 "..D" → floor,floor,door.
+  // Every cell here is on the outer ring, so the lone WALL is also a void.
   const room = parseRoom({ width: 3, height: 2, tiles: ["#..", "..D"] });
 
   it("emits one cell per grid square, ROW-MAJOR (y outer, x inner)", () => {
     const cells = tileCells(room, 40);
     expect(cells.length).toBe(6);
     expect(cells.map((c) => c.className)).toEqual([
-      "tile-room tile-wall",  // (0,0)
-      "tile-room tile-floor", // (1,0)
-      "tile-room tile-floor", // (2,0)
-      "tile-room tile-floor", // (0,1)
-      "tile-room tile-floor", // (1,1)
-      "tile-room tile-door",  // (2,1)
+      "tile-room tile-wall tile-void", // (0,0) — ring wall = the room's edge
+      "tile-room tile-floor",          // (1,0)
+      "tile-room tile-floor",          // (2,0)
+      "tile-room tile-floor",          // (0,1)
+      "tile-room tile-floor",          // (1,1)
+      "tile-room tile-door",           // (2,1) — a door is a surface, not a hole
     ]);
   });
 
   it("sizes every cell to the tile and positions it at x*tile, y*tile", () => {
     const cells = tileCells(room, 40);
     expect(cells[0]).toEqual({
-      className: "tile-room tile-wall",
+      className: "tile-room tile-wall tile-void",
       width: "40px",
       height: "40px",
       transform: "translate(0px, 0px)",

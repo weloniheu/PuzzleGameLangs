@@ -6,7 +6,7 @@
 // thin DOM applier (`renderTileLayer`). The applier is a 1:1 of the old inline loop.
 // ---------------------------------------------------------------------------
 
-import type { Room } from "../core/room";
+import { isVoid, type Room } from "../core/room";
 
 /** One tile's render descriptor — exactly the values the inline buildTiles set per cell. */
 export interface TileCell {
@@ -22,8 +22,12 @@ export function tileCells(room: Room, tile: number): TileCell[] {
   const cells: TileCell[] = [];
   for (let y = 0; y < room.height; y++) {
     for (let x = 0; x < room.width; x++) {
+      // A VOID cell (an authored pit, or the room's outer wall ring) swallows a thrown
+      // token where an ordinary wall bounces it — so it has to look different, or the
+      // rule is invisible and losing a token reads as a glitch. See room.isVoid.
+      const voidHere = isVoid(room, x, y);
       cells.push({
-        className: `tile-room tile-${room.grid[y][x]}`,
+        className: `tile-room tile-${room.grid[y][x]}${voidHere ? " tile-void" : ""}`,
         width: `${tile}px`,
         height: `${tile}px`,
         transform: `translate(${x * tile}px, ${y * tile}px)`,
