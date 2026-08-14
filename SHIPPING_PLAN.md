@@ -176,9 +176,6 @@ things are NOT done, on purpose rather than by oversight:
 
 - **App icons.** No source art exists to build `.icns`/`.ico` from — this needs real
   design work, not a placeholder I'd generate from the snake portraits.
-- **Window scale-to-fit.** Shipped a fixed 1000×800 default window instead of the
-  CSS `transform: scale()` approach below — smaller change, defers the harder
-  design call. Revisit if a maximized window still reads as broken.
 - **Actually launching it.** `npm install` completed, but Electron's ~150 MB binary
   download failed — this sandbox's Bash tool can reach `npm`'s registry but not
   GitHub, where that binary is hosted. Run `npm run electron` (builds, then
@@ -207,13 +204,17 @@ solo project with no other Rust in it.
   for Windows).
 - A minimal main process: create the window, load `dist/index.html`, strip the
   default menu bar, disable devtools in production, block external navigation.
-- **Window sizing is the one real UI task.** `src/style.css:39` pins the game to
-  `#app { max-width: 720px; }`. In a maximized desktop window that renders as a
-  narrow strip down the middle of a large screen, which reads as broken. Decide on a
-  scaling approach — a CSS `transform: scale()` on the app root driven by viewport
-  size is the lowest-risk option since it needs no layout changes and cannot leak
-  into per-renderer styles (CLAUDE.md Rule 5). Add fullscreen toggle (F11 / Cmd-Ctrl-F)
-  and a sensible minimum window size.
+- **Window sizing turned out to be a non-issue — corrected after checking, not
+  guessed at.** This doc originally claimed `#app { max-width: 720px; }` would
+  render as "a narrow strip down the middle of a large screen" and called for a
+  CSS `transform: scale()` fix. That was wrong: `#app .stage` is a legacy card
+  layout that's unreachable in the shipped game (only wired to a "TEMPORARY
+  dev-only switcher" in `main.ts`). Every real screen — the title screen and all
+  four tracks — renders through `.game-root` (`position: fixed; inset: 0`) with
+  tile size recomputed on every resize (`roomHost.ts` → `systems/camera.ts`
+  `computeTile`), and `roomSettings.roomSize` defaults to `"fill"`: the game
+  already scales to exactly fit whatever window it's given. No fix needed; added
+  only a fullscreen toggle (F11 / Cmd-Ctrl-F) and a sensible minimum window size.
 - **macOS: build a universal binary** (`electron-builder --universal`) so one build
   covers Intel and Apple Silicon rather than maintaining two depots.
 
