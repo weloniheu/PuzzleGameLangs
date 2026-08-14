@@ -19,6 +19,7 @@ import type { Puzzle, VocabMatchPayload, VocabPropDef, VocabTileDef } from "../.
 import type { EngineContext, MountedPuzzle, RoomPuzzleModule } from "../../engine/puzzleModule";
 import { floorOrigin } from "../../engine/core/room";
 import { mulberry32, randomSeed, shufflePositions } from "../../engine/core/shuffle";
+import { getItem, setItem } from "../../engine/core/storage";
 import type { PropertyId } from "../logic/schema";
 import {
   tryMove,
@@ -304,8 +305,8 @@ export const vocabModule: RoomPuzzleModule = {
         banner.append(starsEl, ` ${solvedText}`);
         try {
           const key = `vocab.stars.${puzzle.id}`;
-          const prev = Number(localStorage.getItem(key) ?? 0);
-          if (stars > prev) localStorage.setItem(key, String(stars));
+          const prev = Number(getItem(key) ?? 0);
+          if (stars > prev) setItem(key, String(stars));
         } catch { /* storage unavailable — the rating is a reward, not progress */ }
       } else {
         banner.textContent = solvedText;

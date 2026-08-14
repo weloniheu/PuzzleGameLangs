@@ -16,6 +16,7 @@ import type { LogicRulesPayload, Puzzle } from "../../schema/types";
 import type { EngineContext, MountedPuzzle, RoomPuzzleModule } from "../../engine/puzzleModule";
 import { floorOrigin } from "../../engine/core/room";
 import { mulberry32, shuffled, randomSeed } from "../../engine/core/shuffle";
+import { getItem, setItem } from "../../engine/core/storage";
 import type { LogicPack, LogicPuzzle } from "./schema";
 import { loadLogicPack } from "./packLoader";
 import { cloneEntities, OBJECT_GLYPH } from "./logicRenderer";
@@ -99,12 +100,12 @@ export function starsFor(moves: number, par: number): number {
   return 1;
 }
 
-/** Persist the best star rating per board (localStorage; storage may be unavailable). */
+/** Persist the best star rating per board (see engine/core/storage; storage may be unavailable). */
 function saveBestStars(boardId: string, stars: number) {
   try {
     const key = `logic.stars.${boardId}`;
-    const prev = Number(localStorage.getItem(key) ?? 0);
-    if (stars > prev) localStorage.setItem(key, String(stars));
+    const prev = Number(getItem(key) ?? 0);
+    if (stars > prev) setItem(key, String(stars));
   } catch { /* private mode etc. — the rating is a reward, not progress */ }
 }
 
