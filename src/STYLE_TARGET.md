@@ -10,6 +10,10 @@ shared styles, scope it first or ask.
 > it separate: the same way the engine never branches on a language, the code
 > game's CSS should not leak into the other renderers.
 
+**For the full inventory of what can be styled — every class hook, what triggers it,
+and the timing constants animations must match — see [`VISUAL_CATALOG.md`](../VISUAL_CATALOG.md).**
+This doc is the target for one game type; that one is the map of all of them.
+
 ---
 
 ## Mood
