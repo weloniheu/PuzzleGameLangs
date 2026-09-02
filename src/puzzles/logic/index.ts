@@ -15,11 +15,12 @@
 import type { LogicRulesPayload, Puzzle } from "../../schema/types";
 import type { EngineContext, MountedPuzzle, RoomPuzzleModule } from "../../engine/puzzleModule";
 import { floorOrigin } from "../../engine/core/room";
-import { mulberry32, shuffled, randomSeed } from "../../engine/core/shuffle";
+import { mulberry32, randomSeed, shuffled } from "../../engine/core/shuffle";
 import { getItem, setItem } from "../../engine/core/storage";
 import type { LogicPack, LogicPuzzle } from "./schema";
 import { loadLogicPack } from "./packLoader";
 import { cloneEntities, OBJECT_GLYPH } from "./logicRenderer";
+import { transformBoard } from "./boardTransform";
 import {
   createBoard,
   step,
@@ -144,17 +145,19 @@ export const logicModule: RoomPuzzleModule = {
     let boardDef: LogicPuzzle | null = null;
     let board: Board | null = null;
 
-    // `randomized` (Axis 3): permute the LOOSE word-tiles — the ones NOT currently
-    // part of an active rule — among their own authored cells, so the board's
-    // starting rules (e.g. "SLIME IS YOU") always survive the shuffle. One seed per
-    // mount: reset() rebuilds the SAME arrangement (reset restores, re-entry rerolls).
-    const shuffleSeed = randomSeed();
-    function shuffleLooseWords(b: Board) {
-      if (!puzzle.modifiers?.includes("randomized")) return;
-      const live = activeRuleCells(b);
-      const loose = b.entities.filter((e) => e.word && !live.has(`${e.x},${e.y}`));
-      const cells = shuffled(loose.map((e) => ({ x: e.x, y: e.y })), mulberry32(shuffleSeed));
-      loose.forEach((e, i) => { e.x = cells[i].x; e.y = cells[i].y; });
+    // `randomized` (Axis 3) on a RULE BOARD: roll one of the level's declared TRANSFORMS
+    // and flip the whole board through it (see puzzles/logic/boardTransform.ts). Not a
+    // re-deal — permuting word tiles on a Baba board can hand out a room that cannot be
+    // finished, because the words ARE the rules. A mirror can't: the rules come out
+    // exactly as authored, every position moves, and none of the route the player
+    // memorized still works. One roll per mount: reset() rebuilds the SAME board
+    // (reset restores, re-entry rerolls).
+    const variants = puzzle.mechanics?.variants ?? [];
+    const variant = puzzle.modifiers?.includes("randomized") && variants.length
+      ? shuffled(variants, mulberry32(randomSeed()))[0]
+      : null;
+    function applyVariant(b: Board) {
+      if (variant) transformBoard(b, variant);
     }
     const history: Array<{ entities: Entity[]; moves: number }> = [];
     let moves = 0;
@@ -272,7 +275,7 @@ export const logicModule: RoomPuzzleModule = {
     function reset() {
       if (!pack || !boardDef) return;
       board = createBoard(boardDef, pack.vocab, pack.pattern);
-      shuffleLooseWords(board);
+      applyVariant(board);
       history.length = 0;
       moves = 0;
       won = false;
@@ -291,7 +294,7 @@ export const logicModule: RoomPuzzleModule = {
         pack = p;
         boardDef = def;
         board = createBoard(def, p.vocab, p.pattern);
-        shuffleLooseWords(board);
+        applyVariant(board);
         drawBoard();
         updateChip();
       })

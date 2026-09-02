@@ -50,9 +50,18 @@ describe("defaults", () => {
   // inventory/drop keys follow that vocabulary rather than inventing their own.
   it("borrows Minecraft's inventory vocabulary: E opens the inventory, Q drops", () => {
     const std = defaultBindings("standard");
-    expect(std.pickup).toEqual([["e"]]);
+    expect(std.inventory).toEqual([["e"]]);
     expect(std.drop).toEqual([["q"]]);
+    expect(defaultBindings("vim").inventory).toEqual([["e"]]);
     expect(defaultBindings("vim").drop).toEqual([["q"]]);
+  });
+
+  // PICK UP is a separate verb from OPEN INVENTORY (CLAUDE.md Rule 4). While they shared
+  // one key, standing on a pile made the inventory un-openable — the pile always won.
+  it("pick up is its own key: I in standard, dw in vim", () => {
+    expect(defaultBindings("standard").pickup).toEqual([["i"]]);
+    expect(defaultBindings("vim").pickup).toEqual([["d", "w"]]);
+    expect(actionsFor("standard").some((a) => a.id === "inventory")).toBe(true);
   });
 
   // Digits are NOT here on purpose: 1-9 are a fixed slot-select convention handled in
@@ -114,7 +123,7 @@ describe("rebind", () => {
     expect(res.ok).toBe(true);
     if (res.ok) {
       expect(res.bindings.pickup).toEqual([["z"]]);
-      expect(std.pickup).toEqual([["e"]]); // original untouched (E is the default)
+      expect(std.pickup).toEqual([["i"]]); // original untouched (I is the default)
     }
   });
 

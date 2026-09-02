@@ -1,0 +1,474 @@
+{
+  "pack_id": "grammar.room.haw.v1",
+  "schema_version": "1.0.0",
+  "language": "haw",
+  "language_label": "ʻŌlelo Hawaiʻi",
+  "typology": {
+    "word_order": "VSO (predicate-first)",
+    "pattern_family": "predicate-first-equational",
+    "notes": "Four sentence patterns, one per level: he (indefinite classifying), ʻo (definite equational), aia (locative), e (imperative). Every pattern puts its marker word FIRST, so the frame is read left to right from the marker. Frame slots carry no labels — the pattern is taught by the room's tutorial and the English target, not by the boxes."
+  },
+  "_review_note": "NEEDS KUMU REVIEW before shipping. Specific calls to check: (1) 'He kumu ʻo Kaleo' vs 'He kumu ʻo ia' — the ʻo subject marker on a personal name is treated as part of the subject block, not its own slot; (2) 'ʻO Leilani ke kumu' — fronted-predicate equational, and whether 'ke kumu' reads as the subject to a speaker; (3) 'Aia ʻo Kaleo i ke kula' — i vs ma for a school, both are taught as location markers here but only i is used in a slot; (4) 'E inu ʻoe i ka wai' — an imperative that keeps ʻoe, glossed to English as 'Drink the water.' with the literal 'You drink the water.' shown alongside. Vocabulary used by this pack: kumu, haumāna, kula, wai, inu, hale, hoaaloha, hele, ʻoe, and the names Kaleo, Leilani, Kimo. Every content word here is also matched in vocab.room.haw (Nā Hoa, Ke Kula, Hōʻailona, Hoʻopunipuni), so the two tracks review each other.",
+  "puzzles": [
+    {
+      "id": "grammar-haw-001",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "grammar_build",
+      "validator_type": "exact_match",
+      "difficulty": 2,
+      "prompt": "Build “Kaleo is a teacher.” in Hawaiian: push the word blocks into the frame.",
+      "payload": {
+        "structure": [
+          { "role": "he" },
+          { "role": "noun" },
+          { "role": "subject" }
+        ],
+        "words": [
+          { "text": "kumu", "role": "noun", "pos": { "x": 5, "y": 4 } },
+          { "text": "ʻo Kaleo", "role": "subject", "pos": { "x": 6, "y": 5 } },
+          { "text": "he", "role": "he", "pos": { "x": 8, "y": 4 } },
+          { "text": "aia", "role": "decoy", "pos": { "x": 10, "y": 6 } }
+        ],
+        "structures": [["he", "noun", "subject"]],
+        "frame": { "x": 5, "y": 2 },
+        "feedback": {
+          "solved": "✦ He kumu ʻo Kaleo — “Kaleo is a teacher.” Walk back to the portal ✦"
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "grammar-haw-001-enter",
+              "speaker": "narrator",
+              "text": "A new shelf, in ʻōlelo Hawaiʻi. The boxes are blank here.",
+              "trigger": "on_enter"
+            }
+          ],
+          "guided_tutorial": [
+            {
+              "id": "haw-he-1",
+              "speaker": "narrator",
+              "text": "Hawaiian says WHAT something is before it says WHO. The English order is the one that gets rearranged, not this one.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            },
+            {
+              "id": "haw-he-2",
+              "speaker": "narrator",
+              "text": "The he pattern:  he + [what it is] + [who].   He haumāna ʻo Leilani.  —  “Leilani is a student.”",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            },
+            {
+              "id": "haw-he-3",
+              "speaker": "narrator",
+              "text": "The boxes no longer tell you what they want. Press T for the target — it says, in English, the sentence you are building.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            }
+          ],
+          "hints": [
+            {
+              "text": "Predicate first: the block that says WHAT someone is goes in before the block that says WHO.",
+              "tag": "step:1"
+            },
+            {
+              "text": "he marks “a / an”. It opens the sentence, so it belongs in the leftmost box.",
+              "tag": "step:2"
+            },
+            {
+              "text": "he · kumu · ʻo Kaleo  —  “Kaleo is a teacher.” aia belongs to a different pattern; leave it on the floor.",
+              "tag": "step:3"
+            }
+          ]
+        },
+        "par": 32
+      },
+      "solution": { "sentence": "He kumu ʻo Kaleo." },
+      "hints": [],
+      "metadata": {
+        "reviewed": false,
+        "concept": "he — “Kaleo is a teacher.”",
+        "tags": ["grammar", "room", "hawaiian", "needs-kumu-review"]
+      },
+      "room": {
+        "width": 15,
+        "height": 11,
+        "tiles": [
+          "###############",
+          "#.............#",
+          "#.............#",
+          "#.............#",
+          "#.............#",
+          "#.............#",
+          "#.............#",
+          "#.............#",
+          "#.............#",
+          "#.............#",
+          "###############"
+        ],
+        "spawn": { "x": 7, "y": 8 },
+        "features": [],
+        "flash_color": "#b99c44",
+        "grants_unlock": "hawgram1.cleared",
+        "theme": "tropical",
+        "hint_giver": { "pos": { "x": 13, "y": 9 }, "marker": "❓" }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Target: “Kaleo is a teacher.” Build that sentence in ʻōlelo Hawaiʻi. Three of the four blocks on this floor belong in the frame."
+        }
+      }
+    },
+    {
+      "id": "grammar-haw-002",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "grammar_build",
+      "validator_type": "exact_match",
+      "difficulty": 3,
+      "prompt": "Build “Leilani is the teacher.” in Hawaiian: push the word blocks into the frame.",
+      "payload": {
+        "structure": [
+          { "role": "o" },
+          { "role": "name" },
+          { "role": "subject" }
+        ],
+        "words": [
+          { "text": "ke kumu", "role": "subject", "pos": { "x": 4, "y": 5 } },
+          { "text": "Leilani", "role": "name", "pos": { "x": 7, "y": 4 } },
+          { "text": "ʻo", "role": "o", "pos": { "x": 6, "y": 6 } },
+          { "text": "he", "role": "decoy", "pos": { "x": 9, "y": 3 } }
+        ],
+        "structures": [["o", "name", "subject"]],
+        "frame": { "x": 5, "y": 2 },
+        "feedback": {
+          "solved": "✦ ʻO Leilani ke kumu — “Leilani is the teacher.” Walk back to the portal ✦"
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "grammar-haw-002-enter",
+              "speaker": "narrator",
+              "text": "Same room, different “is”. This one names somebody.",
+              "trigger": "on_enter"
+            }
+          ],
+          "guided_tutorial": [
+            {
+              "id": "haw-o-1",
+              "speaker": "narrator",
+              "text": "Last room: he kumu — “a teacher”, one of many. This room: ke kumu — “THE teacher”, the particular one.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            },
+            {
+              "id": "haw-o-2",
+              "speaker": "narrator",
+              "text": "When the sentence names a definite one, it opens with ʻo instead:  ʻo + [name] + [the one they are].   ʻO Kimo koʻu hoaaloha.  —  “Kimo is my friend.”",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            },
+            {
+              "id": "haw-o-3",
+              "speaker": "narrator",
+              "text": "So he cannot open this one. It is on the floor to be left there.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            }
+          ],
+          "hints": [
+            {
+              "text": "This sentence points at one particular teacher, not just any teacher — so it cannot start with he.",
+              "tag": "step:1"
+            },
+            {
+              "text": "ʻo marks the one being named, and it opens the sentence.",
+              "tag": "step:2"
+            },
+            {
+              "text": "ʻo · Leilani · ke kumu  —  “Leilani is the teacher.”",
+              "tag": "step:3"
+            }
+          ]
+        },
+        "par": 36
+      },
+      "solution": { "sentence": "ʻO Leilani ke kumu." },
+      "hints": [],
+      "metadata": {
+        "reviewed": false,
+        "concept": "ʻo — “Leilani is the teacher.”",
+        "tags": ["grammar", "room", "hawaiian", "needs-kumu-review"]
+      },
+      "room": {
+        "width": 15,
+        "height": 11,
+        "tiles": [
+          "###############",
+          "#.............#",
+          "#.............#",
+          "#.............#",
+          "#.............#",
+          "#...#.........#",
+          "#.............#",
+          "#.............#",
+          "#.............#",
+          "#.............#",
+          "###############"
+        ],
+        "spawn": { "x": 7, "y": 8 },
+        "features": [],
+        "flash_color": "#b99c44",
+        "grants_unlock": "hawgram2.cleared",
+        "theme": "tropical",
+        "hint_giver": { "pos": { "x": 13, "y": 9 }, "marker": "❓" }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Target: “Leilani is the teacher.” Build that sentence in ʻōlelo Hawaiʻi. One block on this floor means “a”, not “the” — it has no box here."
+        }
+      }
+    },
+    {
+      "id": "grammar-haw-003",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "grammar_build",
+      "validator_type": "exact_match",
+      "difficulty": 4,
+      "prompt": "Build “Kaleo is at the school.” in Hawaiian: push the word blocks into the frame.",
+      "payload": {
+        "structure": [
+          { "role": "aia" },
+          { "role": "subject" },
+          { "role": "prep" },
+          { "role": "place" }
+        ],
+        "words": [
+          { "text": "aia", "role": "aia", "pos": { "x": 2, "y": 4 } },
+          { "text": "ke kula", "role": "place", "pos": { "x": 5, "y": 6 } },
+          { "text": "ʻo Kaleo", "role": "subject", "pos": { "x": 7, "y": 5 } },
+          { "text": "i", "role": "prep", "pos": { "x": 8, "y": 4 } },
+          { "text": "he", "role": "decoy", "pos": { "x": 10, "y": 7 } }
+        ],
+        "structures": [["aia", "subject", "prep", "place"]],
+        "frame": { "x": 4, "y": 2 },
+        "feedback": {
+          "solved": "✦ Aia ʻo Kaleo i ke kula — “Kaleo is at the school.” Walk back to the portal ✦"
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "grammar-haw-003-enter",
+              "speaker": "narrator",
+              "text": "Four boxes this time. Somebody is somewhere.",
+              "trigger": "on_enter"
+            }
+          ],
+          "guided_tutorial": [
+            {
+              "id": "haw-aia-1",
+              "speaker": "narrator",
+              "text": "Saying WHERE something is gets its own opening word: aia. It does the work English does with “is at”.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            },
+            {
+              "id": "haw-aia-2",
+              "speaker": "narrator",
+              "text": "The aia pattern:  aia + [who or what] + i + [the place].   Aia ʻo Leilani i ka hale.  —  “Leilani is at the house.”",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            },
+            {
+              "id": "haw-aia-3",
+              "speaker": "narrator",
+              "text": "That little i is a whole box of its own. It carries the “at”, and the place cannot arrive without it.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            }
+          ],
+          "hints": [
+            {
+              "text": "aia opens every “is at” sentence — it takes the leftmost box.",
+              "tag": "step:1"
+            },
+            {
+              "text": "After aia comes the one being located, then the small word that means “at”, then the place itself.",
+              "tag": "step:2"
+            },
+            {
+              "text": "aia · ʻo Kaleo · i · ke kula  —  “Kaleo is at the school.”",
+              "tag": "step:3"
+            }
+          ]
+        },
+        "par": 50
+      },
+      "solution": { "sentence": "Aia ʻo Kaleo i ke kula." },
+      "hints": [],
+      "metadata": {
+        "reviewed": false,
+        "concept": "aia — “Kaleo is at the school.”",
+        "tags": ["grammar", "room", "hawaiian", "needs-kumu-review"]
+      },
+      "room": {
+        "width": 15,
+        "height": 11,
+        "tiles": [
+          "###############",
+          "#.............#",
+          "#.............#",
+          "#.............#",
+          "#..........#..#",
+          "#.............#",
+          "#.....#.......#",
+          "#.............#",
+          "#.............#",
+          "#.............#",
+          "###############"
+        ],
+        "spawn": { "x": 7, "y": 8 },
+        "features": [],
+        "flash_color": "#b99c44",
+        "grants_unlock": "hawgram3.cleared",
+        "theme": "tropical",
+        "hint_giver": { "pos": { "x": 13, "y": 9 }, "marker": "❓" }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Target: “Kaleo is at the school.” Build that sentence in ʻōlelo Hawaiʻi. Four boxes, five blocks — one of them belongs to another pattern."
+        }
+      }
+    },
+    {
+      "id": "grammar-haw-004",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "grammar_build",
+      "validator_type": "exact_match",
+      "difficulty": 5,
+      "prompt": "Build “Drink the water.” in Hawaiian: push the word blocks into the frame.",
+      "payload": {
+        "structure": [
+          { "role": "e" },
+          { "role": "verb" },
+          { "role": "subject" },
+          { "role": "object" }
+        ],
+        "words": [
+          { "text": "inu", "role": "verb", "pos": { "x": 3, "y": 6 } },
+          { "text": "e", "role": "e", "pos": { "x": 6, "y": 5 } },
+          { "text": "i ka wai", "role": "object", "pos": { "x": 8, "y": 4 } },
+          { "text": "ʻoe", "role": "subject", "pos": { "x": 9, "y": 5 } },
+          { "text": "he", "role": "decoy", "pos": { "x": 2, "y": 2 } },
+          { "text": "aia", "role": "decoy", "pos": { "x": 10, "y": 7 } }
+        ],
+        "structures": [["e", "verb", "subject", "object"]],
+        "frame": { "x": 4, "y": 2 },
+        "feedback": {
+          "solved": "✦ E inu ʻoe i ka wai — “Drink the water.” Walk back to the portal ✦"
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "grammar-haw-004-enter",
+              "speaker": "narrator",
+              "text": "The last shelf. This one is not a statement — it is an order.",
+              "trigger": "on_enter"
+            }
+          ],
+          "guided_tutorial": [
+            {
+              "id": "haw-e-1",
+              "speaker": "narrator",
+              "text": "A command opens with e. It turns the action word that follows it into “do this”.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            },
+            {
+              "id": "haw-e-2",
+              "speaker": "narrator",
+              "text": "The e pattern:  e + [do what] + [who] + [to what].   E hele ʻoe i ke kula.  —  “Go to school.” (literally: “You go to school.”)",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            },
+            {
+              "id": "haw-e-3",
+              "speaker": "narrator",
+              "text": "English throws the “you” away when it gives an order. Hawaiian keeps it — so ʻoe still needs a box.",
+              "trigger": "guided_tutorial",
+              "autoAdvance": false
+            }
+          ],
+          "hints": [
+            {
+              "text": "An order opens with e, and the action word follows it immediately.",
+              "tag": "step:1"
+            },
+            {
+              "text": "ʻoe means “you” — it comes after the action, and the thing you act on comes last.",
+              "tag": "step:2"
+            },
+            {
+              "text": "e · inu · ʻoe · i ka wai  —  “Drink the water.” he and aia open other patterns; both stay on the floor.",
+              "tag": "step:3"
+            }
+          ]
+        },
+        "par": 54
+      },
+      "solution": { "sentence": "E inu ʻoe i ka wai." },
+      "hints": [],
+      "metadata": {
+        "reviewed": false,
+        "concept": "e — “Drink the water.”",
+        "tags": ["grammar", "room", "hawaiian", "needs-kumu-review"]
+      },
+      "room": {
+        "width": 15,
+        "height": 11,
+        "tiles": [
+          "###############",
+          "#.............#",
+          "#.............#",
+          "#.............#",
+          "#..#..........#",
+          "#.............#",
+          "#........#....#",
+          "#.............#",
+          "#.............#",
+          "#.............#",
+          "###############"
+        ],
+        "spawn": { "x": 8, "y": 8 },
+        "features": [],
+        "flash_color": "#b99c44",
+        "grants_unlock": "hawgram4.cleared",
+        "theme": "tropical",
+        "hint_giver": { "pos": { "x": 13, "y": 9 }, "marker": "❓" }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Target: “Drink the water.” Build that command in ʻōlelo Hawaiʻi — Hawaiian keeps the “you” that English drops."
+        }
+      }
+    }
+  ],
+  "progression": [
+    {
+      "puzzle_type": "grammar_build",
+      "levels": [
+        { "id": "grammar-haw-001", "label": "He", "unlock": "grammar3.cleared" },
+        { "id": "grammar-haw-002", "label": "ʻO", "unlock": "hawgram1.cleared" },
+        { "id": "grammar-haw-003", "label": "Aia", "unlock": "hawgram2.cleared" },
+        { "id": "grammar-haw-004", "label": "E", "unlock": "hawgram3.cleared" }
+      ]
+    }
+  ]
+}

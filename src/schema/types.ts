@@ -86,14 +86,37 @@ export interface MechanicsConfig {
   /** Order-checker REQUIRES punctuation tokens (stops normalizing them away). Defaults from
    *  the tier (mixed/explicit ⇒ true); set explicitly to compose onto another tier. */
   punctuationRequired?: boolean;
+  /** Which BOARD TRANSFORMS the `randomized` modifier may roll for this level (see
+   *  BoardTransform). Each one listed must leave the level winnable — that is a claim
+   *  about this board, and the pack's completion test proves it by replaying the authored
+   *  route transformed the same way. Omitted ⇒ the level rolls none, and a board module
+   *  that has no other reading of `randomized` leaves the board as authored. */
+  variants?: BoardTransform[];
+  /** What a GOOD run of this level looks like — the level-complete card scores time and
+   *  steps against it (see engine/core/score.ts). CONTENT: a long level says so here
+   *  instead of the engine guessing. Omitted ⇒ the engine's defaults. */
+  par?: { seconds?: number; steps?: number };
   /** Decor-embedded hints (SCHEMA HOOK ONLY — see EnvClue). */
   envClues?: EnvClue[];
 }
 
+/** A rigid BOARD TRANSFORM the `randomized` modifier may roll for a board level (CLOSED
+ *  set — the engine implements exactly these). A mirror flips the whole board, walls and
+ *  all, and puts back into reading order any rule the flip reversed, so the level's RULES
+ *  survive it untouched while every route through the room changes.
+ *
+ *  Which of them a level may roll is CONTENT (MechanicsConfig.variants), because whether a
+ *  particular flip leaves a particular board winnable is a fact about that board — proven,
+ *  level by level, by replaying the authored route transformed the same way (see
+ *  puzzles/logic/levelCompletion.test.ts). */
+export type BoardTransform = "mirror-x" | "mirror-y" | "mirror-both";
+
 /** Axis 3 — stackable environmental MODIFIERS, orthogonal to concept and tier. CLOSED
  *  registry (validated at load); defaults to [] for every level.
  *  - randomized: pile spawn positions shuffled per run (seed is RUNTIME — random at mount,
- *    injected fixed in tests; not stored in pack data).
+ *    injected fixed in tests; not stored in pack data). A board game whose level declares
+ *    `mechanics.variants` instead rolls one of those TRANSFORMS (see BoardTransform) —
+ *    a smaller, provable kind of "different" for boards a re-deal could strand.
  *  - lowlight: limited vision radius — a radial falloff pinned to the player's screen cell
  *    (rendered by roomHost; see the `.room-lowlight` rules in style.css). */
 export type Modifier = "randomized" | "lowlight";
@@ -185,6 +208,14 @@ export interface CodeToken {
   text: string; // what is written into the program, e.g. print  or  "hello"
   /** functional tokens do something; `decoy` tokens are red herrings. */
   kind: "function" | "keyword" | "string" | "value" | "punctuation" | "decoy";
+  /** This token is a NAME the player picks, not a fixed word: a variable or parameter
+   *  whose spelling is arbitrary. The order-checker then accepts any CONSISTENT
+   *  renaming among the level's renameable tokens (`x = 5 / y = 2` and `y = 5 / x = 2`
+   *  are both right), because renaming cannot change what a program prints.
+   *  CONTENT declares this — the engine never guesses which tokens are names, so a
+   *  decoy is never renameable and a keyword is never a name. Still Rule 3: this is an
+   *  order/equality comparison under a bijection, nothing is executed. */
+  renameable?: boolean;
   /** if set, successfully using this token unlocks it in the player's Codex. */
   discovers?: string;
 }
@@ -231,7 +262,10 @@ export interface LogicRulesSolution {
 // zero engine change. See src/puzzles/grammar/.
 export interface GrammarSlotDef {
   role: string;  // machine role, e.g. "subject" | "verb" — pack-defined, engine-opaque
-  label: string; // learner prompt drawn on the slot, e.g. "who?"
+  /** Learner prompt drawn on the slot, e.g. "who?". OPTIONAL: a pack that teaches its
+   *  word order from the room's tutorial (rather than from the boxes) omits it and the
+   *  slot renders bare. CONTENT's call — the engine draws whatever is, or isn't, there. */
+  label?: string;
 }
 export interface GrammarWordDef {
   text: string;                  // printed on the tile
@@ -337,6 +371,9 @@ export type TutorialWaitFor =
   | "move" | "interact" | "pickup" | "place" | "build" | "run"
   /** threw a held token onto the floor (the Q drop — a transient, auto-repickup item) */
   | "drop"
+  /** landed a hit on an ACTIVE monster (a telegraph marker isn't attackable, so a swing
+   *  at one doesn't count — the step waits for a real fight) */
+  | "attack"
   /** an OPEN door transition — stricter than "interact" (blocked doors / hint giver don't count) */
   | "enter_door"
   // CARD-GAME kinds (fired via systems/tutorialOverlay.ts; see content/TUTORIAL_SCRIPTS.md):
@@ -365,7 +402,11 @@ export type TutorialDemo =
   /** tiles swapping places — the `randomized` modifier's "shuffled" tier */
   | "shuffle"
   /** the room dark except a circle around the player — the `lowlight` modifier */
-  | "lowlight";
+  | "lowlight"
+  /** a placed tile lifts off the board into a creature's hand — the THIEF concept
+   *  (something eats code you already placed, not you). No matching `TutorialWaitFor`:
+   *  the follow-up step that waits for the player to act reuses "attack". */
+  | "steal";
 /** One spoken beat. `speaker` selects the avatar; `trigger` selects when it fires. */
 export interface DialogueBeat {
   id: string;
@@ -474,12 +515,68 @@ export interface CodingArea {
    *  reads it exactly like a player-placed token. Omitted ⇒ nothing pre-placed. */
   prefilled?: { token: string; x: number; y: number }[];
 }
+/** What a monster DOES once active. CLOSED set; content picks, the engine dispatches
+ *  (see engine/core/monsters.ts). Omitted ⇒ "carrier" (the original behavior).
+ *  - carrier: spawns already holding `token`; defeat drops it. The alternative token
+ *    SOURCE to a pile — fight the thing carrying it instead of standing on a pile.
+ *  - thief: spawns EMPTY-HANDED and hunts something the ROOM MODULE itself offers up
+ *    (e.g. a placed code token — MountedPuzzle.stealTargets); reaching one STEALS it off
+ *    the board. Carries it for a rescue window (digest_ms); kill it in time and it drops
+ *    what it took, same as a carrier — let the window run out and the object is
+ *    DIGESTED (gone, but always re-obtainable from its original source; see
+ *    validateRepair's softlock guard), and it goes hunting again after a cooldown. */
+export type MonsterBehavior = "carrier" | "thief";
+/** A roaming token-carrier OR token-thief. CONTENT: the engine never invents a monster,
+ *  its loot, or what it steals — it only runs the lifecycle (see engine/core/monsters.ts
+ *  and MonsterBehavior). */
+export interface MonsterDef {
+  /** carrier: REQUIRED — the loot token it spawns holding (what a pile would otherwise
+   *  hand over). thief: unused — see MonsterBehavior; a thief's loot is whatever it
+   *  stole, not authored here. */
+  token?: string;
+  /** What it does once active. Omitted ⇒ "carrier". */
+  behavior?: MonsterBehavior;
+  /** Preferred spawn cell. Used whenever it is free at spawn time; otherwise the engine
+   *  picks a free floor cell. Omitted ⇒ always a free floor cell. */
+  pos?: { x: number; y: number };
+  /** Hits needed to defeat it (default 1). */
+  hp?: number;
+  /** What it looks like — a glyph drawn on the tile (placeholder art). CONTENT. */
+  glyph?: string;
+  /** Display name shown under the monster. */
+  name?: string;
+  /** VISUAL classification of the LOOT (same closed set as RoomPile.kind), so a dropped
+   *  comma still reads as punctuation. carrier only — a thief's loot classification comes
+   *  from whatever it stole, which the room module already tags. Style only; validation
+   *  never reads it. */
+  kind?: RoomPile["kind"];
+}
+/** The room's monster table (the "monsters" feature's data). All timings are CONTENT with
+ *  engine defaults — see engine/core/monsters.ts MONSTER_DEFAULTS. */
+export interface MonsterConfig {
+  /** One entry per monster SLOT. A slot re-telegraphs after `respawn_ms`, so a level can
+   *  never be stranded by loot that despawned (piles are infinite; monsters match that). */
+  spawns: MonsterDef[];
+  /** Telegraph marker → attackable monster (ms). */
+  spawn_delay_ms?: number;
+  /** Defeat → the slot's next telegraph (ms). */
+  respawn_ms?: number;
+  /** How often an active monster takes a wander/chase step (ms). */
+  move_ms?: number;
+  /** How long dropped LOOT lies on the floor before despawning (ms). */
+  loot_ttl_ms?: number;
+  /** THIEF ONLY: the rescue window once a thief starts carrying a stolen object (ms). */
+  digest_ms?: number;
+  /** THIEF ONLY: after a theft or a digest, before it hunts again (ms). */
+  steal_cooldown_ms?: number;
+}
+
 /** Optional, gateable room features. A room renders ONLY the features it declares; an
  *  undeclared feature is not built at all. CLOSED set (engine has a render branch per
  *  feature); content picks from these. Always-on basics (movement, settings) are NOT
  *  features — they need no declaration. The inventory HUD IS a feature: rooms that
  *  carry tokens (hub, code levels) declare it; board rooms (logic) don't. */
-export type RoomFeature = "terminal" | "coding_area" | "inventory";
+export type RoomFeature = "terminal" | "coding_area" | "inventory" | "monsters";
 
 /** Visual skins a room may declare (STYLE axis). CLOSED set — the engine ships one
  *  scoped CSS block per token; content picks. The language→look mapping is a CONTENT
@@ -500,6 +597,9 @@ export interface RoomLayout {
   spawn?: { x: number; y: number };
   /** Word piles placed on floor cells; the player faces one and presses pickup. */
   piles?: RoomPile[];
+  /** Roaming token-carriers (the "monsters" feature). The OTHER way a room hands out
+   *  tokens: fight the monster, pick up what it drops. See MonsterConfig. */
+  monsters?: MonsterConfig;
   /** Region where tokens can be placed (and indent is measured from). */
   coding_area?: CodingArea;
   /** Features this room renders. Undeclared features are not built (see RoomFeature).

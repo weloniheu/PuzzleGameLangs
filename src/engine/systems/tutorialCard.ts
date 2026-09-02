@@ -210,6 +210,33 @@ function buildDemo(kind: TutorialDemo): HTMLElement {
       el.append(slot, item);
       break;
     }
+    case "attack": {
+      // The slime swings at the thing in front of it, and the thing drops what it carried.
+      const slime = document.createElement("div");
+      slime.className = "tdemo-dot tdemo-attack-slime";
+      const swipe = document.createElement("div");
+      swipe.className = "tdemo-attack-swipe";
+      swipe.textContent = "✧";
+      const foe = document.createElement("div");
+      foe.className = "tdemo-attack-foe";
+      foe.textContent = "👾";
+      const loot = chip("", "tdemo-attack-loot");
+      el.append(slime, swipe, foe, loot);
+      break;
+    }
+    case "steal": {
+      // The reverse arc of "place": a tile lifts OFF the board into a creature's hand,
+      // instead of snapping into a slot. The THIEF concept — it takes code you already
+      // placed, not you.
+      const slot = document.createElement("div");
+      slot.className = "tdemo-slot";
+      const tile = chip("", "tdemo-steal-chip");
+      const thief = document.createElement("div");
+      thief.className = "tdemo-steal-thief";
+      thief.textContent = "🦝";
+      el.append(slot, tile, thief);
+      break;
+    }
     case "build": {
       const btn = document.createElement("div");
       btn.className = "tdemo-button tdemo-button-build";

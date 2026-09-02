@@ -50,6 +50,11 @@ export const codingModule: RoomPuzzleModule = {
     // placed/prefilled punctuation keeps the bead silhouette.
     const kindByToken = new Map<string, string>();
     for (const t of payload.tokens ?? []) kindByToken.set(t.text, t.kind);
+    // RENAMEABLE tokens (CONTENT): the names this level lets the player choose between. The
+    // engine never infers these — a decoy must never become a legal variable name.
+    const names: ReadonlySet<string> = new Set(
+      (payload.tokens ?? []).filter((t) => t.renameable).map((t) => t.text),
+    );
     for (const pl of ctx.layout.piles ?? []) if (pl.kind) kindByToken.set(pl.token, pl.kind);
 
     const area = createCodingArea({
@@ -57,6 +62,7 @@ export const codingModule: RoomPuzzleModule = {
       accepted,
       output: solution.output,
       requirePunctuation: requiresPunctuation(puzzle.mechanics), // punctuation tier keeps ( ) : ,
+      names,
       termCmds,
       termWrite: (lines, state) => terminal?.write(lines, state), // no terminal → nowhere to echo
       snakeBeat,
@@ -70,6 +76,10 @@ export const codingModule: RoomPuzzleModule = {
       onInteract: (cell) => area.onInteract(cell),
       onAction: (actionId) => area.onAction(actionId),
       occupies: (cell) => area.occupies(cell),
+      // THIEF MONSTERS (see engine/core/monsters.ts): exposed unconditionally — a room
+      // with no monster feature, or no thief in its table, simply never calls these.
+      stealTargets: () => area.stealTargets(),
+      takeToken: (cell) => area.takeToken(cell),
       relayout: () => {
         area.relayout();
         terminal?.clampAndPlace(); // keep a popped window on-screen after resize

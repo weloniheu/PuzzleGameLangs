@@ -27,6 +27,7 @@ const BOARD_PACKS = [
   "content/packs/vocab.room.haw.v1.json",
   "content/packs/vocab.room.en.v1.json",
   "content/packs/grammar.room.en.v1.json",
+  "content/packs/grammar.room.haw.v1.json",
   "content/packs/logic.room.en.v1.json",
   "content/packs/logic.room.haw.v1.json",
 ];

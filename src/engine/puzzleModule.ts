@@ -60,6 +60,11 @@ export interface EngineContext {
   inventory: InventoryHud | null;
   /** Report the room's puzzle solved (may earn an unlock — the manager decides). */
   onSolved(): void;
+  /** Report a solve attempt that did NOT pass (a failed Run / submit). Feeds the
+   *  level-complete card's score and nothing else — a module with no notion of a
+   *  failed attempt (a board that simply auto-wins) never calls it, and its runs
+   *  are scored on time/steps/hints alone. */
+  reportMiss(): void;
   /** Register module undo callbacks (the engine also clears all room DOM). */
   teardown: Teardown;
 }
@@ -76,6 +81,18 @@ export interface MountedPuzzle {
    *  a board tile)? The engine asks before dropping a token there, so a Q-drop never
    *  lands on top of module furniture. Omitted ⇒ the module claims no cells. */
   occupies?(cell: Cell): boolean;
+  /** THIEF MONSTERS ONLY (see schema MonsterBehavior, engine/core/monsters.ts): cells
+   *  holding something a thief may STEAL. Omitted ⇒ the module offers nothing, and any
+   *  thief in this room simply never finds a target — the engine never invents what is
+   *  "stealable" (that stays entirely the module's call, e.g. the coding module's own
+   *  unlocked placed tokens; scaffolded/locked ones are excluded there, not here). */
+  stealTargets?(): Cell[];
+  /** THIEF MONSTERS ONLY: take whatever the module has at `cell` RIGHT NOW, updating its
+   *  OWN state (e.g. removing a placed token and re-dirtying the line), and return what
+   *  was taken — or null if `cell` doesn't hold a stealable thing anymore (already gone;
+   *  the engine re-asks stealTargets() every tick, so a stale cell is expected, not a bug).
+   *  Omitted alongside a missing stealTargets ⇒ never called. */
+  takeToken?(cell: Cell): string | null;
   /** Rebuild the module's own layers at the current tile size. */
   relayout(): void;
   /** Non-DOM cleanup (the engine also clears the room DOM wholesale). */

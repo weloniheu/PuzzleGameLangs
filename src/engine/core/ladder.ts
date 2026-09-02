@@ -59,9 +59,12 @@ export interface LadderRung {
 
 /** Canonical mechanic display order + labels. Unknown keys append after, capitalized —
  *  a NEW mechanic key in content still renders without an engine change. */
-const MECHANIC_ORDER = ["base", "mixed", "explicit", "shuffled", "shrouded"];
+// "hunted" is a CONTENT-declared rung (a level entry's own `mechanic` key — the coding
+// levels whose tokens come off monsters instead of piles). It sits right after Base
+// because that is where its unlock chain puts it; the engine only orders and labels it.
+const MECHANIC_ORDER = ["base", "hunted", "mixed", "explicit", "shuffled", "shrouded"];
 const MECHANIC_LABELS: Record<string, string> = {
-  base: "Base", mixed: "Mixed", explicit: "Explicit",
+  base: "Base", hunted: "Hunted", mixed: "Mixed", explicit: "Explicit",
   shuffled: "Shuffled", shrouded: "Shrouded",
 };
 
@@ -109,6 +112,26 @@ export function ladderPath(data: LadderData): LadderStep[] {
   const lv = data.levels.find((l) => l.id === data.currentId);
   if (!lv) return [{}];
   return [{}, { lang: lv.language }, { lang: lv.language, mech: lv.mechanic }];
+}
+
+/**
+ * The level to offer NEXT after clearing the current one — what the level-complete
+ * card's "Next level" button goes to. The next AVAILABLE level in the SAME
+ * language+mechanic rung (staying on the ladder the player is climbing), else the
+ * next available level anywhere further down the list, else null (nothing left open
+ * — the card falls back to the hub). Availability is the usual unlock rule, read from
+ * a FRESH snapshot, so the key just earned by this very solve already counts. PURE.
+ */
+export function nextLevel(data: LadderData): LadderLevel | null {
+  const i = data.levels.findIndex((lv) => lv.id === data.currentId);
+  if (i < 0) return null;
+  const current = data.levels[i];
+  const rest = data.levels.slice(i + 1).filter((lv) => available(lv, data.unlocks));
+  return (
+    rest.find((lv) => lv.language === current.language && lv.mechanic === current.mechanic)
+    ?? rest[0]
+    ?? null
+  );
 }
 
 /** Distinct values of `key` over `levels`, in first-appearance order. */

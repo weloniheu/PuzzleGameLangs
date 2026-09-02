@@ -2,6 +2,9 @@
 // LLM-generatable JSON format loads and plays. Solutions are scripted key-sequences;
 // the same harness will re-run the Hawaiian pack once its pattern is confirmed.
 //
+// The routes themselves live in ./authoredRoutes — shared with levelCompletion.test.ts,
+// which replays them MIRRORED to prove the `randomized` variants finishable.
+//
 // Every solution is also pinned to the board's PAR (the ★★★ budget): the script must
 // win within par, so an author can't ship a dishonest rating. Negative probes assert
 // the naive straight-line walk does NOT win — the geometry, not the player's patience,
@@ -12,6 +15,7 @@ import hawPack from "../../../content/packs/logic.rules.haw.v1.json";
 import { validateLogicPack } from "./packLoader";
 import { createBoard, step, DIRECTIONS } from "./ruleEngine";
 import { starsFor } from "./index";
+import { AUTHORED_ROUTES } from "./authoredRoutes";
 import type { LogicPack } from "./schema";
 
 type Dir = "up" | "down" | "left" | "right";
@@ -50,11 +54,11 @@ describe("english logic pack", () => {
   });
 
   it("en-00-tutorial: walk right onto the flag", () => {
-    solves(en, "en-00-tutorial", rep(R, 4));
+    solves(en, "en-00-tutorial", AUTHORED_ROUTES["en-00-tutorial"]);
   });
 
   it("en-01-welcome: the rock plugs the wall's only gap — shove it through", () => {
-    solves(en, "en-01-welcome", [R, R, R, R, D, D, R, R]);
+    solves(en, "en-01-welcome", AUTHORED_ROUTES["en-01-welcome"]);
     // Straight down the row never wins: the flag sits off the rock's line.
     expect(play(en, "en-01-welcome", rep(R, 12))).toBe(false);
     // And there is no way around — the wall runs the full height of the room.
@@ -62,55 +66,37 @@ describe("english logic pack", () => {
   });
 
   it("en-02-push: route around and pocket the rock (straight push jams it)", () => {
-    solves(en, "en-02-push", [D, D, R, R, R, R, U, U, R, R, R]);
+    solves(en, "en-02-push", AUTHORED_ROUTES["en-02-push"]);
     // Naive corridor push wedges the rock onto the flag against the cap wall.
     expect(play(en, "en-02-push", rep(R, 12))).toBe(false);
   });
 
   it("en-03-break-wall: breaking WALL IS STOP is now MANDATORY (full-height wall)", () => {
-    solves(en, "en-03-break-wall", [U, R, U, D, ...rep(R, 6), D]);
+    solves(en, "en-03-break-wall", AUTHORED_ROUTES["en-03-break-wall"]);
     // No walk-around exists any more.
     expect(play(en, "en-03-break-wall", rep(R, 12))).toBe(false);
   });
 
   it("en-04-make-win: escort WIN up, across, and into FLAG IS ___", () => {
-    solves(en, "en-04-make-win", [R, U, U, U, U, L, U, ...rep(R, 5), D, R, U, D, D, D, D]);
+    solves(en, "en-04-make-win", AUTHORED_ROUTES["en-04-make-win"]);
     expect(play(en, "en-04-make-win", rep(R, 12))).toBe(false);
   });
 
   it("en-05-become: form ROCK IS FLAG so the rock becomes the win-flag", () => {
-    solves(en, "en-05-become", [D, ...rep(R, 6), U, L, L, L, D, L, U, U, R, R, R, U, U]);
+    solves(en, "en-05-become", AUTHORED_ROUTES["en-05-become"]);
   });
 
   it("en-06-through: break the wall rule, then carry WIN through the breach", () => {
-    solves(en, "en-06-through", [
-      R, D, D,                   // shove STOP off its rule — the wall is just a wall now
-      U, U, U, L, L, U,          // get behind the WIN word
-      ...rep(R, 7),              // escort it through the breach to the far column
-      D, R, U, U,                // push it up into FLAG IS ___
-      D, D, D, L,                // the flag is WIN — go touch it
-    ]);
+    solves(en, "en-06-through", AUTHORED_ROUTES["en-06-through"]);
     expect(play(en, "en-06-through", rep(R, 12))).toBe(false);
   });
 
   it("en-07-which-rule: the flag is sealed — build ROCK IS WIN instead", () => {
-    solves(en, "en-07-which-rule", [
-      D, R, U, R, D, D,          // steer ROCK next to the waiting IS
-      R, R, R, D, D, D, R, R, R, U, // loop around to the WIN word
-      L, L, L,                   // push WIN into line: ROCK IS WIN
-      D, L, U,                   // nudge it up into the rule row
-      R,                         // the rock is WIN — touch it
-    ]);
+    solves(en, "en-07-which-rule", AUTHORED_ROUTES["en-07-which-rule"]);
   });
 
   it("en-08-two-locks: break the rock plug, cross, finish FLAG IS WIN beyond it", () => {
-    solves(en, "en-08-two-locks", [
-      U, U, R, U,                // break ROCK IS STOP — the plug is passable
-      D, D, D, D, R, R, R,       // cross through the gap
-      U, U, U, U, R, R, R,       // get above the WIN word
-      D, D, D, D, D,             // drive it down into FLAG IS ___
-      U, U, U, L,                // the flag is WIN — go claim it
-    ]);
+    solves(en, "en-08-two-locks", AUTHORED_ROUTES["en-08-two-locks"]);
     expect(play(en, "en-08-two-locks", rep(R, 12))).toBe(false);
   });
 });
@@ -168,27 +154,21 @@ describe("hawaiian logic pack (predicate-first pattern)", () => {
   });
 
   it("haw-00-e-hele: ʻO ʻOE KA LIMU / LANAKILA KA HAE — walk onto the flag", () => {
-    solves(haw, "haw-00-e-hele", rep(R, 4));
+    solves(haw, "haw-00-e-hele", AUTHORED_ROUTES["haw-00-e-hele"]);
   });
 
   it("haw-01-ke-ala: PAHU KA PŌHAKU — pocket the rock (straight push jams)", () => {
-    solves(haw, "haw-01-ke-ala", [D, D, R, R, R, R, U, U, R, R, R]);
+    solves(haw, "haw-01-ke-ala", AUTHORED_ROUTES["haw-01-ke-ala"]);
     expect(play(haw, "haw-01-ke-ala", rep(R, 12))).toBe(false);
   });
 
   it("haw-02-wawahi: break PAʻA KA PĀ, then cross the wall", () => {
-    solves(haw, "haw-02-wawahi", [U, R, U, D, ...rep(R, 6), D]);
+    solves(haw, "haw-02-wawahi", AUTHORED_ROUTES["haw-02-wawahi"]);
     expect(play(haw, "haw-02-wawahi", rep(R, 12))).toBe(false);
   });
 
   it("haw-03-lanakila: escort LANAKILA to the FRONT of ___ KA HAE (predicate-first!)", () => {
-    solves(haw, "haw-03-lanakila", [
-      R, U, U, U, U,             // push LANAKILA up the column
-      L, U,                      // get behind it
-      R, R, R,                   // escort it along the top corridor
-      D, R, U,                   // nudge it up into the rule's FIRST slot
-      D, D, D, D, R, R,          // the flag wins now — go touch it
-    ]);
+    solves(haw, "haw-03-lanakila", AUTHORED_ROUTES["haw-03-lanakila"]);
     expect(play(haw, "haw-03-lanakila", rep(R, 12))).toBe(false);
   });
 });
