@@ -132,7 +132,10 @@ export const grammarModule: RoomPuzzleModule = {
         el.style.width = `${tile}px`;
         el.style.height = `${tile}px`;
         el.style.transform = `translate(${(cell.x + ox) * tile}px, ${(cell.y + oy) * tile}px)`;
-        if (filled[i] === null) { // hide the label once a word occupies the slot
+        // The label is CONTENT and OPTIONAL: a pack whose lesson IS the word order
+        // (see grammar.room.haw) ships slots with no label, and the frame draws as
+        // bare boxes. Hide it once a word occupies the slot, either way.
+        if (filled[i] === null && s.label) {
           const label = document.createElement("span");
           label.className = "grammar-slot-label";
           label.textContent = s.label;

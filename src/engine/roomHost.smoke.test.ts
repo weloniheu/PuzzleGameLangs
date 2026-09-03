@@ -38,15 +38,16 @@ function bootWorld() {
   const logic = loadPack("content/packs/logic.room.en.v1.json");
   const logicHaw = loadPack("content/packs/logic.room.haw.v1.json");
   const grammar = loadPack("content/packs/grammar.room.en.v1.json");
+  const grammarHaw = loadPack("content/packs/grammar.room.haw.v1.json");
   const vocab = loadPack("content/packs/vocab.room.haw.v1.json");
   const vocabEn = loadPack("content/packs/vocab.room.en.v1.json");
   const registry = new Map<string, Puzzle>();
-  for (const p of [...hub.puzzles, ...code.puzzles, ...logic.puzzles, ...logicHaw.puzzles, ...grammar.puzzles, ...vocab.puzzles, ...vocabEn.puzzles]) {
+  for (const p of [...hub.puzzles, ...code.puzzles, ...logic.puzzles, ...logicHaw.puzzles, ...grammar.puzzles, ...grammarHaw.puzzles, ...vocab.puzzles, ...vocabEn.puzzles]) {
     registry.set(p.id, p);
   }
   const laddersByType = new Map<PuzzleType, TypeLadder>();
   const tutorialsById = new Map<string, TutorialBlock>();
-  for (const pack of [hub, code, logic, logicHaw, grammar, vocab, vocabEn]) {
+  for (const pack of [hub, code, logic, logicHaw, grammar, grammarHaw, vocab, vocabEn]) {
     for (const prog of pack.progression ?? []) {
       const ladder = laddersByType.get(prog.puzzle_type) ?? { levels: [], lockedLanguages: [] };
       const stamped: LadderLevel[] = prog.levels.map((lv) => ({
@@ -160,10 +161,10 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     expect(ladderLabels(c)).toEqual(["Python", "JavaScript", "SQL", "← Back", "⌂ Return to hub"]);
     press(c, "Enter"); // the cursor starts on Python → the MECHANIC rung
     expect(text(c, ".room-destmenu-title")).toBe("Python — mechanic");
-    // Only Base has anything unlocked yet — Mixed/Explicit grey out (locked).
-    expect(ladderLabels(c)).toEqual(["Base", "Mixed", "Explicit", "← Back", "⌂ Return to hub"]);
+    // Only Base has anything unlocked yet — Hunted/Mixed/Explicit grey out (locked).
+    expect(ladderLabels(c)).toEqual(["Base", "Hunted", "Mixed", "Explicit", "← Back", "⌂ Return to hub"]);
     expect([...c.querySelectorAll(".room-destmenu-option")].filter((b) => b.classList.contains("locked")))
-      .toHaveLength(2);
+      .toHaveLength(3);
     press(c, "Enter"); // Base → the LEVEL rung
     expect(text(c, ".room-destmenu-title")).toBe("Base — level");
     expect(ladderLabels(c)).toEqual(["Tutorial", "← Back", "⌂ Return to hub"]); // no skip-ahead
@@ -182,16 +183,16 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // Pick up print / hello / world (FIFO), from spawn (6,7).
     press(c, "ArrowUp");           // (6,6)
     press(c, "ArrowRight", 3);     // (9,6) print pile
-    press(c, "e");
+    press(c, "i");
     expect(text(c, ".room-inventory")).toContain("print");
     // → the hotbar step (informational, Enter-gated), then the place step.
     expect(speech(c)).toContain("number key");
     press(c, "Enter");
     expect(speech(c)).toContain("press P"); // tutorial advanced to "place"
     press(c, "ArrowRight");        // (10,6) hello
-    press(c, "e");
+    press(c, "i");
     press(c, "ArrowRight");        // (11,6) world
-    press(c, "e");
+    press(c, "i");
 
     // Place the line at indent 0: (1,1) (2,1) (3,1).
     press(c, "ArrowUp", 5);        // (11,1)
@@ -235,7 +236,26 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     expect(text(c, ".room-terminal-body")).toContain("hello world");
     expect(c.querySelector(".room-terminal-body")!.classList.contains("term-success")).toBe(true);
     expect(text(c, ".room-dialogue").length).toBeGreaterThan(0); // snake success beat
-    press(c, "Enter"); // dismiss it
+
+    // --- LEVEL COMPLETE: the score card takes over the moment the level is cleared,
+    // over the success beat still playing underneath, and offers the next rung first. ---
+    expect((c.querySelector(".room-summary") as HTMLElement).hidden).toBe(false);
+    expect(text(c, ".room-summary-banner")).toBe("LEVEL COMPLETE");
+    expect(text(c, ".room-summary-title")).toBe("Tutorial"); // the LADDER's name for this level
+    expect(text(c, ".room-summary-letter")).toMatch(/^[SABCD]$/);
+    expect(text(c, ".room-summary-points")).toMatch(/^\d+ pts$/);
+    // Every measured cost is on the card, whether or not it cost anything.
+    expect([...c.querySelectorAll(".room-summary-label")].map((e) => e.textContent))
+      .toEqual(["Time", "Steps", "Hints used", "Failed runs"]);
+    // The just-earned unlock is already counted: "Variables" is the next rung, and it
+    // leads as the primary choice (the cursor opens on it).
+    const cardButtons = [...c.querySelectorAll(".room-summary-btn")];
+    expect(cardButtons.map((b) => b.textContent))
+      .toEqual(["Variables →", "↻ Play again", "☰ Choose a level", "⌂ Return to hub"]);
+    expect(cardButtons[0].classList.contains("selected")).toBe(true);
+    press(c, "Escape"); // "stay here" — dismiss the card back into the solved room
+    expect((c.querySelector(".room-summary") as HTMLElement).hidden).toBe(true);
+    press(c, "Enter");  // dismiss the success beat that was playing under it
 
     // PROBE the esc ladder: settings opens from the plain room, esc backs out.
     press(c, "Escape");
@@ -321,7 +341,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     expect(text(c, ".achievements-summary")).toMatch(/^1 of \d+ earned$/);
     // Every track the packs declare shows up as its own group.
     expect([...c.querySelectorAll(".achievements-group")].map((g) => g.firstChild!.textContent))
-      .toEqual(["Coding — Python", "Logic — English", "Logic — ʻŌlelo Hawaiʻi", "Grammar — English", "Language — ʻŌlelo Hawaiʻi", "Language — English"]);
+      .toEqual(["Coding — Python", "Logic — English", "Logic — ʻŌlelo Hawaiʻi", "Grammar — English", "Grammar — ʻŌlelo Hawaiʻi", "Language — ʻŌlelo Hawaiʻi", "Language — English"]);
 
     // ← Back is the first row of the sub-tab, so Enter on it returns to the menu.
     expect(cursor()).toBe("←");
@@ -453,6 +473,10 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // board RELEASES movement, so the engine walks the slime back to the portal.
     press(c, "ArrowRight", 4);
     expect(text(c, ".logic-room-banner")).toContain("Solved");
+    // Clearing it opens the LEVEL COMPLETE card (the same one the coding levels get —
+    // it's engine, not module). Dismiss it to keep walking around the solved room.
+    expect(text(c, ".room-summary-title")).toBe("Tutorial");
+    press(c, "Escape");
     press(c, "ArrowLeft", 4); // engine movement now (board frozen)
     press(c, "Enter");        // on the menu portal → the ladder, on THIS level's rung
     expect(ladderLabels(c)).toEqual(["Tutorial", "Logic I", "← Back", "⌂ Return to hub"]);
@@ -474,7 +498,10 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "Enter");      // tut-3 → tut-4 waits enter_door
     press(c, "ArrowRight", 3); // (8,4)
     press(c, "ArrowUp", 3);    // (8,4) → (8,1) — the now-OPEN Grammar door
-    press(c, "Enter");         // the portal's ladder (language rung: English)
+    press(c, "Enter");         // the portal's ladder (language rung)
+    // Grammar is a two-language track now: the Hawaiian wing is its own row, greyed
+    // until the English chain is finished (grammar3.cleared — see PROGRESSION.md).
+    expect(ladderLabels(c)).toEqual(["English", "ʻŌlelo Hawaiʻi", "← Back", "⌂ Return to hub"]);
     press(c, "Enter");         // English → mechanic rung (Base)
     press(c, "Enter");         // Base → level rung (only the Tutorial unlocked)
     press(c, "Enter");         // select it → the grammar tutorial
@@ -511,6 +538,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     ];
     for (const k of solution) press(c, k);
     expect(text(c, ".grammar-banner")).toContain("sentence");
+    press(c, "Escape"); // dismiss the LEVEL COMPLETE card back into the solved room
 
     // The solved board releases movement; walk to the menu portal (spawn) → exit.
     // grammar.tutorial.cleared is earned, so the chooser now offers Grammar I.
@@ -526,6 +554,43 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     expect(c.innerHTML).toBe("");
   });
 
+  // The HAWAIIAN grammar wing: the same module, but its frame ships with NO slot labels
+  // (GrammarSlotDef.label is optional now). With the boxes silent, the two surfaces that
+  // replace them have to be there — the room's tutorial showing the pattern with a worked
+  // example, and a task prompt that states the sentence in English — so this pins all three.
+  it("hawaiian grammar room: bare frame, pattern in the tutorial, English target under T", async () => {
+    const { container: c, manager } = world;
+    manager.enter("grammar-haw-001");
+    await vi.waitFor(() => expect(c.querySelector(".room-world")).toBeTruthy());
+
+    expect(c.classList.contains("room-theme-tropical")).toBe(true); // pack-declared skin
+    expect(c.querySelectorAll(".grammar-slot")).toHaveLength(3);
+    expect(c.querySelectorAll(".grammar-slot-label")).toHaveLength(0); // no prompt in the boxes
+    expect(c.querySelectorAll(".grammar-word")).toHaveLength(4);       // 3 + one decoy
+    // Always on screen, no keypress needed: the sentence being built, in English.
+    expect(text(c, ".room-hud-title")).toContain("Kaleo is a teacher");
+
+    press(c, "Enter"); // past the on_enter greeting → the tutorial card
+    press(c, "Enter"); // "predicate first" → the PATTERN beat
+    expect(speech(c)).toContain("he + [what it is] + [who]");
+    expect(speech(c)).toContain("He haumāna ʻo Leilani"); // the worked example
+    press(c, "Escape"); // skip the rest — the room is live again
+
+    press(c, "t");
+    expect(text(c, ".task-overlay-desc")).toContain("“Kaleo is a teacher.”");
+    press(c, "t");
+
+    // The authored route (pinned move-for-move in puzzles/grammar/packPlaythrough).
+    const KEY: Record<string, string> = {
+      U: "ArrowUp", D: "ArrowDown", L: "ArrowLeft", R: "ArrowRight",
+    };
+    for (const ch of "ULUUULURDDDRDRUUURRDLLLDLUU") press(c, KEY[ch]);
+    expect(text(c, ".grammar-banner")).toContain("He kumu ʻo Kaleo");
+
+    manager.teardown();
+    expect(c.innerHTML).toBe("");
+  });
+
   it("entering a level NEVER auto-opens the menu (even one already cleared)", () => {
     const { container: c, manager } = world;
     addUnlock("grammar1.cleared"); // Grammar I is already completed
@@ -536,26 +601,49 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     manager.teardown();
   });
 
-  it("solving a level auto-opens its chooser only when the toggle is on", () => {
-    const { container: c, manager } = world;
-    // grammar-build-001's ★★★ line: the subject rides straight up, then the verb goes
-    // up the next column and is shoved LEFT into the walled slot (see its playthrough test).
-    const solution = "LUUUDDDRRUUURUL".split("").map((c2) =>
-      ({ L: "ArrowLeft", R: "ArrowRight", U: "ArrowUp", D: "ArrowDown" }[c2]!));
+  // grammar-build-001's ★★★ line: the subject rides straight up, then the verb goes up the
+  // next column and is shoved LEFT into the walled slot (see its own playthrough test).
+  const GRAMMAR_SOLUTION = "LUUUDDDRRUUURUL".split("").map((k) =>
+    ({ L: "ArrowLeft", R: "ArrowRight", U: "ArrowUp", D: "ArrowDown" }[k]!));
 
-    // Toggle ON → the winning move opens the chooser immediately (no walk to the portal).
-    // try/finally: a failure in here must not leak the toggle into the tests that follow.
-    try {
-      roomSettings.autoMenuOnSolve = true;
-      manager.enter("grammar-build-001");
-      press(c, "Enter"); // dismiss the on_enter greeting
-      for (const k of solution) press(c, k);
-      expect((c.querySelector(".room-destmenu") as HTMLElement).hidden).toBe(false);
-      expect(text(c, ".room-destmenu-title")).toBe("Base — level"); // opens on this level's rung
-      manager.teardown();
-    } finally {
-      roomSettings.autoMenuOnSolve = false; // restore the default
-    }
+  it("solving a level opens the LEVEL COMPLETE card, and its Next button travels", () => {
+    const { container: c, manager } = world;
+    manager.enter("grammar-build-001");
+    press(c, "Enter"); // dismiss the on_enter greeting
+    for (const k of GRAMMAR_SOLUTION) press(c, k);
+
+    // The winning move opens the card itself — no walk back to the portal, and no
+    // setting to turn on: this is what clearing a level does now.
+    expect((c.querySelector(".room-summary") as HTMLElement).hidden).toBe(false);
+    expect(text(c, ".room-summary-title")).toBe("Grammar I");
+    // Grammar II just unlocked, so it leads. Enter on it IS the transition.
+    expect([...c.querySelectorAll(".room-summary-btn")][0].textContent).toBe("Grammar II →");
+    press(c, "Enter");
+    expect((c.querySelector(".room-summary") as HTMLElement | null)?.hidden ?? true).toBe(true);
+    expect(text(c, ".room-hud-title").length).toBeGreaterThan(0);
+    expect(c.querySelectorAll(".room-world")).toHaveLength(1); // one room, cleanly swapped
+    manager.teardown();
+  });
+
+  it("the card's cursor moves with the movement keys, and ☰ opens the chooser under it", () => {
+    const { container: c, manager } = world;
+    manager.enter("grammar-build-001");
+    press(c, "Enter");
+    for (const k of GRAMMAR_SOLUTION) press(c, k);
+
+    const buttons = () => [...c.querySelectorAll(".room-summary-btn")];
+    const cursor = () => buttons().findIndex((b) => b.classList.contains("selected"));
+    expect(cursor()).toBe(0);
+    press(c, "ArrowDown", 2); // → ☰ Choose a level
+    expect(cursor()).toBe(2);
+    press(c, "ArrowUp", 9);   // clamps at the top rather than wrapping
+    expect(cursor()).toBe(0);
+
+    press(c, "ArrowDown", 2);
+    press(c, "Enter");        // ☰ → the ordinary ladder chooser, on this level's rung
+    expect((c.querySelector(".room-summary") as HTMLElement).hidden).toBe(true);
+    expect(text(c, ".room-destmenu-title")).toBe("Base — level");
+    manager.teardown();
   });
 
   it("vocab room: shared Sokoban push locks pairs; ? reveals a meaning", () => {
@@ -631,14 +719,14 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     expect(c.innerHTML).toBe("");
   });
 
-  it("inventory focus toggles with i and esc returns to the room (not settings)", () => {
+  it("inventory focus toggles with E and esc returns to the room (not settings)", () => {
     const { container: c, manager } = world;
     manager.enter("hub");
     press(c, "Enter");      // tut-1
     press(c, "ArrowLeft");  // tut-2 (move)
     press(c, "Enter");      // tut-3 → tut-4 waits enter_door (input passes through)
 
-    press(c, "e"); // empty floor → inventory focus
+    press(c, "e"); // E opens the carry bag — its own verb, independent of what you stand on
     expect(c.querySelector(".room-inventory")!.classList.contains("focused")).toBe(true);
     press(c, "Escape"); // esc ladder: exit inventory, do NOT open settings
     expect(c.querySelector(".room-inventory")!.classList.contains("focused")).toBe(false);
@@ -654,7 +742,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
   const grabPrint = (c: HTMLElement) => {
     press(c, "ArrowUp");       // (6,6)
     press(c, "ArrowRight", 3); // (9,6) print pile
-    press(c, "e");
+    press(c, "i");
   };
 
   it("drop (q): throws the held token onto the cell the slime FACES, not onto the board", () => {
@@ -771,7 +859,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
   const boxIn = (c: HTMLElement) => {
     press(c, "ArrowUp");        // (6,6)
     press(c, "ArrowRight", 3);  // (9,6) print pile
-    press(c, "e"); press(c, "e"); // piles are infinite → two prints
+    press(c, "i"); press(c, "i"); // piles are infinite → two prints
     press(c, "ArrowUp", 5);     // (9,1)
     press(c, "ArrowLeft");      // (8,1), facing left
     press(c, "q");              // lands one on (7,1) — the cell that will be "behind"
@@ -838,7 +926,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // Collect print (9,6) then hello (10,6) → slots 1 and 2.
     grabPrint(c);
     press(c, "ArrowRight");
-    press(c, "e");
+    press(c, "i");
     expect(filledSlots(c)).toHaveLength(2);
     expect(selectedIndex()).toBe(0); // slot 1 is active by default
 
@@ -871,15 +959,15 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // Collect print / ( / "hello world" / ) — in the order they'll be placed (FIFO).
     press(c, "ArrowUp");           // (6,6)
     press(c, "ArrowRight", 3);     // (9,6) print
-    press(c, "e");
+    press(c, "i");
     press(c, "ArrowRight");        // (10,6) (
-    press(c, "e");
+    press(c, "i");
     press(c, "ArrowUp", 2);        // (10,4)
     press(c, "ArrowLeft");         // (9,4) "hello world"
-    press(c, "e");
+    press(c, "i");
     press(c, "ArrowRight", 2);     // (11,4)
     press(c, "ArrowDown", 2);      // (11,6) )
-    press(c, "e");
+    press(c, "i");
 
     // Place print ( "hello world" ) at indent 0: (1,1) (2,1) (3,1) (4,1).
     press(c, "ArrowUp", 5);        // (11,1)
@@ -909,9 +997,9 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // Collect only print and "hello world" — skip the parens.
     press(c, "ArrowUp");           // (6,6)
     press(c, "ArrowRight", 3);     // (9,6) print
-    press(c, "e");
+    press(c, "i");
     press(c, "ArrowUp", 2);        // (9,4) "hello world"
-    press(c, "e");
+    press(c, "i");
 
     // Place print "hello world" (no parens) at (1,1) (2,1).
     press(c, "ArrowUp", 3);        // (9,1)
@@ -944,11 +1032,11 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // Pick up in the WRONG order — inventory is FIFO, so: hello, then print, then world.
     press(c, "ArrowUp");        // (6,6)
     press(c, "ArrowRight", 4);  // (10,6) hello
-    press(c, "e");
+    press(c, "i");
     press(c, "ArrowLeft");      // (9,6) print
-    press(c, "e");
+    press(c, "i");
     press(c, "ArrowRight", 2);  // (11,6) world
-    press(c, "e");
+    press(c, "i");
 
     // Place all three at indent 0 → "hello print world": the right words, wrong order.
     press(c, "ArrowUp", 5);     // (11,1)
@@ -1022,13 +1110,13 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // Batch 1: collect x, =, 5 and lay line 0 "x = 5" at row 1.
     press(c, "ArrowRight", 5);  // (6,7) → (11,7)
     press(c, "ArrowUp", 4);     // (11,3) x pile
-    press(c, "e");
+    press(c, "i");
     press(c, "ArrowDown");      // (11,4)
     press(c, "ArrowLeft", 2);   // (9,4) = pile
-    press(c, "e");
+    press(c, "i");
     press(c, "ArrowRight", 2);  // (11,4)
     press(c, "ArrowDown", 2);   // (11,6) 5 pile
-    press(c, "e");
+    press(c, "i");
     press(c, "ArrowUp", 5);     // (11,1)
     press(c, "ArrowLeft", 10);  // (1,1)
     press(c, "p");                          // x
@@ -1040,10 +1128,10 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     press(c, "ArrowDown", 6);   // (3,1) → (3,7)
     press(c, "ArrowRight", 6);  // (9,7)
     press(c, "ArrowUp");        // (9,6) print pile
-    press(c, "e");
+    press(c, "i");
     press(c, "ArrowRight", 2);  // (11,6)
     press(c, "ArrowUp", 3);     // (11,3) x pile
-    press(c, "e");
+    press(c, "i");
     press(c, "ArrowUp");        // (11,2) — climb above the row-3 wall block before going left
     press(c, "ArrowLeft", 10);  // (1,2) — row 2 is clear of the walls
     press(c, "p");                          // print at (1,2)
@@ -1072,19 +1160,19 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // It's LOCKED: standing on it (4,1) and pressing pickup does nothing.
     press(c, "ArrowLeft", 2);  // (6,7) → (4,7)
     press(c, "ArrowUp", 6);    // (4,1) the prefilled )
-    press(c, "e");
+    press(c, "i");
     expect(c.querySelectorAll(".tile-placed")).toHaveLength(1); // still there — not pickable
 
     // Collect print, (, "hello world".
     press(c, "ArrowDown", 6);  // (4,7)
     press(c, "ArrowRight", 5); // (9,7)
     press(c, "ArrowUp");       // (9,6) print
-    press(c, "e");
+    press(c, "i");
     press(c, "ArrowRight");    // (10,6) (
-    press(c, "e");
+    press(c, "i");
     press(c, "ArrowUp", 2);    // (10,4)
     press(c, "ArrowLeft");     // (9,4) "hello world"
-    press(c, "e");
+    press(c, "i");
 
     // Place print ( "hello world" at (1,1)(2,1)(3,1); the locked ) already sits at (4,1).
     press(c, "ArrowUp", 3);    // (9,1)
@@ -1112,11 +1200,11 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
 
     // Header batch: collect for i in range 3 (row 6), then lay it at row 1, indent 0.
     press(c, "ArrowUp");           // (6,6)
-    press(c, "ArrowRight"); press(c, "e"); // (7,6) for
-    press(c, "ArrowRight"); press(c, "e"); // (8,6) i
-    press(c, "ArrowRight"); press(c, "e"); // (9,6) in
-    press(c, "ArrowRight"); press(c, "e"); // (10,6) range
-    press(c, "ArrowRight"); press(c, "e"); // (11,6) 3
+    press(c, "ArrowRight"); press(c, "i"); // (7,6) for
+    press(c, "ArrowRight"); press(c, "i"); // (8,6) i
+    press(c, "ArrowRight"); press(c, "i"); // (9,6) in
+    press(c, "ArrowRight"); press(c, "i"); // (10,6) range
+    press(c, "ArrowRight"); press(c, "i"); // (11,6) 3
     press(c, "ArrowUp", 5);        // (11,1)
     press(c, "ArrowLeft", 10);     // (1,1)
     press(c, "p");                          // for
@@ -1129,10 +1217,10 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // Body batch: collect print, i and lay it at row 2, INDENT 1 (cols 2,3 — one tile in).
     press(c, "ArrowDown", 3);      // (5,4)
     press(c, "ArrowRight", 2);     // (7,4) print
-    press(c, "e");
+    press(c, "i");
     press(c, "ArrowRight");        // (8,4)
     press(c, "ArrowDown", 2);      // (8,6) i
-    press(c, "e");
+    press(c, "i");
     press(c, "ArrowUp", 4);        // (8,2)
     press(c, "ArrowLeft", 6);      // (2,2) — indent 1
     press(c, "p");                          // print
@@ -1183,6 +1271,40 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
     // A permutation NEVER invents a cell: whatever the runtime seed, the multiset of
     // occupied cells is exactly the authored one (only the assignment may differ).
     expect(cells()).toEqual(authored);
+    manager.teardown();
+  });
+
+  // A RULE board is the one board `randomized` may not re-deal — its word tiles are the
+  // rules. It mirrors instead (puzzles/logic/boardTransform.ts), and this is that promise
+  // seen from outside the module: same room, every piece moved, and moved as a reflection.
+  it("modifiers: a shuffled LOGIC level mounts mirrored, not re-dealt", async () => {
+    const { container: c, manager } = world;
+    const cells = async () => {
+      await vi.waitFor(() =>
+        expect(c.querySelectorAll(".logic-board-layer .logic-cell-box").length).toBeGreaterThan(0));
+      const tile = parseFloat((c.querySelector(".room-tile-layer .tile-room") as HTMLElement).style.width);
+      return [...c.querySelectorAll<HTMLElement>(".logic-board-layer .logic-cell-box")].map((el) => {
+        const m = /translate\(([-\d.]+)px,\s*([-\d.]+)px\)/.exec(el.style.transform)!;
+        return { x: Math.round(parseFloat(m[1]) / tile), y: Math.round(parseFloat(m[2]) / tile) };
+      }).sort((a, b) => a.y - b.y || a.x - b.x);
+    };
+    const show = (list: { x: number; y: number }[]) =>
+      [...list].sort((a, b) => a.y - b.y || a.x - b.x).map((p) => `${p.x},${p.y}`).join(" ");
+
+    manager.enter("logic-rules-001");
+    const authored = await cells();
+    const w = 15, h = 11; // the level's room; the board fills its interior exactly
+    const mirrored = {
+      x: authored.map((p) => ({ x: w - 1 - p.x, y: p.y })),
+      y: authored.map((p) => ({ x: p.x, y: h - 1 - p.y })),
+      both: authored.map((p) => ({ x: w - 1 - p.x, y: h - 1 - p.y })),
+    };
+
+    manager.enter("logic-rules-001-shuffled"); // ["randomized"], variants: all three mirrors
+    const rolled = show(await cells());
+    expect(rolled).not.toBe(show(authored)); // it really is a different room…
+    // …and it is one of the level's declared reflections, never an invented layout.
+    expect([show(mirrored.x), show(mirrored.y), show(mirrored.both)]).toContain(rolled);
     manager.teardown();
   });
 
@@ -1271,7 +1393,7 @@ describe("roomHost smoke — hub → level → solve → back, through the real 
   // prompt (T) and the hint-giver marker are the only framing they get. Both render
   // through generic roomHost paths — this pins that a board room actually gets them
   // (packFraming.test.ts pins that every level supplies the content).
-  it.each(["grammar-build-002", "vocab-match-005", "vocab-en-001"])(
+  it.each(["grammar-build-002", "vocab-match-005", "vocab-match-007", "vocab-en-001"])(
     "%s: T opens its task prompt (freezing the board), and its hint-giver marker renders",
     async (id) => {
       const { container: c, manager } = world;

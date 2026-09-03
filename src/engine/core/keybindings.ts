@@ -22,9 +22,11 @@ export const COMMON_ACTIONS: ActionDef[] = [
   { id: "down", label: "Move down" },
   { id: "left", label: "Move left" },
   { id: "right", label: "Move right" },
-  { id: "pickup", label: "Pick up / inventory" },
+  { id: "pickup", label: "Pick up" },
+  { id: "inventory", label: "Open inventory" },
   { id: "place", label: "Place token" },
   { id: "drop", label: "Drop held token" },
+  { id: "attack", label: "Attack (monsters)" },
   { id: "interact", label: "Interact (Build / Run / Talk)" },
   { id: "undo", label: "Undo move" },
   { id: "reset", label: "Reset puzzle" },
@@ -47,19 +49,26 @@ export function defaultBindings(scheme: SchemeId): Bindings {
   if (scheme === "vim") {
     return {
       up: [["k"]], down: [["j"]], left: [["h"]], right: [["l"]],
-      pickup: [["d", 'w']], place: [["p"]], interact: [["Enter"]], debug: [["`"]],
+      pickup: [["d", 'w']], inventory: [["e"]], place: [["p"]], interact: [["Enter"]], debug: [["`"]],
       undo: [["u"]], reset: [["r"]], help: [["?"]], task: [["t"]], drop: [["q"]],
+      attack: [["f"]],
       clearLine: [["d", "d"]], deleteToken: [["x"]],
     };
   }
   // Minecraft's vocabulary, since the HUD is already a hotbar: E opens the inventory,
   // Q throws the held token onto the floor. (Digits 1-9 select a slot too, but those
   // are a FIXED convention handled in systems/inputDispatch — not rebindable, same as Esc.)
+  //
+  // PICK UP is its own verb on I (CLAUDE.md Rule 4), separate from E: taking a token off
+  // the floor and opening the carry bag are two different intentions, and one key doing
+  // both meant standing on a pile made E un-openable.
   return {
     up: [["ArrowUp"], ["w"]], down: [["ArrowDown"], ["s"]],
     left: [["ArrowLeft"], ["a"]], right: [["ArrowRight"], ["d"]],
-    pickup: [["e"]], place: [["p"]], interact: [["Enter"]], debug: [["`"]],
+    pickup: [["i"]], inventory: [["e"]], place: [["p"]], interact: [["Enter"]], debug: [["`"]],
     undo: [["u"]], reset: [["r"]], help: [["?"]], task: [["t"]], drop: [["q"]],
+    // F for "fight": the cell in front of you, the same one Q throws at.
+    attack: [["f"]],
   };
 }
 

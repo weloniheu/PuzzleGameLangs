@@ -49,6 +49,10 @@ export function createRoomManager(
     /** The achievements tracker's rows (main.ts owns the merged progression). Passed
      *  straight through to every room's settings panel; omitted ⇒ no Achievements tab. */
     achievements?: () => AchievementGroup[];
+    /** Passed straight through to every room's settings panel (Quit). The manager
+     *  doesn't act on it itself — main.ts's handler calls THIS manager's own
+     *  `teardown()` before leaving, same as it does for the dev pack switcher. */
+    onQuit?: () => void;
   } = {},
 ): RoomManager {
   let current: RoomHandle | null = null;
@@ -102,6 +106,7 @@ export function createRoomManager(
       // owns the cross-pack lookup, the host owns the seen-check + playback.
       tutorialFor: hooks.tutorialFor,
       achievements: hooks.achievements,
+      onQuit: hooks.onQuit,
       // A transition (door OR ladder selection) is just "enter the target".
       onDoor: (target) => enter(target),
       // Solving a room can earn an unlock (e.g. reveal the next level in the ladder).

@@ -16,6 +16,7 @@ import {
   type SchemeId, type Bindings, type Key,
 } from "../core/keybindings";
 import { renderAchievements, type AchievementGroup } from "../core/achievements";
+import { attachScrollFade } from "./scrollFade";
 import type { RoomSize } from "./camera";
 
 const SCHEME_LABELS: Record<SchemeId, string> = { standard: "Standard", vim: "Vim" };
@@ -34,10 +35,6 @@ export const roomSettings = {
   termFontPx: 14,
   scheme: "standard" as SchemeId,
   bindings: { standard: defaultBindings("standard"), vim: defaultBindings("vim") } as Record<SchemeId, Bindings>,
-  /** When ON, SOLVING a level immediately opens its destination chooser (skip
-   *  walking back to the portal). Off by default; toggle in Display. Entry never
-   *  auto-opens the menu — this is a solve-time convenience only. */
-  autoMenuOnSolve: false,
 };
 
 // --- rebind CAPTURE machine: buffer + commit timing (PURE of DOM; testable) ----------
@@ -119,6 +116,11 @@ export interface SettingsPanelDeps {
   onBeforeOpen: () => void;   // drop inventory/terminal focus before opening
   onClose: () => void;        // return focus to the room on close
   onEscape: () => void;       // the esc ladder (handles esc while the panel is open)
+  /** Leave the room for the title screen. Omitted ⇒ "Quit" stays a disabled
+   *  "coming soon" stub, same degradation as `achievements` being absent. The panel
+   *  itself only confirms the choice (buildQuitConfirm) — teardown + navigation are
+   *  the host's business, exactly like `onDoor` / `onSolved`. */
+  onQuit?: () => void;
 }
 
 export interface SettingsPanel {
@@ -140,7 +142,7 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
   settingsEl.appendChild(settingsCard);
   deps.container.appendChild(settingsEl);
 
-  let view: "menu" | "controls" | "display" | "achievements" = "menu";
+  let view: "menu" | "controls" | "display" | "achievements" | "quit" = "menu";
   let captureTarget: { action: string; slot: number } | null = null;
   let captureMsg = "";
   const machine = createCaptureMachine({ max: CAPTURE_MAX, window: CAPTURE_WINDOW, onCommit: onCaptureCommit });
@@ -152,6 +154,35 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
     p.textContent = text;
     return p;
   }
+
+  /** The SCROLLABLE middle of every screen. The head (title/back arrow) and the nav
+   *  hint stay pinned outside it (see render()); everything a builder appends into
+   *  `body` can grow past the window without pushing those out of reach. One generic
+   *  wrapper for every view — including Achievements — so navMove's scroll fallback
+   *  (below) never has to know which screen it's looking at.
+   *
+   *  Returns `mount` (append THIS to settingsCard — it also carries the top/bottom fade
+   *  tells) and `body` (append CONTENT to this). Two different nodes because the fade
+   *  divs must be siblings of the scrolling element, not inside it (else they'd scroll
+   *  away too, and stop marking the edge). */
+  function scrollBody(): { mount: HTMLDivElement; body: HTMLDivElement } {
+    const mount = document.createElement("div");
+    mount.className = "room-settings-body-wrap";
+    const body = document.createElement("div");
+    body.className = "room-settings-body";
+    const fadeTop = document.createElement("div");
+    fadeTop.className = "room-scroll-fade room-scroll-fade-top";
+    const fadeBottom = document.createElement("div");
+    fadeBottom.className = "room-scroll-fade room-scroll-fade-bottom";
+    mount.append(body, fadeTop, fadeBottom);
+    pendingFadeRepaint = attachScrollFade(body, fadeTop, fadeBottom);
+    return { mount, body };
+  }
+  // The repaint returned by the CURRENT view's scrollBody() call — render() invokes it
+  // once more after the view is fully built and (already) visible, when `body`'s real
+  // scrollHeight is known. Module-scoped because each builder calls scrollBody() itself;
+  // this is simpler than threading the function back out through every builder's return.
+  let pendingFadeRepaint: (() => void) | null = null;
 
   /** A sub-tab header: optional back arrow (→ top menu) + title. */
   function settingsHead(text: string, withBack: boolean) {
@@ -175,6 +206,7 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
 
   function buildMenu() {
     settingsCard.appendChild(settingsHead("Settings", false));
+    const { mount, body } = scrollBody();
     const list = document.createElement("div");
     list.className = "room-settings-menu";
     const entries: [string, (() => void) | null][] = [
@@ -183,7 +215,7 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
       ...(deps.achievements ? [["Achievements", () => setView("achievements")] as [string, () => void]] : []),
       ["Controls", () => setView("controls")],
       ["Display", () => setView("display")],
-      ["Quit", null], // stub — wired in a later phase
+      ["Quit", deps.onQuit ? () => setView("quit") : null],
     ];
     for (const [text, onClick] of entries) {
       const b = document.createElement("button");
@@ -200,17 +232,48 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
       }
       list.appendChild(b);
     }
-    settingsCard.appendChild(list);
+    body.appendChild(list);
     const close = document.createElement("button");
     close.type = "button";
     close.className = "room-settings-close";
     close.textContent = "Close";
     close.onclick = () => closePanel();
-    settingsCard.appendChild(close);
+    body.appendChild(close);
+    settingsCard.appendChild(mount);
+  }
+
+  /** Quit confirm: its own sub-screen (not a click-through) so a mis-keyed Enter on the
+   *  menu can never fall straight through into discarding an in-progress program — the
+   *  cursor lands on "Cancel" here, never on "Quit to title". */
+  function buildQuitConfirm() {
+    settingsCard.appendChild(settingsHead("Quit?", true));
+    const { mount, body } = scrollBody();
+    const warn = document.createElement("p");
+    warn.className = "room-settings-help-text";
+    warn.textContent = "Returns to the title screen. Anything placed but not solved in this room is lost — earned unlocks are not.";
+    body.appendChild(warn);
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "room-menu-entry";
+    cancel.textContent = "Cancel";
+    cancel.onclick = () => setView("menu");
+    const confirm = document.createElement("button");
+    confirm.type = "button";
+    confirm.className = "room-settings-reset";
+    confirm.textContent = "Quit to title";
+    confirm.onclick = () => deps.onQuit?.();
+    // Cancel BEFORE Confirm: the safe choice comes first either way you reach it — the
+    // cursor's actual default landing spot on this screen is the head's own "←" button
+    // (every sub-tab has one; see settingsHead), which is functionally Cancel too. Either
+    // way, quitting needs a deliberate move onto "Quit to title" — never the reflexive
+    // second Enter after opening this screen.
+    body.append(cancel, confirm);
+    settingsCard.appendChild(mount);
   }
 
   function buildControls() {
     settingsCard.appendChild(settingsHead("Controls", true));
+    const { mount, body } = scrollBody();
 
     // Two scheme SUB-TABS. The selected sub-tab is also the ACTIVE (live) scheme.
     const tabs = document.createElement("div");
@@ -223,13 +286,13 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
       b.onclick = () => { roomSettings.scheme = s; cancelCapture(); render(); };
       tabs.appendChild(b);
     }
-    settingsCard.append(settingsLabel("Scheme — ←→ to pick, ⏎ to make it active"), tabs);
+    body.append(settingsLabel("Scheme — ←→ to pick, ⏎ to make it active"), tabs);
 
     if (roomSettings.scheme === "standard") {
       const note = document.createElement("p");
       note.className = "room-settings-help-text";
       note.textContent = "Standard: arrows AND WASD both move you. Select a binding to remap it.";
-      settingsCard.appendChild(note);
+      body.appendChild(note);
     }
 
     // Editable bindings for the viewed scheme.
@@ -257,13 +320,13 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
       row.append(name, chips);
       list.appendChild(row);
     }
-    settingsCard.append(settingsLabel("Keys — ⏎ on a key to remap it · Esc cancels"), list);
+    body.append(settingsLabel("Keys — ⏎ on a key to remap it · Esc cancels"), list);
 
     // Reserved + conflict messages.
     const msg = document.createElement("p");
     msg.className = `room-settings-help-text${captureMsg ? " warn" : ""}`;
     msg.textContent = captureMsg || "Esc is reserved for the menu and can't be bound.";
-    settingsCard.appendChild(msg);
+    body.appendChild(msg);
 
     // Test Mode — QA toggle: shows every hub portal and every level as unlocked,
     // without earning them. Independent of Reset (below): flip it off to see real
@@ -278,7 +341,7 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
       b.onclick = () => { deps.setTestMode(val); render(); };
       testRow.appendChild(b);
     }
-    settingsCard.append(settingsLabel("Test Mode — unlock every level"), testRow);
+    body.append(settingsLabel("Test Mode — unlock every level"), testRow);
 
     // Replay Tutorials: tutorials now play ONCE (persisted — core/codex.ts) and stay
     // quiet after that. This is the deliberate way back in — re-shows every tutorial on
@@ -290,7 +353,7 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
     replay.textContent = "📖 Replay Tutorials";
     replay.title = "Every tutorial plays again on next entry — earned progress is untouched";
     replay.onclick = () => deps.resetSeenTutorials();
-    settingsCard.appendChild(replay);
+    body.appendChild(replay);
 
     const reset = document.createElement("button");
     reset.type = "button";
@@ -304,21 +367,28 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
       );
       if (ok) deps.resetCodex();
     };
-    settingsCard.appendChild(reset);
+    body.appendChild(reset);
+    settingsCard.appendChild(mount);
   }
 
   /** The ACHIEVEMENTS tab — the same tracker the title screen shows, rendered by the
    *  shared renderer so the two surfaces can never drift apart. Read-only. */
   function buildAchievementsView() {
     settingsCard.appendChild(settingsHead("Achievements", true));
-    const box = document.createElement("div");
-    box.className = "room-settings-achievements";
-    renderAchievements(box, deps.achievements?.() ?? []);
-    settingsCard.appendChild(box);
+    const { mount, body } = scrollBody();
+    // Nothing else on this screen is a navRows entry (the rows renderAchievements draws
+    // are <li>s, not buttons — see navMove's fallback), so `body` IS the whole screen.
+    renderAchievements(body, deps.achievements?.() ?? []);
+    settingsCard.appendChild(mount);
   }
 
   function buildDisplay() {
     settingsCard.appendChild(settingsHead("Display", true));
+    const { mount, body } = scrollBody();
+    // Attached immediately (not at the end): buildDisplay returns EARLY when there's no
+    // terminal to size, and `body` still needs to be in the tree for whatever it already
+    // holds by that point. Appending more children to an attached node afterward is fine.
+    settingsCard.appendChild(mount);
 
     // Room size: Fill window / Small / Medium / Large.
     const sizeRow = document.createElement("div");
@@ -335,20 +405,11 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
       b.onclick = () => { roomSettings.roomSize = val; render(); deps.relayout(); };
       sizeRow.appendChild(b);
     }
-    settingsCard.append(settingsLabel("Room size"), sizeRow);
+    body.append(settingsLabel("Room size"), sizeRow);
 
-    // Auto-open the level chooser the moment a puzzle is solved (opt-in).
-    const autoRow = document.createElement("div");
-    autoRow.className = "room-settings-schemes";
-    for (const [val, text] of [[true, "On"], [false, "Off"]] as [boolean, string][]) {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = `room-scheme-btn${roomSettings.autoMenuOnSolve === val ? " active" : ""}`;
-      b.textContent = text;
-      b.onclick = () => { roomSettings.autoMenuOnSolve = val; render(); };
-      autoRow.appendChild(b);
-    }
-    settingsCard.append(settingsLabel("Open menu on solve"), autoRow);
+    // (The old "Open menu on solve" toggle lived here. Solving a level now always opens the
+    // LEVEL COMPLETE card — see engine/systems/levelSummary.ts — and one of its buttons is
+    // that very chooser, so there is no longer a preference to express.)
 
     // Terminal text size — only when this room HAS a terminal (else there's nothing to size).
     if (!deps.hasTerminal) return;
@@ -380,7 +441,7 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
     sample.textContent = '>>> print("hello, world")';
     sample.style.fontSize = `${roomSettings.termFontPx}px`;
 
-    settingsCard.append(settingsLabel("Terminal text size"), presetRow, stepRow, sample);
+    body.append(settingsLabel("Terminal text size"), presetRow, stepRow, sample);
   }
 
   // --- keyboard navigation (Rule 4: the panel is driven by the MOVEMENT keys) ---
@@ -402,21 +463,27 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
       lastStrip = strip;
     }
   }
-  /** Paint the cursor (clamping it into whatever the latest render produced). */
+  /** Paint the cursor (clamping it into whatever the latest render produced), and drag
+   *  the SCROLLABLE body along with it — a long Controls list (16 rows and growing) or
+   *  ladder-style screen must never let the cursor move onto a row the player can't see. */
   function paintNav() {
     for (const row of navRows) for (const b of row) b.classList.remove("nav-cursor");
     if (!navRows.length) return;
     cursor = moveCursor(navRows.map((r) => r.length), cursor, "none");
-    navRows[cursor.row][cursor.col].classList.add("nav-cursor");
+    const focused = navRows[cursor.row][cursor.col];
+    focused.classList.add("nav-cursor");
+    focused.scrollIntoView?.({ block: "nearest" });
   }
   function navMove(action: string) {
-    // A read-only screen (Achievements) has one control — ← Back — and a long list
-    // behind it, so up/down SCROLL it rather than fighting over a single row. Without
-    // this the keyboard could never reach the bottom of the tracker.
-    const scroller = settingsCard.querySelector<HTMLElement>(".room-settings-achievements");
-    if (scroller && (action === "up" || action === "down")) {
-      scroller.scrollTop += action === "down" ? SCROLL_STEP : -SCROLL_STEP;
-      return;
+    // A read-only screen (Achievements) has ONE control — ← Back — and a long list of
+    // non-interactive rows behind it, so scrollIntoView above never reaches past the top:
+    // there is nothing else in navRows to move the cursor onto. Up/down SCROLL the body
+    // directly in that case (the only case: any screen with ≥2 real rows relies on the
+    // scrollIntoView above instead, so a row NEVER silently sits off both the cursor's
+    // reach and the scroll fallback's).
+    if ((action === "up" || action === "down") && navRows.length < 2) {
+      const body = settingsCard.querySelector<HTMLElement>(".room-settings-body");
+      if (body) { body.scrollTop += action === "down" ? SCROLL_STEP : -SCROLL_STEP; return; }
     }
     cursor = moveCursor(navRows.map((r) => r.length), cursor, action);
     paintNav();
@@ -437,6 +504,7 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
     if (view === "controls") buildControls();
     else if (view === "display") buildDisplay();
     else if (view === "achievements") buildAchievementsView();
+    else if (view === "quit") buildQuitConfirm();
     else buildMenu();
     const hint = document.createElement("p");
     hint.className = "room-settings-nav-hint";
@@ -444,6 +512,10 @@ export function createSettingsPanel(deps: SettingsPanelDeps): SettingsPanel {
     settingsCard.appendChild(hint);
     collectNav();
     paintNav();
+    // Now that the view is fully built and the panel is visible, its real scroll height
+    // is known — repaint the fade tell against that (the one taken at scrollBody() time
+    // was on an empty, not-yet-inserted node and cannot be trusted).
+    pendingFadeRepaint?.();
     settingsEl.focus({ preventScroll: true });
   }
 

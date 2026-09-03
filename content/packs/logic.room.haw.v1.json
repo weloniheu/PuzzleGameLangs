@@ -428,7 +428,13 @@
       ],
       "tutorial_refs": [
         "tier:shuffled"
-      ]
+      ],
+      "mechanics": {
+        "variants": [
+          "mirror-x",
+          "mirror-both"
+        ]
+      }
     },
     {
       "id": "logic-haw-000-shrouded",
@@ -517,7 +523,13 @@
       ],
       "tutorial_refs": [
         "tier:shrouded"
-      ]
+      ],
+      "mechanics": {
+        "variants": [
+          "mirror-x",
+          "mirror-both"
+        ]
+      }
     },
     {
       "id": "logic-haw-001-shuffled",
@@ -607,7 +619,13 @@
       ],
       "tutorial_refs": [
         "tier:shuffled"
-      ]
+      ],
+      "mechanics": {
+        "variants": [
+          "mirror-x",
+          "mirror-both"
+        ]
+      }
     },
     {
       "id": "logic-haw-001-shrouded",
@@ -698,7 +716,13 @@
       ],
       "tutorial_refs": [
         "tier:shrouded"
-      ]
+      ],
+      "mechanics": {
+        "variants": [
+          "mirror-x",
+          "mirror-both"
+        ]
+      }
     },
     {
       "id": "logic-haw-002-shuffled",
@@ -790,7 +814,14 @@
       ],
       "tutorial_refs": [
         "tier:shuffled"
-      ]
+      ],
+      "mechanics": {
+        "variants": [
+          "mirror-x",
+          "mirror-y",
+          "mirror-both"
+        ]
+      }
     },
     {
       "id": "logic-haw-002-shrouded",
@@ -883,7 +914,14 @@
       ],
       "tutorial_refs": [
         "tier:shrouded"
-      ]
+      ],
+      "mechanics": {
+        "variants": [
+          "mirror-x",
+          "mirror-y",
+          "mirror-both"
+        ]
+      }
     },
     {
       "id": "logic-haw-003-shuffled",
@@ -975,7 +1013,12 @@
       ],
       "tutorial_refs": [
         "tier:shuffled"
-      ]
+      ],
+      "mechanics": {
+        "variants": [
+          "mirror-y"
+        ]
+      }
     },
     {
       "id": "logic-haw-003-shrouded",
@@ -1068,7 +1111,12 @@
       ],
       "tutorial_refs": [
         "tier:shrouded"
-      ]
+      ],
+      "mechanics": {
+        "variants": [
+          "mirror-y"
+        ]
+      }
     }
   ],
   "progression": [

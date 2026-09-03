@@ -20,6 +20,7 @@ const CODE_PACK = "/content/packs/python.code.v1.json";
 const LOGIC_ROOM_PACK = "/content/packs/logic.room.en.v1.json";
 const LOGIC_ROOM_HAW_PACK = "/content/packs/logic.room.haw.v1.json"; // ʻōlelo Hawaiʻi track
 const GRAMMAR_ROOM_PACK = "/content/packs/grammar.room.en.v1.json";
+const GRAMMAR_ROOM_HAW_PACK = "/content/packs/grammar.room.haw.v1.json"; // ʻōlelo Hawaiʻi track
 const VOCAB_ROOM_PACK = "/content/packs/vocab.room.haw.v1.json";
 const VOCAB_ROOM_EN_PACK = "/content/packs/vocab.room.en.v1.json"; // English synonym tier
 
@@ -119,17 +120,17 @@ const tutorialsById = new Map<string, TutorialBlock>();   // shared first-encoun
  *  tutorial map. Kicked off at boot (not on Start) so the title screen's achievements
  *  tracker has the progression data to read. */
 async function loadWorld() {
-  const [hub, code, logic, logicHaw, grammar, vocab, vocabEn] = await Promise.all([
+  const [hub, code, logic, logicHaw, grammar, grammarHaw, vocab, vocabEn] = await Promise.all([
     loadPack(HUB_PACK), loadPack(CODE_PACK), loadPack(LOGIC_ROOM_PACK),
-    loadPack(LOGIC_ROOM_HAW_PACK), loadPack(GRAMMAR_ROOM_PACK), loadPack(VOCAB_ROOM_PACK),
-    loadPack(VOCAB_ROOM_EN_PACK),
+    loadPack(LOGIC_ROOM_HAW_PACK), loadPack(GRAMMAR_ROOM_PACK), loadPack(GRAMMAR_ROOM_HAW_PACK),
+    loadPack(VOCAB_ROOM_PACK), loadPack(VOCAB_ROOM_EN_PACK),
   ]);
-  for (const p of [...hub.puzzles, ...code.puzzles, ...logic.puzzles, ...logicHaw.puzzles, ...grammar.puzzles, ...vocab.puzzles, ...vocabEn.puzzles]) {
+  for (const p of [...hub.puzzles, ...code.puzzles, ...logic.puzzles, ...logicHaw.puzzles, ...grammar.puzzles, ...grammarHaw.puzzles, ...vocab.puzzles, ...vocabEn.puzzles]) {
     roomRegistry.set(p.id, p);
   }
   // Merge each pack's progression → the per-type ladder (stamped levels + locked
   // languages) and tutorials → id map (first-encounter).
-  for (const pack of [hub, code, logic, logicHaw, grammar, vocab, vocabEn]) {
+  for (const pack of [hub, code, logic, logicHaw, grammar, grammarHaw, vocab, vocabEn]) {
     for (const prog of pack.progression ?? []) {
       const ladder = laddersByType.get(prog.puzzle_type) ?? { levels: [], lockedLanguages: [] };
       const stamped: LadderLevel[] = prog.levels.map((lv) => ({
@@ -170,6 +171,12 @@ async function bootHub() {
         onBeforeMount: useFullscreen,
         tutorialFor: (id) => tutorialsById.get(id) ?? null,
         achievements: achievementGroups,
+        // Settings → Quit (after its own confirm): leave the room and land back on the
+        // title screen — the same one boot shows, restarted the same way (bootHub).
+        onQuit: () => {
+          roomManager?.teardown();
+          showTitleScreen(bootHub);
+        },
       },
     );
   }
@@ -195,10 +202,23 @@ if (import.meta.env.DEV) {
 }
 
 // --- title screen (STYLE 3a "Dawn grove"): morning sky, the mascot, the menu ---
-// Pure chrome over the boot: ▶ Start tears it down and enters the hub; 🏆 Achievements
-// opens the tracker over it. Driven by the SAME movement bindings as the game (arrows /
-// WASD, or hjkl in vim) so the menus feel like one control scheme.
+// NOT shown at boot any more: the game starts IN the hub (see the bottom of this file).
+// This is now the QUIT destination only — Settings → Quit leaves the room and lands here,
+// where ▶ Start walks back in and 🏆 Achievements opens the tracker. Driven by the SAME
+// movement bindings as the game (arrows / WASD, or hjkl in vim) so the menus feel like
+// one control scheme.
 function showTitleScreen(onStart: () => void) {
+  // Defensive re-entry guard: Quit calls this a SECOND time (boot calls it once). A
+  // stray leftover instance would mean two DOM trees and two `window` keydown listeners
+  // racing each other — normally impossible (this function's own `start()` always tears
+  // its instance down before the next one is ever built), but cheap enough to make
+  // structurally impossible rather than merely "shouldn't happen".
+  document.querySelector(".title-screen")?.remove();
+  // Match the pre-Start page state (Quit is a return trip, not a fresh boot): the
+  // fullscreen room host and its body class are boot-time OFF until Start is pressed.
+  gameRoot.hidden = true;
+  document.body.classList.remove("fullscreen-game");
+
   const screen = document.createElement("div");
   screen.className = "title-screen";
   screen.innerHTML = `
@@ -285,4 +305,7 @@ function showTitleScreen(onStart: () => void) {
   panel.addEventListener("pointerdown", (e) => { if (e.target === panel) closeAchievements(); });
 }
 
-showTitleScreen(bootHub);
+// BOOT: straight into the hub. There is no Start gate — the world loads and the player is
+// already standing in it. (The title screen above still exists as the QUIT landing spot,
+// which is a deliberate "I want out", not a thing to press on the way in.)
+bootHub();

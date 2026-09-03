@@ -459,7 +459,16 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   padding: 1.1rem 1.25rem; border-radius: 16px;
   border: 2px solid var(--panel-wood-border);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  /* The card itself never scrolls — its HEIGHT is capped, and only the body wrap
+     (below) grows a scrollbar. Head + nav-hint (siblings of the wrap) stay pinned. */
+  display: flex; flex-direction: column;
+  max-height: min(82vh, 640px);
 }
+.room-settings-head, .room-settings-nav-hint { flex: none; } /* pinned, never shrink */
+/* The scrollable middle (settingsPanel.ts scrollBody()) — one wrapper reused by every
+   screen, so a long Controls list, Display, or Achievements all scroll the same way. */
+.room-settings-body-wrap { position: relative; flex: 1 1 auto; min-height: 0; }
+.room-settings-body { height: 100%; overflow-y: auto; padding-right: 2px; }
 .room-settings-title { margin: 0 0 1rem; font-weight: 700; font-size: 1.15rem; }
 .room-settings-label {
   margin: 0 0 0.4rem; color: #a99574; font-family: "IBM Plex Mono", monospace;
@@ -746,8 +755,11 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   position: absolute;
   display: flex; align-items: center; justify-content: center;
   pointer-events: none; /* gameplay is keyboard-only (Rule 4) — never a click target */
-  animation: dropped-bob 1.6s ease-in-out infinite;
 }
+/* The BOB lives on the label, not on the box: the box's transform is the cell POSITION
+   (written per-item by roomHost.drawDropped), and an animation's transform outranks an
+   inline one — animating the box would park every dropped item at the world origin. */
+.room-dropped-label { animation: dropped-bob 1.6s ease-in-out infinite; }
 /* The item itself is a small chip inside the cell box, so the cell stays walkable-looking. */
 .room-dropped-label {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
@@ -763,15 +775,199 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   50%      { transform: translateY(-13%); }
 }
 /* Last DROP_WARN_MS before despawn: blink out so it reads as "about to go". */
-.room-dropped.expiring { animation: dropped-bob 1.6s ease-in-out infinite, dropped-expire 0.5s ease-in-out infinite; }
+.room-dropped.expiring .room-dropped-label { animation: dropped-bob 1.6s ease-in-out infinite, dropped-expire 0.5s ease-in-out infinite; }
 @keyframes dropped-expire {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.25; }
 }
 @media (prefers-reduced-motion: reduce) {
   /* Keep the meaning (it is fading), drop the movement. */
-  .room-dropped { animation: none; }
-  .room-dropped.expiring { animation: none; opacity: 0.45; }
+  .room-dropped-label { animation: none; }
+  .room-dropped.expiring .room-dropped-label { animation: none; opacity: 0.45; }
+}
+/* MONSTER LOOT: a dropped token that was FOUGHT for. Same item, warmer tell, so a
+   just-killed monster's drop is findable in a room that may also hold Q-dropped tokens. */
+.room-loot .room-dropped-label {
+  color: #2a1c0d;
+  background: linear-gradient(#ffdf9a, #e2a34e);
+  border-color: rgba(120, 74, 20, 0.55);
+}
+/* LOOT TAG (8a): a thin ring in the accent of the monster it came from, so the drop
+   still reads as "that thing's" once the body is gone. */
+.room-loot-carrier .room-dropped-label { box-shadow: 0 0 0 2px color-mix(in srgb, var(--mon-carrier) 70%, transparent); }
+.room-loot-thief .room-dropped-label { box-shadow: 0 0 0 2px color-mix(in srgb, var(--mon-hunt) 70%, transparent); }
+
+/* Monster skin tokens (8a): ONE shared body tint per room theme, plus the two role
+   accents — carrier and thief-hunt. Declared on .room-world because both the monster
+   layer and the loot a monster drops sit inside it and must read the same values.
+   Grove is the default; the host's `.room-theme-*` re-points them. */
+.room-world {
+  --mon-body: #8a7256;
+  --mon-carrier: #c85a3c;
+  --mon-hunt: #8f7ff0;
+}
+.room-theme-tropical .room-world { --mon-body: #2f8a72; --mon-carrier: #ff7a45; --mon-hunt: #3fb8af; }
+.room-theme-library .room-world { --mon-body: #5c4636; --mon-carrier: #8a3324; --mon-hunt: #5a4a8a; }
+.room-theme-tech .room-world { --mon-body: #2f4258; --mon-carrier: #d9534f; --mon-hunt: #35c2e0; }
+
+/* MONSTERS (feature "monsters") — the roaming alternative to a pile: the token walks
+   around and has to be fought for. The COLOUR is done (8a: shared body + role accents,
+   tinted per room skin — see the tokens above); the GLYPH is still whatever the pack
+   authored, so this is styled but not yet illustrated. Every hook a further art pass
+   needs is classed and catalogued (VISUAL_CATALOG §2b).
+   The two phases must stay VISUALLY DISTINCT — that difference is the rule the player
+   plays by (a telegraph is not solid and cannot be hit; an active monster is both). */
+.room-monster-layer { position: absolute; top: 0; left: 0; }
+.tile-monster {
+  position: absolute;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1px;
+  pointer-events: none; /* keyboard-only (Rule 4) — you attack it, you never click it */
+  z-index: 2;
+  transition: transform 0.16s linear; /* the wander step slides instead of teleporting */
+}
+.tile-monster[hidden] { display: none; }
+/* TELEGRAPH: "something is arriving here". Not solid, not attackable — a warning mark on
+   the floor, deliberately smaller and flatter than the monster that follows. */
+.tile-monster.telegraph .tile-monster-glyph {
+  color: #ffdf9a;
+  text-shadow: 0 0 6px rgba(255, 150, 60, 0.9);
+  animation: monster-telegraph 0.6s ease-in-out infinite;
+}
+.tile-monster.telegraph { opacity: 0.9; }
+@keyframes monster-telegraph {
+  0%, 100% { transform: scale(0.85); opacity: 0.55; }
+  50%      { transform: scale(1.1); opacity: 1; }
+}
+/* ACTIVE: a body. Solid, attackable, and the only thing that can drop loot. The OUTER
+   falloff is --mon-body, shared by every monster in the room; the CORE carries the role
+   accent. "Something is here" and "which kind" stay two separate reads (8a). */
+.tile-monster.active {
+  background: radial-gradient(ellipse at 50% 60%,
+    color-mix(in srgb, var(--mon-carrier) 78%, transparent),
+    color-mix(in srgb, var(--mon-body) 26%, transparent) 70%, transparent 78%);
+}
+.tile-monster.active .tile-monster-glyph { animation: monster-idle 1.4s ease-in-out infinite; }
+@keyframes monster-idle {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-8%) scale(1.04); }
+}
+.tile-monster-glyph { line-height: 1; }
+/* The token it is CARRYING (or its authored name) — the reason to fight it. */
+.tile-monster-label {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-weight: 600; line-height: 1;
+  max-width: 96%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  padding: 1px 3px; border-radius: 4px;
+  color: #ffe9c4; background: rgba(38, 16, 20, 0.75);
+}
+.tile-monster-hp { color: #ff8a8a; line-height: 1; letter-spacing: 1px; }
+/* A landed hit: a flash for MONSTER_HURT_MS, so "that connected" is never ambiguous. */
+.tile-monster.hurt { filter: brightness(2.1) saturate(0.4); }
+
+/* THIEF (MonsterBehavior "thief", §2c): a distinct silhouette from a carrier's warm-red
+   glow, so "this one steals, it doesn't just hold something" reads before anything
+   happens. HUNTING and CARRYING are the two sub-states a thief adds on top of the shared
+   telegraph/active machinery — see engine/core/monsters.ts. */
+.tile-monster.active.tile-monster-thief {
+  background: radial-gradient(ellipse at 50% 60%,
+    color-mix(in srgb, var(--mon-hunt) 74%, transparent),
+    color-mix(in srgb, var(--mon-body) 26%, transparent) 70%, transparent 78%);
+}
+/* HUNTING: prowling for something to take — announced BEFORE any steal happens (the
+   fairness rule this whole tell exists for; see core/monsters.ts's "announces before it
+   takes"). A slow outer pulse, distinct from the carrier's idle bob. */
+.tile-monster.hunting { animation: thief-hunt-pulse 1s ease-in-out infinite; }
+@keyframes thief-hunt-pulse {
+  0%, 100% { filter: none; }
+  50%      { filter: brightness(1.25); }
+}
+/* CARRYING: it has something of yours. The label already shows WHAT (see drawSlot in
+   systems/monsters.ts); this is the "at risk right now" silhouette. */
+.tile-monster.carrying { box-shadow: 0 0 0 2px rgba(255, 210, 120, 0.55); border-radius: 8px; }
+/* The digest ring: a fill bar draining over digest_ms while carrying — the rescue
+   window, made visible. Empty/hidden outside that state (see drawSlot). */
+.tile-monster-digest {
+  display: none;
+  width: 80%; height: 3px; border-radius: 2px;
+  background: rgba(0, 0, 0, 0.45); overflow: hidden;
+}
+.tile-monster.carrying .tile-monster-digest { display: block; }
+.tile-monster-digest-fill {
+  display: block; height: 100%; background: #ffb347;
+  transition: width 0.1s linear; /* matches MONSTER_TICK_MS — a smooth drain, not a stepped one */
+}
+@media (prefers-reduced-motion: reduce) {
+  .tile-monster { transition: none; }
+  .tile-monster.telegraph .tile-monster-glyph,
+  .tile-monster.active .tile-monster-glyph { animation: none; }
+  /* The telegraph still has to READ as pending, so keep it dimmed rather than pulsing. */
+  .tile-monster.telegraph { opacity: 0.75; }
+  .tile-monster.hunting { animation: none; filter: brightness(1.1); }
+  .tile-monster-digest-fill { transition: none; }
+}
+
+/* The swing itself — fired on the faced cell whether or not anything was there, so a miss
+   reads as a miss. One-shot, ATTACK_SWIPE_MS. */
+.room-attack-swipe {
+  position: absolute; z-index: 7; pointer-events: none;
+  color: #fff3d2; font-weight: 700; line-height: 1;
+  text-shadow: 0 0 8px rgba(255, 210, 120, 0.9);
+  animation: attack-swipe 0.22s ease-out forwards; /* keep in sync with ATTACK_SWIPE_MS */
+}
+@keyframes attack-swipe {
+  0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.5) rotate(-25deg); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.35) rotate(20deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .room-attack-swipe { animation: attack-swipe-fade 0.22s linear forwards; transform: translate(-50%, -50%); }
+  @keyframes attack-swipe-fade { to { opacity: 0; } }
+}
+
+/* THIEF cell markers — "which token is about to go, before it goes" (§2c). Sits under
+   the placed token it warns about (that layer draws separately — see the coding module),
+   so the tint reads as a property of the CELL, not a replacement for what's on it. */
+.room-steal-target {
+  position: absolute; z-index: 1; pointer-events: none;
+  box-shadow: inset 0 0 0 2px rgba(150, 90, 220, 0.6);
+  background: rgba(120, 60, 200, 0.12);
+  animation: steal-target-pulse 1s ease-in-out infinite;
+}
+.room-steal-target[hidden] { display: none; }
+@keyframes steal-target-pulse {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+/* The grab — one-shot, STEAL_FLASH_MS, on the cell that was JUST robbed. */
+.room-steal-flash {
+  position: absolute; z-index: 8; pointer-events: none;
+  transform: translate(-50%, -50%);
+  width: 1.4em; height: 1.4em; margin-left: -0.7em; margin-top: -0.7em;
+  border-radius: 50%; border: 2px solid rgba(200, 140, 255, 0.85);
+  animation: steal-flash 0.26s ease-out forwards; /* keep in sync with STEAL_FLASH_MS */
+}
+@keyframes steal-flash {
+  0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.4); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.6); }
+}
+/* Digested — the rescue window ran out. Same "gone" language as a void-puff (§2), on
+   purpose: both mean "you will need to fetch that again", just from a different cause. */
+.room-digest-puff {
+  position: absolute; z-index: 6; pointer-events: none;
+  transform: translate(-50%, -50%);
+  color: #c79bff; font-family: "IBM Plex Mono", monospace; font-weight: 700;
+  animation: digest-puff 0.7s ease-out forwards; /* keep in sync with DIGEST_PUFF_MS */
+}
+@keyframes digest-puff {
+  0%   { opacity: 0.95; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, 30%) scale(0.55); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .room-steal-target { animation: none; opacity: 0.85; }
+  .room-steal-flash { animation: steal-flash-fade 0.26s linear forwards; transform: translate(-50%, -50%); }
+  @keyframes steal-flash-fade { to { opacity: 0; } }
+  .room-digest-puff { animation: digest-puff-fade 0.7s linear forwards; }
+  @keyframes digest-puff-fade { to { opacity: 0; } }
 }
 
 /* Placed token: dropped into the coding area — brighter amber + a snap pop (3i). */
@@ -942,6 +1138,16 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   border: 2px solid var(--panel-wood-border);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
   display: flex; flex-direction: column; gap: 0.5rem;
+  /* The card's HEIGHT is capped; only the row list (below) grows a scrollbar — the
+     title and the ↑↓/Enter/Esc hint stay pinned so a long ladder still reads as a
+     chooser, not a wall of rows with no way to tell where you are or how to leave. */
+  max-height: min(82vh, 640px);
+}
+.room-destmenu-title, .room-destmenu-hint { flex: none; }
+.room-destmenu-list-wrap { position: relative; flex: 1 1 auto; min-height: 0; }
+.room-destmenu-list {
+  height: 100%; overflow-y: auto; padding-right: 2px;
+  display: flex; flex-direction: column; gap: 0.5rem;
 }
 .room-destmenu-title { margin: 0 0 0.5rem; font-weight: 700; font-size: 1.15rem; }
 .room-destmenu-option {
@@ -967,6 +1173,123 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
 }
 .room-destmenu-option.selected .room-destmenu-tag { background: var(--amber-ink); color: var(--amber); border-color: var(--amber-ink); }
 .room-destmenu-hint { margin: 0.4rem 0 0; color: #8a7a63; font-family: "IBM Plex Mono", monospace; font-size: 0.7rem; text-align: center; }
+
+/* LEVEL COMPLETE card (engine/systems/levelSummary.ts) — opens the instant a level is
+   solved: the grade, what the run cost, and where to go next. Sits ABOVE the chooser
+   (z 61 vs 60): one of its own buttons opens that chooser underneath it.
+   STYLE 9a — a reward moment, not a preferences dialog: the grade is a pressed wax
+   seal, the stats read as a ledger, and the card wears the room's own skin. */
+.room-summary {
+  position: fixed; inset: 0; z-index: 61;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  font-family: "Fredoka", system-ui, sans-serif;
+}
+.room-summary[hidden] { display: none; }
+/* Skin tokens (9a). The card lives inside the room container, so the `.room-theme-*`
+   the host already stamps there re-points these: grove wood by default, then tropical /
+   library / tech below. STYLE axis only — keyed on the skin token, never on a language. */
+.room-summary-card {
+  --sum-card: linear-gradient(#7a5433, #5f4326);
+  --sum-border: #4a3016;
+  --sum-ink: #f4ead4;
+  --sum-foot: #c9b98a;
+  --sum-grade-ink: #f2c66b;
+  width: 320px; max-width: 92vw; max-height: min(88vh, 680px); overflow-y: auto;
+  background: var(--sum-card); color: var(--sum-ink);
+  padding: 20px; border-radius: 16px; border: 3px solid var(--sum-border);
+  box-shadow: 0 26px 50px rgba(0, 0, 0, 0.55);
+  animation: summary-pop 260ms cubic-bezier(0.2, 1.3, 0.5, 1) both;
+}
+.room-theme-tropical .room-summary-card {
+  --sum-card: linear-gradient(#0f4a3e, #0a3730); --sum-border: #0a3730;
+  --sum-ink: #eafff5; --sum-foot: #8fd8c4; --sum-grade-ink: #ff9d6b;
+}
+.room-theme-library .room-summary-card {
+  --sum-card: linear-gradient(#2a1a18, #1c1210); --sum-border: #1c1210;
+  --sum-ink: #ecdfc8; --sum-foot: #a7907a; --sum-grade-ink: #c99a4a;
+}
+.room-theme-tech .room-summary-card {
+  --sum-card: linear-gradient(#141b26, #0c1119); --sum-border: #0c1119;
+  --sum-ink: #dfe9f5; --sum-foot: #7fa3c9; --sum-grade-ink: #35c2e0;
+}
+@keyframes summary-pop {
+  from { transform: scale(0.88) translateY(12px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+.room-summary-banner {
+  margin: 0 0 14px; text-align: center; color: var(--sum-foot);
+  font-family: "IBM Plex Mono", monospace; font-size: 11px;
+  font-weight: 700; letter-spacing: 0.14em;
+}
+/* The level's name is context, not the headline — the seal below it is. */
+.room-summary-title { margin: 0 0 16px; text-align: center; font-size: 13px; color: var(--sum-ink); }
+/* Grade block: the wax seal leads, stars are the second glance, points a footnote. */
+.room-summary-grade { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 18px; }
+.room-summary-seal {
+  position: relative; width: 76px; height: 76px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: radial-gradient(circle at 35% 30%,
+    color-mix(in srgb, var(--sum-grade-ink) 93%, transparent),
+    color-mix(in srgb, var(--sum-grade-ink) 60%, transparent) 70%);
+  border: 3px solid rgba(0, 0, 0, 0.25);
+  box-shadow: inset 0 3px 6px rgba(255, 255, 255, 0.35),
+              inset 0 -4px 8px rgba(0, 0, 0, 0.35),
+              0 6px 14px rgba(0, 0, 0, 0.4);
+}
+.room-summary-seal-shine {
+  position: absolute; inset: 4px; border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #fff, transparent 55%);
+  animation: summary-seal-shine 2400ms ease-in-out infinite;
+}
+@keyframes summary-seal-shine {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.4; }
+}
+.room-summary-letter {
+  font-family: "IBM Plex Mono", monospace; font-weight: 800; font-size: 30px;
+  color: #2c1a10; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.room-summary-stars { font-size: 15px; letter-spacing: 2px; color: var(--sum-grade-ink); }
+.room-summary-points { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; color: var(--sum-foot); }
+/* Ledger, not chips: one hairline top and bottom, label left, value right in mono digits. */
+.room-summary-stats {
+  display: flex; flex-direction: column; gap: 2px; padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+.room-summary-row { display: flex; align-items: center; gap: 6px; padding: 6px 4px; }
+.room-summary-label { flex: 1 1 auto; font-size: 12px; color: var(--sum-foot); }
+.room-summary-value {
+  flex: none; font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 13px;
+  color: var(--sum-ink);
+}
+/* Only a row that actually COST something wears a chip — a clean run reads clean. */
+.room-summary-penalty {
+  flex: none; font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 700;
+  color: #e0534f; background: rgba(224, 83, 79, 0.14);
+  padding: 1px 6px; border-radius: 8px;
+}
+.room-summary-actions { display: flex; flex-direction: column; gap: 7px; margin-top: 16px; }
+.room-summary-btn {
+  cursor: pointer; text-align: center; padding: 10px 14px; border-radius: 10px;
+  font-family: "IBM Plex Mono", monospace; font-size: 13px; font-weight: 600;
+  color: var(--sum-ink); background: rgba(255, 255, 255, 0.06);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+}
+/* The headline choice keeps a firmer edge even once the cursor moves off it. */
+.room-summary-btn.primary { border-color: rgba(255, 255, 255, 0.28); }
+/* Selected is NOT hover: the gold fill is the keyboard cursor; hover is a faint lift
+   that never moves it, so a stray mouse can't be mistaken for where Enter goes. */
+.room-summary-btn:hover:not(.selected) { background: rgba(255, 255, 255, 0.11); }
+.room-summary-btn.selected {
+  background: linear-gradient(#f2c66b, #e0a53f); color: #3a2410;
+  border-color: #b07d2a; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35);
+}
+.room-summary-hint {
+  margin: 12px 0 0; text-align: center; color: var(--sum-foot);
+  font-family: "IBM Plex Mono", monospace; font-size: 10px;
+}
 
 /* Hint giver's "?" marker (3i's red help key). */
 .room-marker-layer { position: absolute; top: 0; left: 0; }
@@ -1235,6 +1558,54 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   60%     { transform: translate(0, 0) scale(1); }
   75%     { transform: translate(0, -5px) scale(1); }
   90%, 100% { transform: translate(0, 0) scale(1); }
+}
+
+/* attack (F): the slime lunges at the monster in front of it, a swipe flashes, and the
+   monster drops what it was carrying — the whole loop in one picture. */
+.tdemo-attack { gap: 10px; }
+.tdemo-attack-slime { animation: tdemo-lunge 2.2s ease-in-out infinite; }
+.tdemo-attack-swipe {
+  font-size: 1.1rem; color: #fff3d2;
+  animation: tdemo-swipe 2.2s ease-in-out infinite;
+}
+.tdemo-attack-foe { font-size: 1.2rem; animation: tdemo-foe-hit 2.2s ease-in-out infinite; }
+.tdemo-attack-loot { animation: tdemo-loot-fall 2.2s ease-in-out infinite; }
+@keyframes tdemo-lunge {
+  0%, 25% { transform: translateX(0); }
+  35%     { transform: translateX(9px); }
+  50%, 100% { transform: translateX(0); }
+}
+@keyframes tdemo-swipe {
+  0%, 28%   { opacity: 0; transform: scale(0.5) rotate(-25deg); }
+  38%       { opacity: 1; transform: scale(1.2) rotate(15deg); }
+  52%, 100% { opacity: 0; transform: scale(1.3) rotate(20deg); }
+}
+@keyframes tdemo-foe-hit {
+  0%, 33%   { opacity: 1; transform: scale(1); filter: none; }
+  40%       { opacity: 1; transform: scale(1.12); filter: brightness(2.2); }
+  60%, 100% { opacity: 0; transform: scale(0.6); }
+}
+@keyframes tdemo-loot-fall {
+  0%, 55%   { opacity: 0; transform: translateY(-10px) scale(0.6); }
+  70%       { opacity: 1; transform: translateY(0) scale(1); }
+  100%      { opacity: 1; transform: translateY(-3px) scale(1); }
+}
+
+/* steal: the REVERSE arc of "place" — a tile lifts OUT of its slot into a creature's
+   hand, instead of snapping in. The thief concept: something eats code you already
+   placed, not you. */
+.tdemo-steal { gap: 14px; }
+.tdemo-steal-chip { animation: tdemo-lift-out 2.2s ease-in-out infinite; }
+.tdemo-steal-thief { font-size: 1.2rem; animation: tdemo-thief-grab 2.2s ease-in-out infinite; }
+@keyframes tdemo-lift-out {
+  0%, 30%   { transform: translate(0, 0) scale(1); opacity: 1; }
+  60%       { transform: translate(22px, -14px) scale(0.75); opacity: 1; }
+  75%, 100% { transform: translate(22px, -14px) scale(0.75); opacity: 0; }
+}
+@keyframes tdemo-thief-grab {
+  0%, 45%   { transform: scale(1); }
+  60%       { transform: scale(1.18); }
+  75%, 100% { transform: scale(1); }
 }
 
 /* build: a chunky button depresses, then a checkmark flashes. */
@@ -1660,8 +2031,6 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
 }
 .achievements-row.earned { opacity: 1; }
 .achievements-mark { color: #f0cd6a; width: 1em; flex: none; }
-.room-settings-achievements { max-height: 46vh; overflow-y: auto; }
-
 /* The settings panel's KEYBOARD cursor. Mouse hover must never look like the cursor,
    so this is an outline (structural) rather than a background swap. */
 .room-settings-card button.nav-cursor {
@@ -1671,3 +2040,25 @@ body.fullscreen-game { overflow: hidden; } /* the fixed host owns the window; no
   margin: 0.9rem 0 0; font-family: "IBM Plex Mono", monospace; font-size: 0.72rem;
   letter-spacing: 0.04em; color: var(--panel-muted); text-align: center;
 }
+
+/* Scroll-edge fade (systems/scrollFade.ts): "there is more above/below" — a max-height
+   list alone can look like it simply ENDS. Two thin bars pinned to the body-wrap's own
+   edges (siblings of the scroller, so they never scroll away with it), invisible until
+   the scroller actually has that edge cut off. Colors approximate the wood gradient
+   behind them; exact-match blending is a later visual pass (VISUAL_CATALOG §10). */
+.room-scroll-fade {
+  position: absolute; left: 0; right: 0; height: 22px; pointer-events: none;
+  opacity: 0; transition: opacity 0.15s ease; z-index: 1;
+}
+.room-scroll-fade.visible { opacity: 1; }
+.room-scroll-fade-top {
+  top: 0; background: linear-gradient(var(--panel-wood-hi), transparent);
+}
+.room-scroll-fade-bottom {
+  bottom: 0; background: linear-gradient(transparent, var(--panel-wood-lo));
+}
+
+/* Quit confirm sub-screen (settingsPanel.ts buildQuitConfirm). Reuses the reset
+   button's "this is destructive-ish" red for the actual quit action, and the plain
+   menu-entry look for Cancel, so the two rows read as different weight at a glance. */
+.room-settings-body .room-menu-entry { margin-bottom: 0.5rem; }

@@ -2,12 +2,13 @@ import type {
   Puzzle, MatchPayload, MatchSolution, PuzzleType, ValidatorType,
   SentencePayload, ReorderSolution, CombinePayload, CombineSolution,
   CodeBuildPayload, CodeBuildSolution, LogicRulesPayload, GrammarBuildPayload, VocabMatchPayload,
-  MechanicTier, CodeMode, Modifier,
+  MechanicTier, CodeMode, Modifier, MonsterBehavior, BoardTransform,
 } from "../schema/types";
 import { MAX_DIFFICULTY } from "../schema/types";
 import { hasRenderer } from "../engine/renderers";
 import { hasValidator } from "../engine/validators";
 import { moduleFor } from "../puzzles";
+import { normalizeContent, requiresPunctuation } from "../puzzles/coding/codeGameLogic";
 
 const PUZZLE_TYPES: PuzzleType[] = [
   "match", "fill_blank", "reorder", "sentence_build", "combine", "code_build",
@@ -21,6 +22,8 @@ const VALIDATOR_TYPES: ValidatorType[] = [
 const MECHANIC_TIERS: MechanicTier[] = ["base", "mixed", "explicit", "env_clues", "concept_modes"];
 const CODE_MODES: CodeMode[] = ["assemble", "debug", "predict"];
 const MODIFIERS: Modifier[] = ["randomized", "lowlight"];
+const BOARD_TRANSFORMS: BoardTransform[] = ["mirror-x", "mirror-y", "mirror-both"];
+const MONSTER_BEHAVIORS: MonsterBehavior[] = ["carrier", "thief"];
 
 /**
  * The single source of truth for "is this puzzle usable?". Used BOTH when loading
@@ -55,6 +58,16 @@ export function validatePuzzle(p: unknown): { ok: boolean; errors: string[] } {
   if (o.modifiers !== undefined) {
     if (!Array.isArray(o.modifiers)) errors.push(`modifiers must be an array`);
     else for (const m of o.modifiers) if (!MODIFIERS.includes(m)) errors.push(`unknown modifier "${m}"`);
+  }
+  // mechanics.variants — the BOARD TRANSFORMS `randomized` may roll (closed set, like the
+  // modifiers above). A typo here would silently disable a level's variety rather than
+  // fail, so it is checked at load like every other closed-set token.
+  const variants = (o.mechanics as { variants?: unknown } | undefined)?.variants;
+  if (variants !== undefined) {
+    if (!Array.isArray(variants)) errors.push(`mechanics.variants must be an array`);
+    else for (const v of variants) {
+      if (!BOARD_TRANSFORMS.includes(v as BoardTransform)) errors.push(`unknown board transform "${v}"`);
+    }
   }
   // tutorial_refs (shared first-encounter tutorials) — shape only; the pack-level cross-check
   // that each id resolves lives in loadPack, which has the tutorials map.
@@ -177,6 +190,95 @@ export function validatePuzzle(p: unknown): { ok: boolean; errors: string[] } {
       }
     }
     if (!o.room) errors.push(`vocab_match puzzles are room-only: "room" is required`);
+  }
+
+  // MONSTERS (any room puzzle type may declare them — see RoomLayout.monsters). The feature
+  // flag and the table have to arrive together: a table with no feature is dead data, and a
+  // feature with no table is a room that promises monsters and spawns none. Both silently
+  // produce a level whose tokens are UNREACHABLE, which is the failure worth being loud about.
+  if (o.room) {
+    const declared = (o.room.features ?? []).includes("monsters");
+    const table = o.room.monsters;
+    if (declared && !table?.spawns?.length) {
+      errors.push(`the "monsters" feature needs room.monsters.spawns`);
+    }
+    if (!declared && table) errors.push(`room.monsters is ignored unless "monsters" is in features`);
+    // THIEF-ONLY timings: engine defaults cover the rest (spawn/respawn/move/loot), but
+    // these two govern the rescue window and the hunt cooldown — a zero or negative value
+    // would make either instantaneous, which is never the author's intent.
+    for (const [key, val] of [
+      ["digest_ms", table?.digest_ms], ["steal_cooldown_ms", table?.steal_cooldown_ms],
+    ] as const) {
+      if (val !== undefined && (typeof val !== "number" || val <= 0)) {
+        errors.push(`monsters.${key} must be > 0 (got ${val})`);
+      }
+    }
+    for (const m of table?.spawns ?? []) {
+      const label = m.token ?? "(thief)";
+      if (m.behavior !== undefined && !MONSTER_BEHAVIORS.includes(m.behavior)) {
+        errors.push(`monster "${label}" has an unknown behavior "${m.behavior}"`);
+      }
+      const thief = m.behavior === "thief";
+      // A carrier's whole identity IS its cargo; a thief's is whatever it steals — the two
+      // are mutually exclusive, and a def carrying both fields is a level that doesn't know
+      // which one it authored.
+      if (!thief && (typeof m.token !== "string" || !m.token.trim())) {
+        errors.push(`a carrier monster needs a loot token`);
+      }
+      if (thief && m.token !== undefined) {
+        errors.push(`a thief must not declare "token" — it steals, it doesn't spawn holding one`);
+      }
+      if (m.hp !== undefined && (typeof m.hp !== "number" || m.hp < 1)) {
+        errors.push(`monster "${label}" has hp ${m.hp} (expected ≥ 1)`);
+      }
+      // An authored spawn cell must be floor — otherwise the monster silently relocates
+      // every time, and the level's authored layout is a lie.
+      if (m.pos) {
+        const legend: Record<string, string> = {
+          "#": "wall", ".": "floor", D: "door", O: "pit", S: "spawn",
+          ...(o.room.legend ?? {}),
+        };
+        const ch = o.room.tiles?.[m.pos.y]?.[m.pos.x];
+        const meaning = ch === undefined ? undefined : legend[ch];
+        if (meaning !== "floor" && meaning !== "spawn") {
+          errors.push(`monster "${label}" spawns on a non-floor cell`);
+        }
+      }
+    }
+
+    // THE SOFTLOCK GUARD: a thief redistributes EXISTING supply — it never manufactures a
+    // token — so every token the accepted solution needs must be reachable WITHOUT ever
+    // depending on a thief handing it back (piles are infinite, loot despawns, digests are
+    // permanent). Scoped to code_build/coding_area, the one room shape a thief can actually
+    // steal from today (MountedPuzzle.stealTargets — see engine/puzzleModule.ts).
+    if (o.puzzle_type === "code_build" && o.room.features?.includes("coding_area")
+        && (table?.spawns ?? []).some((m) => m.behavior === "thief")) {
+      const sol = o.solution as CodeBuildSolution | undefined;
+      const variants = [...(sol?.lines ? [sol.lines] : []), ...(sol?.accepted ?? [])];
+      const punct = requiresPunctuation(o.mechanics);
+      const prefilled = (o.room.coding_area?.prefilled ?? []).map((p) => p.token);
+      const piles = (o.room.piles ?? []).map((p) => p.token);
+      const carrierLoot = (table?.spawns ?? [])
+        .filter((m) => m.behavior !== "thief")
+        .map((m) => m.token)
+        .filter((t): t is string => typeof t === "string");
+      const available = new Set(normalizeContent([...piles, ...carrierLoot, ...prefilled], punct));
+      const unsafe = new Set<string>();
+      for (const variant of variants) {
+        for (const line of variant) {
+          for (const tok of normalizeContent(line.content, punct)) {
+            if (!available.has(tok)) unsafe.add(tok);
+          }
+        }
+      }
+      for (const tok of unsafe) {
+        errors.push(
+          `token "${tok}" has no thief-proof source (a pile, a carrier's loot, or ` +
+          `coding_area.prefilled) — a level with a thief can never rely on a thief's OWN ` +
+          `loot as that token's only supply, or it can be permanently softlocked by a digest`,
+        );
+      }
+    }
   }
 
   // code_build: there must be tokens to assemble and a target output.

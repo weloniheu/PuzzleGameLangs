@@ -13,7 +13,9 @@
 // button, panel dragging, and to focus the room for keyboard (Rule 4).
 // ---------------------------------------------------------------------------
 
-import type { DialogueBeat, DialogueConfig, DialogueSpeaker, Puzzle, TutorialBlock } from "../schema/types";
+import type {
+  DialogueBeat, DialogueConfig, DialogueSpeaker, MonsterBehavior, Puzzle, TutorialBlock,
+} from "../schema/types";
 import {
   parseRoom, step, pileAt, isWalkable, resolveDropTarget, MOVE,
   type Cell, type Direction,
@@ -24,7 +26,7 @@ import {
 } from "./core/codex";
 import { createTeardown } from "./core/teardown";
 import { resolveFeatures, resolveInventorySlots } from "./core/roomFeatures";
-import type { LadderData } from "./core/ladder";
+import { nextLevel, type LadderData } from "./core/ladder";
 import type { AchievementGroup } from "./core/achievements";
 import { mulberry32, randomSeed, shufflePositions } from "./core/shuffle";
 import { renderTileLayer } from "./systems/tileLayer";
@@ -37,6 +39,10 @@ import { createInventoryHud } from "./systems/inventoryHud";
 import { createPortals } from "./systems/portals";
 import { resolveEscape } from "./systems/focus";
 import { createInputDispatch } from "./systems/inputDispatch";
+import { createMonsters, ATTACK_SWIPE_MS, type Monsters } from "./systems/monsters";
+import { createLevelSummary } from "./systems/levelSummary";
+import { scoreRun } from "./core/score";
+import { HUB_ID } from "./core/progression";
 import type { EngineContext, MountedPuzzle } from "./puzzleModule";
 import { moduleFor } from "../puzzles";
 
@@ -74,6 +80,10 @@ export interface RoomCallbacks {
   /** The ACHIEVEMENTS tracker's rows, recomputed fresh on each open so a key earned
    *  this session shows immediately. Omitted ⇒ settings hides the Achievements tab. */
   achievements?: () => AchievementGroup[];
+  /** Leave the room for the title screen (Settings → Quit, after its own confirm).
+   *  Omitted ⇒ Quit stays a disabled "coming soon" stub. The room does not decide what
+   *  "quit" means — same shape as onDoor / onSolved, resolved one layer up. */
+  onQuit?: () => void;
 }
 /** Handle to a mounted room. `teardown()` destroys EVERYTHING the room created. */
 export interface RoomHandle {
@@ -117,6 +127,16 @@ export function mountRoom(
 
   const room = parseRoom(layout);
   let pos: Cell = { ...room.spawn };
+
+  // RUN STATS — what the level-complete card scores (see core/score.ts). Four things the
+  // engine can see for ANY puzzle type: the clock, the walking, the hints served, and the
+  // failed attempts a module reports through ctx.reportMiss. Reset by construction: a room
+  // mounts fresh, so re-entering a level starts a new run.
+  const runStartedAt = Date.now();
+  let runSteps = 0;
+  let runHints = 0;
+  let runMisses = 0;
+  let solved = false; // the card opens on the FIRST solve only (Run again ≠ a new clear)
 
   // AXIS-3 MODIFIERS (see schema Modifier) — read once at mount, dispatch-only.
   const modifiers = new Set(puzzle.modifiers ?? []);
@@ -200,6 +220,11 @@ export function mountRoom(
   // relayout can reposition them without disturbing piles or the module's placed tokens.
   const droppedLayer = document.createElement("div");
   droppedLayer.className = "room-dropped-layer";
+  // Monsters (FEATURE-GATED): the roaming alternative to a pile — the room's tokens walk
+  // around and have to be fought for. Its own layer so the lifecycle can repaint without
+  // touching piles, loot, or the module's placed tokens.
+  const monsterLayer = document.createElement("div");
+  monsterLayer.className = "room-monster-layer";
   const slime = createSlime();
 
   viewport.appendChild(world);
@@ -246,6 +271,7 @@ export function mountRoom(
     getTestMode,
     setTestMode,
     achievements: callbacks.achievements,
+    onQuit: callbacks.onQuit,
     onBeforeOpen: () => dropFocusToRoom(), // clear inventory/panel focus before opening
     onClose: focusRoom,
     onEscape: () => handleEscape(),        // route esc through the room's esc ladder
@@ -296,10 +322,48 @@ export function mountRoom(
     onTransition: (target) => callbacks.onDoor?.(target), // manager tears THIS room down + mounts target
   });
 
+  // --- the LEVEL COMPLETE card (system): opened by ctx.onSolved, below. Every one of
+  //     its destination buttons commits through the SAME teleport-away sequence the
+  //     chooser uses, so finishing a level travels exactly like walking a portal. ---
+  const summary = createLevelSummary({
+    container,
+    onChoose: (action) => {
+      switch (action.kind) {
+        case "next": portals.travelTo(action.id, action.flashColor); return;
+        case "replay": portals.travelTo(puzzle.id); return; // remount = a fresh run + fresh stats
+        case "menu": portals.openDestinationMenu(); return;
+        case "hub": portals.travelTo(HUB_ID); return;
+        case "stay": focusRoom();                           // dismissed — back into the solved room
+      }
+    },
+  });
+
+  /** Build and show the card for the run that just ended: the score (core/score.ts)
+   *  and the next rung of THIS type's ladder (core/ladder.ts), both computed from a
+   *  FRESH snapshot so the unlock this solve just earned already counts. */
+  function openSummary() {
+    const data = callbacks.menuLadder?.() ?? null;
+    const here = data?.levels.find((lv) => lv.id === puzzle.id) ?? null;
+    const next = data ? nextLevel(data) : null;
+    summary.open({
+      title: here?.label ?? puzzle.metadata?.concept ?? "",
+      card: scoreRun(
+        {
+          elapsedMs: Date.now() - runStartedAt,
+          steps: runSteps,
+          hints: runHints,
+          misses: runMisses,
+        },
+        puzzle.mechanics?.par ?? {},
+      ),
+      next: next ? { id: next.id, label: next.label, flashColor: next.flashColor } : null,
+    });
+  }
+
   // Order matters for stacking; module layers slot in around these (see addLayer).
   world.append(tileLayer, portals.doorLayer);
   if (portals.menuPortalEl) world.append(portals.menuPortalEl); // below the slime, which spawns on top of it
-  world.append(markerLayer, pileLayer, droppedLayer, slime);
+  world.append(markerLayer, pileLayer, droppedLayer, monsterLayer, slime);
 
   // --- the puzzle-type MODULE: looked up by registry, mounted with engine services ---
   let mounted: MountedPuzzle | null = null;
@@ -325,6 +389,7 @@ export function mountRoom(
       const dx = Math.sign(cell.x - pos.x);
       const dy = Math.sign(cell.y - pos.y);
       if (dx || dy) {
+        runSteps++; // a board module's move is still the player's move — scored the same
         faceDirection({ dx, dy });
         squishForStep();
         puffDust(pos);
@@ -335,16 +400,53 @@ export function mountRoom(
     dialogue,
     inventory: inv,
     onSolved: () => {
+      const first = !solved;
+      solved = true;
       callbacks.onSolved?.(puzzle);
-      // AUTO-MENU ON SOLVE (toggleable): the moment a level is completed, open its
-      // destination chooser so the player can move on without walking back to the
-      // portal. Only level rooms have a chooser. Generic — no puzzle-type branching.
-      if (roomSettings.autoMenuOnSolve && callbacks.menuLadder) portals.openDestinationMenu();
+      // LEVEL COMPLETE: the moment a level is cleared, the score card takes over —
+      // how the run went, and where to go next (which is why there's no walk back to
+      // the portal any more). Only LEVEL rooms have a ladder, so only they get a card.
+      // Generic — no puzzle-type branching.
+      if (first && callbacks.menuLadder) openSummary();
     },
+    reportMiss: () => { runMisses++; },
     teardown,
   };
   const module = moduleFor(puzzle.puzzle_type);
   mounted = module ? module.mount(ctx, puzzle) : null;
+
+  // Declared here (ahead of its own "TASK overlay" section, further down) purely so the
+  // monsters block below can close over it — mutated by openTask/closeTask as always.
+  let taskOpen = false;
+
+  // --- monsters (FEATURE-GATED system): built only when the room declares BOTH the
+  //     feature and a monster table. Mounted AFTER the module so its free-cell test can
+  //     already see the module's furniture (placed tokens, Build/Run), and so its THIEF
+  //     wiring (stealTargets/takeToken) can reach into that same module. ---
+  const monsters: Monsters | null =
+    features.has("monsters") && layout.monsters?.spawns?.length
+      ? createMonsters({
+          room,
+          config: layout.monsters,
+          layer: monsterLayer,
+          tile: () => tile,
+          // Same occupancy test a thrown token uses, plus the player: a monster must not
+          // spawn or step onto the cell the slime is standing on.
+          isFree: (c) => freeForDrop(c) && !(c.x === pos.x && c.y === pos.y),
+          onLoot: (token, cell, kind, ttl, from) =>
+            spawnDropped(token, cell, { ttlMs: ttl, kind, loot: true, from }),
+          // THIEF MONSTERS (see engine/puzzleModule.ts): the room module owns what is
+          // stealable — a room whose module doesn't implement these (or has no thief in
+          // its table) simply never has either called in a way that matters.
+          stealTargets: () => mounted?.stealTargets?.() ?? [],
+          takeToken: (cell) => mounted?.takeToken?.(cell) ?? null,
+          // Freeze hunting/stealing/digesting while the player can't respond — the same
+          // states that already swallow every gameplay key (see dispatchAction's context()
+          // below), the finished level's score card among them.
+          inputBlocked: () =>
+            dialogue.blocksInput() || taskOpen || portals.isDestMenuOpen() || summary.isOpen(),
+        })
+      : null;
 
   /**
    * The ONE esc decision — the pure ladder lives in systems/focus; this is the wiring.
@@ -404,6 +506,7 @@ export function mountRoom(
     dialogue.buildMarker(tile);
     buildPiles();
     drawDropped();
+    monsters?.relayout();
     mounted?.relayout(); // module layers (zone, controls, placed, panel clamp)
     applyViewport();
   }
@@ -536,10 +639,14 @@ export function mountRoom(
     } else {
       const before = pos;
       faceDirection(dir); // eyes track travel direction even on a wall bump
-      pos = step(room, pos, dir);
+      // An ACTIVE monster is solid: you can't walk through the thing holding the token,
+      // you have to fight it. A telegraph marker is not — it's a warning, not a body.
+      const ahead = { x: pos.x + dir.dx, y: pos.y + dir.dy };
+      pos = monsters?.occupies(ahead) ? pos : step(room, pos, dir);
       draw();
       // GUIDED TUTORIAL: a step waiting on "move" needs an ACTUAL move — bumping a wall doesn't count.
       if (pos.x !== before.x || pos.y !== before.y) {
+        runSteps++; // scored: a wall bump is free, a step is not
         squishForStep();
         puffDust(before);
         autoPickupAt(pos); // walked onto a dropped token → it comes back with you
@@ -558,12 +665,20 @@ export function mountRoom(
     if (inventory.isFull()) dialogue.fireFirstTime("first_inventory_full");
   }
 
-  /** pickup fallthrough (the module already declined): pile here → toggle focus. */
+  /** pickup fallthrough (the module already declined its own claim — e.g. a placed
+   *  token): take from the pile under the player. TAKING ONLY — opening the carry bag is
+   *  a separate verb on its own key (see pressInventory), because one key doing both
+   *  meant a player standing on a pile could not open their inventory at all. */
   function pressPickup() {
-    if (!inv) return; // no inventory feature → nothing to pick up or focus
+    if (!inv) return; // no inventory feature → nothing to pick up
     const here = pileAt(room, pos.x, pos.y);
-    if (here) { tryPickup(inv, here.token); return; }
-    if (inv.focused()) { exitInventory(); } else { inv.enterFocus(); }
+    if (here) tryPickup(inv, here.token);
+  }
+
+  /** Toggle inventory focus (the hotbar cursor). Independent of what you are standing on. */
+  function pressInventory() {
+    if (!inv) return; // no inventory feature → nothing to focus
+    if (inv.focused()) exitInventory(); else inv.enterFocus();
   }
 
   // --- DROPPED ITEMS (Q): transient tokens lying on the floor ------------------
@@ -600,6 +715,7 @@ export function mountRoom(
     if (pileAt(room, c.x, c.y) || droppedAt(c.x, c.y)) return false;
     if (portals.doorAt(c.x, c.y) || portals.onMenuPortal(c.x, c.y)) return false;
     if (dialogue.onHintGiver(c.x, c.y)) return false;
+    if (monsters?.occupies(c)) return false; // an active monster is standing there
     return !mounted?.occupies?.(c);
   }
 
@@ -675,10 +791,23 @@ export function mountRoom(
     window.setTimeout(() => el.remove(), 700);
   }
 
-  /** Put `token` on the floor at `cell` and start its despawn countdown. */
-  function spawnDropped(token: string, cell: Cell) {
+  /** Put `token` on the floor at `cell` and start its despawn countdown. `opts` is how
+   *  MONSTER LOOT differs from a Q-drop: it lies around longer (it was earned) and wears
+   *  the `.room-loot` tell. Everything after landing — walk-over pickup, the expiry warn,
+   *  the despawn — is identical, deliberately: loot is a dropped token, not a new thing. */
+  function spawnDropped(
+    token: string,
+    cell: Cell,
+    opts: { ttlMs?: number; kind?: string; loot?: boolean; from?: MonsterBehavior } = {},
+  ) {
+    const ttl = opts.ttlMs ?? DROP_TTL_MS;
     const el = document.createElement("div");
     el.className = "room-dropped";
+    if (opts.loot) el.classList.add("room-loot");
+    // 8a's loot tag: the drop keeps the accent of the ROLE it was fought off, so it
+    // still reads as "came from that thing" once the body is gone.
+    if (opts.from) el.classList.add(`room-loot-${opts.from}`);
+    if (opts.kind === "punctuation") el.classList.add("tile-token-punct");
     const label = document.createElement("span");
     label.className = "room-dropped-label";
     label.textContent = token;
@@ -687,8 +816,8 @@ export function mountRoom(
     const d: DroppedItem = { token, x: cell.x, y: cell.y, timer: 0, el };
     // Warn before it goes: the last stretch fades/blinks so a despawn is never a silent
     // disappearance the player only notices afterwards.
-    const warn = window.setTimeout(() => el.classList.add("expiring"), DROP_TTL_MS - DROP_WARN_MS);
-    d.timer = window.setTimeout(() => { clearTimeout(warn); clearDropped(d); }, DROP_TTL_MS);
+    const warn = window.setTimeout(() => el.classList.add("expiring"), Math.max(0, ttl - DROP_WARN_MS));
+    d.timer = window.setTimeout(() => { clearTimeout(warn); clearDropped(d); }, ttl);
     dropped.push(d);
     drawDropped();
   }
@@ -717,6 +846,29 @@ export function mountRoom(
     dialogue.fireFirstTime("first_pickup");
   }
 
+  /** Swing at the cell the slime FACES — the same cell the Q drop throws at, so "in front
+   *  of you" means one thing in this game. A hit lands only on an ACTIVE monster; the
+   *  swipe itself always shows, so a miss reads as a miss rather than as a dead key.
+   *  Defeat (loot, respawn) is the monster system's business — see systems/monsters.ts. */
+  function pressAttack() {
+    if (!monsters) return; // no monsters in this room → nothing to swing at
+    const target = { x: pos.x + facing.dx, y: pos.y + facing.dy };
+    swipeAt(target);
+    if (monsters.attackAt(target)) dialogue.notify("attack"); // GUIDED TUTORIAL: a real hit
+  }
+
+  /** The swing itself — a one-shot mark on the targeted cell. Self-removing. */
+  function swipeAt(cell: Cell) {
+    const el = document.createElement("div");
+    el.className = "room-attack-swipe";
+    el.style.left = `${(cell.x + 0.5) * tile}px`;
+    el.style.top = `${(cell.y + 0.5) * tile}px`;
+    el.style.fontSize = `${Math.round(tile * 0.6)}px`;
+    el.textContent = "✧";
+    world.appendChild(el);
+    window.setTimeout(() => el.remove(), ATTACK_SWIPE_MS);
+  }
+
   function doInteract() {
     if (inv?.focused()) { if (inv.hasPendingDrop()) inv.confirmDrop(); return; }
     if (mounted?.onInteract(pos)) return;          // stand on a module object (Build / Run) → activate
@@ -727,7 +879,7 @@ export function mountRoom(
     if (menuHere || d || hintHere) dialogue.notify("interact");
     if (menuHere) { portals.openDestinationMenu(); return; }
     if (d) { portals.activateDoor(d); return; }
-    if (hintHere) dialogue.talkToHint();
+    if (hintHere) { runHints++; dialogue.talkToHint(); } // scored: a hint is help, and help costs
   }
 
   // TASK overlay (systems/taskOverlay.ts) — the goalSpec prompt. Its own concern, not
@@ -735,7 +887,8 @@ export function mountRoom(
   // module needs to know the "task" action exists. Opening/closing repaints the same
   // scrim; the board-freeze is a SEPARATE flag (taskOverlayOpen) fed to inputDispatch,
   // same mechanism dialogue.blocksInput() already uses (see systems/inputDispatch.ts).
-  let taskOpen = false;
+  // (`taskOpen` itself is declared earlier — see the monsters block above, which closes
+  // over it too.)
   function openTask() {
     if (!hasTask || taskOpen) return;
     taskOpen = true;
@@ -755,7 +908,9 @@ export function mountRoom(
     if (mounted?.onAction?.(action)) return;
     if (MOVE[action]) { moveOrCursor(MOVE[action]); return; }
     if (action === "pickup") { pressPickup(); return; }
+    if (action === "inventory") { pressInventory(); return; }
     if (action === "drop") { pressDrop(); return; }
+    if (action === "attack") { pressAttack(); return; }
     if (action === "interact") doInteract();
   }
 
@@ -767,6 +922,7 @@ export function mountRoom(
       dialogueBlocks: dialogue.blocksInput(),
       dialogueCanSkip: dialogue.canSkip(),
       destMenuOpen: portals.isDestMenuOpen(),
+      summaryOpen: summary.isOpen(),
       taskOverlayOpen: taskOpen,
     }),
     onDialogueAdvance: () => dialogue.advance(),
@@ -774,6 +930,9 @@ export function mountRoom(
     onDestEscape: () => handleEscape(),
     onDestSelect: () => portals.selectDestination(),
     onDestMove: (delta) => portals.moveDestSel(delta),
+    onSummaryDismiss: () => { summary.close(); focusRoom(); },
+    onSummarySelect: () => summary.select(),
+    onSummaryMove: (delta) => summary.moveSel(delta),
     onEscape: () => handleEscape(),
     onTaskClose: () => closeTask(),
     onSlot: (index) => inv?.selectSlot(index), // hotbar 1-9; no inventory ⇒ nothing to select
@@ -855,6 +1014,7 @@ export function mountRoom(
     for (const d of [...dropped]) clearDropped(d);            // dropped-token despawn timers
     for (const f of inFlight) { clearTimeout(f.timer); f.el.remove(); } // mid-air ricochets
     inFlight.length = 0;
+    monsters?.teardown();               // the monster clock + its hit-flash timers
     settings.cancelCapture();             // drop any pending rebind-capture timer
   });
   teardown.add(() => {

@@ -9,7 +9,7 @@
 // ---------------------------------------------------------------------------
 
 import type { DialogueBeat, RoomControl } from "../../schema/types";
-import { pileAt, type Cell } from "../../engine/core/room";
+import { inCodingArea, pileAt, type Cell } from "../../engine/core/room";
 import type { EngineContext } from "../../engine/puzzleModule";
 import {
   runAny as runProgram,
@@ -104,6 +104,10 @@ export interface CodingAreaDeps {
   /** Punctuation tier: the order-checker keeps + requires punctuation tokens (see
    *  codeGameLogic.requiresPunctuation). Derived from the puzzle's mechanics. */
   requirePunctuation: boolean;
+  /** The level's RENAMEABLE tokens — variable/parameter names the player may swap for one
+   *  another, as long as they do it consistently (see codeGameLogic.checkProgram). CONTENT:
+   *  the pack flags them `renameable`; empty means every token is compared literally. */
+  names: ReadonlySet<string>;
   /** Pretend shell command flavor (CONTENT). */
   termCmds: { build: string; run: string };
   /** Echo into the terminal; a room without one echoes nowhere (no-op). */
@@ -123,6 +127,18 @@ export interface CodingArea {
   occupies(cell: Cell): boolean;
   /** place / pickup(placed token) / debug / clearLine / deleteToken. */
   onAction(actionId: string): boolean;
+  /** THIEF MONSTERS (MountedPuzzle.stealTargets/takeToken — see engine/core/monsters.ts):
+   *  every UNLOCKED placed token INSIDE the coding area. Scaffolded (locked, mixed-tier)
+   *  tokens are never offered — they are provided structure, not the player's to lose,
+   *  same rule tryPickPlaced already enforces for the player's own pickup. A token placed
+   *  outside the zone is cosmetic (Build/Run already ignores it — see currentProgram); a
+   *  thief ignores it too, so stealing can never target something that was never at risk. */
+  stealTargets(): Cell[];
+  /** Take the UNLOCKED, in-zone token at `cell` (removing it from the board and re-dirtying
+   *  the line — a robbed program has to be Built again, same as any other edit) and return
+   *  it, or null if `cell` doesn't hold one anymore (already taken, already picked up, or
+   *  never qualified). */
+  takeToken(cell: Cell): string | null;
   /** Rebuild the zone/controls/placed layers at the current tile size. */
   relayout(): void;
   /** Refresh the position-dependent debug readout (after each player draw). */
@@ -281,7 +297,7 @@ export function createCodingArea(deps: CodingAreaDeps): CodingArea {
   function doRun() {
     dialogue.notify("run"); // GUIDED TUTORIAL: satisfies a step waiting on "run" (any attempt)
     const program = currentProgram();
-    const res = runProgram(buildState, program, accepted, deps.requirePunctuation);
+    const res = runProgram(buildState, program, accepted, deps.requirePunctuation, deps.names);
     // Terminal = the ERROR channel: what went wrong, in the player's own placed terms.
     // A line number only earns its place when the level has more than one line.
     const fb = runFeedback(res, termCmds, deps.output, {
@@ -295,6 +311,9 @@ export function createCodingArea(deps: CodingAreaDeps): CodingArea {
       if (b) dialogue.play([b]);
       return;
     }
+    // A Run that didn't pass is a MISS — it scores against the level-complete card.
+    // Running before Build isn't one: nothing was submitted, so nothing was wrong yet.
+    if (res.reason !== "build-first") ctx.reportMiss();
     // A first-time teaching beat takes precedence the FIRST time; then the reason beat.
     if (fb.firstTrigger && dialogue.fireFirstTime(fb.firstTrigger)) return;
     const b = deps.snakeBeat(fb.beatReason);
@@ -395,6 +414,19 @@ export function createCodingArea(deps: CodingAreaDeps): CodingArea {
       if (actionId === "clearLine") { vimClearLine(); return true; }
       if (actionId === "deleteToken") { vimDeleteToken(); return true; }
       return false;
+    },
+    stealTargets() {
+      return placed
+        .filter((p) => !p.locked && inCodingArea(room, p.x, p.y))
+        .map((p) => ({ x: p.x, y: p.y }));
+    },
+    takeToken(cell) {
+      const p = placedAt(cell.x, cell.y);
+      if (!p || p.locked || !inCodingArea(room, p.x, p.y)) return null;
+      placed.splice(placed.indexOf(p), 1);
+      drawPlaced();
+      dirtyLine(); // a robbed line is a changed line — must Build again before Run
+      return p.token;
     },
     relayout() {
       drawCodingZone();

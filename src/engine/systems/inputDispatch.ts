@@ -18,6 +18,9 @@ export interface DispatchContext {
   /** Escape may cut the current dialogue sequence short. */
   dialogueCanSkip: boolean;
   destMenuOpen: boolean;
+  /** The LEVEL COMPLETE card (systems/levelSummary) is showing → it owns the keyboard,
+   *  exactly like the destination chooser does. Esc dismisses it back into the room. */
+  summaryOpen: boolean;
   /** The TASK overlay (goalSpec prompt, toggled by the "task" action) is showing →
    *  the board is frozen. Only the "task" action or Escape gets through, to close it. */
   taskOverlayOpen: boolean;
@@ -30,6 +33,9 @@ export type Decision =
   | { kind: "dest-escape" }
   | { kind: "dest-select" }
   | { kind: "dest-move"; delta: -1 | 1 }
+  | { kind: "summary-dismiss" }
+  | { kind: "summary-select" }
+  | { kind: "summary-move"; delta: -1 | 1 }
   | { kind: "escape" }
   | { kind: "task-close" }
   | { kind: "slot"; index: number }   // 1-9 → select that inventory slot (0-based index)
@@ -40,6 +46,9 @@ export type Decision =
 /**
  * Decide what one keydown does, given the current focus context and the pending
  * sequence buffer. Mirrors the original handler exactly:
+ *   • level-complete card open → it owns the keyboard outright (even over a dialogue beat
+ *     still playing under it): menu keys move/select, Esc DISMISSES it back into the solved
+ *     room (there is nothing above it to back out to — the level is already won)
  *   • dialogue showing → advance on Enter/Space, skip on Esc (if skippable), swallow the rest
  *   • task overlay open → Esc or the "task" action closes it (whatever it's bound to,
  *     so a rebind stays consistent between open and close); swallow the rest — the
@@ -52,6 +61,19 @@ export type Decision =
  *     (this is also how the task overlay OPENS: "task" fires like any other action)
  */
 export function decide(ctx: DispatchContext, rawKey: string, pending: Key[], bindings: Bindings): Decision {
+  // The level-complete card outranks EVERYTHING, dialogue included: it opens on top of a
+  // finished level — typically while the module's own success beat is still sliding in
+  // underneath it — and owns the keyboard until the player picks where to go next.
+  if (ctx.summaryOpen) {
+    if (rawKey === "Escape") return { kind: "summary-dismiss" };
+    if (rawKey === "Enter" || rawKey === " " || rawKey === "Spacebar") return { kind: "summary-select" };
+    const r = resolve(bindings, [normalizeKey(rawKey)]);
+    if (r.kind === "fire") {
+      if (r.action === "up" || r.action === "left") return { kind: "summary-move", delta: -1 };
+      if (r.action === "down" || r.action === "right") return { kind: "summary-move", delta: 1 };
+    }
+    return { kind: "swallow" };
+  }
   if (ctx.dialogueBlocks) {
     if (rawKey === "Enter" || rawKey === " " || rawKey === "Spacebar") return { kind: "dialogue-advance" };
     if (rawKey === "Escape" && ctx.dialogueCanSkip) return { kind: "dialogue-skip" };
@@ -105,6 +127,9 @@ export interface InputDispatchDeps {
   onDestEscape(): void;
   onDestSelect(): void;
   onDestMove(delta: -1 | 1): void;
+  onSummaryDismiss(): void;
+  onSummarySelect(): void;
+  onSummaryMove(delta: -1 | 1): void;
   onEscape(): void;
   onTaskClose(): void;
   onSlot(index: number): void;
@@ -140,6 +165,9 @@ export function createInputDispatch(deps: InputDispatchDeps): InputDispatch {
       case "dest-escape": e.preventDefault(); deps.onDestEscape(); return;
       case "dest-select": e.preventDefault(); deps.onDestSelect(); return;
       case "dest-move": e.preventDefault(); deps.onDestMove(d.delta); return;
+      case "summary-dismiss": e.preventDefault(); deps.onSummaryDismiss(); return;
+      case "summary-select": e.preventDefault(); deps.onSummarySelect(); return;
+      case "summary-move": e.preventDefault(); deps.onSummaryMove(d.delta); return;
       case "escape": e.preventDefault(); deps.onEscape(); return;
       case "task-close": e.preventDefault(); deps.onTaskClose(); return;
       case "slot": e.preventDefault(); deps.onSlot(d.index); return;

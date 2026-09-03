@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  languageRung, mechanicRung, levelRung, resolveMechanic, ladderPath,
+  languageRung, mechanicRung, levelRung, resolveMechanic, ladderPath, nextLevel,
   type LadderData, type LadderLevel, type LadderRow,
 } from "./ladder";
 import { HUB_ID } from "./progression";
@@ -110,6 +110,33 @@ describe("ladderPath — the chooser opens on the rung the player is standing in
 
   it("an unknown current id falls back to the language rung", () => {
     expect(ladderPath(data([], "nope"))).toEqual([{}]);
+  });
+});
+
+describe("nextLevel — what the level-complete card offers after a clear", () => {
+  it("stays on the rung the player is climbing: the next level in the same group", () => {
+    // Clearing en1 earns en1.cleared, which opens en2 (same language+mechanic), the
+    // shuffled variant, and the Hawaiian wing. The straight-ahead one wins.
+    expect(nextLevel(data(["en1.cleared"], "en1"))?.id).toBe("en2");
+  });
+
+  it("falls through to the next available level anywhere when the rung is finished", () => {
+    // en2 is the last Base English level; the shuffled variant is the next thing open.
+    expect(nextLevel(data(["en1.cleared"], "en2"))?.id).toBe("en1-shuffled");
+  });
+
+  it("skips levels whose key isn't earned yet — no skip-ahead", () => {
+    // Nothing is unlocked, so nothing after en1 is offerable.
+    expect(nextLevel(data([], "en1"))).toBeNull();
+  });
+
+  it("is null at the end of the ladder (the card falls back to the hub)", () => {
+    expect(nextLevel(data(["en1.cleared"], "haw1"))).toBeNull();
+  });
+
+  it("is null when the current level isn't in this ladder at all", () => {
+    expect(nextLevel(data(["en1.cleared"], "not-a-level"))).toBeNull();
+    expect(nextLevel(data(["en1.cleared"], null))).toBeNull();
   });
 });
 

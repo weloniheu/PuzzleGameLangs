@@ -18,6 +18,7 @@ import { doorReaction, effectiveDoorState } from "../core/doors";
 import { portalFlashColor } from "../core/portalColors";
 import { assetUrl } from "../core/assetUrl";
 import { HUB_ID } from "../core/progression";
+import { attachScrollFade } from "./scrollFade";
 import {
   languageRung, mechanicRung, levelRung, ladderPath,
   type LadderData, type LadderRow, type LadderRung, type LadderStep,
@@ -92,6 +93,10 @@ export interface Portals {
   isDestMenuOpen(): boolean;
   openDestinationMenu(): void;
   closeDestinationMenu(): void;
+  /** Travel to a target id WITHOUT going through the chooser — the same strict
+   *  teleport-away sequence a selected row commits (flash → remove player →
+   *  transition). Used by the level-complete card's own destination buttons. */
+  travelTo(target: string, flashColor?: string): void;
   /** Esc inside the chooser: pop one rung, or close when already at the top. */
   escBack(): void;
   moveDestSel(delta: number): void;
@@ -269,8 +274,11 @@ export function createPortals(deps: PortalsDeps): Portals {
     // the level highlighted. No current level (e.g. a hub door) → the language rung.
     rungStack = ladderPath(data);
     destMenuOpen = true;
-    renderDestMenu(true);
+    // Unhide BEFORE building the rows: the fade tell (below) reads the list's real
+    // scrollHeight, and a `[hidden]` ancestor collapses layout — read while still hidden,
+    // every list would measure as "fits fine" even when it doesn't.
     destMenuEl.hidden = false;
+    renderDestMenu(true);
   }
   function openDestinationMenu() {
     const data = deps.menuLadder?.(); // fresh: a just-earned unlock shows up now
@@ -304,6 +312,20 @@ export function createPortals(deps: PortalsDeps): Portals {
     title.className = "room-destmenu-title";
     title.textContent = rung.title;
     destMenuCard.appendChild(title);
+    // The row LIST is the only part that scrolls (style.css) — title above and the hint
+    // below stay pinned, so a ladder that outgrows the window still reads as a chooser
+    // with a title and a way out, not a wall of rows with no context. The fade divs are
+    // LIST's siblings (not its children) so they mark the edge without scrolling away.
+    const listWrap = document.createElement("div");
+    listWrap.className = "room-destmenu-list-wrap";
+    const list = document.createElement("div");
+    list.className = "room-destmenu-list";
+    const fadeTop = document.createElement("div");
+    fadeTop.className = "room-scroll-fade room-scroll-fade-top";
+    const fadeBottom = document.createElement("div");
+    fadeBottom.className = "room-scroll-fade room-scroll-fade-bottom";
+    listWrap.append(list, fadeTop, fadeBottom);
+    let selectedEl: HTMLButtonElement | null = null;
     rung.rows.forEach((row, i) => {
       const b = document.createElement("button");
       b.type = "button";
@@ -325,12 +347,22 @@ export function createPortals(deps: PortalsDeps): Portals {
       // Mouse is SECONDARY: a click picks directly, but hovering never moves the
       // keyboard cursor (arrows own the selection; hover feedback is CSS-only).
       b.onclick = () => { destSel = i; selectDestination(); };
-      destMenuCard.appendChild(b);
+      if (i === destSel) selectedEl = b;
+      list.appendChild(b);
     });
+    destMenuCard.appendChild(listWrap);
     const hint = document.createElement("p");
     hint.className = "room-destmenu-hint";
     hint.textContent = "↑↓ choose · Enter go · Esc back";
     destMenuCard.appendChild(hint);
+    // Drag the view with the cursor — a long ladder (a level list, or the growing
+    // language/mechanic rungs) must never leave the selection scrolled out of sight.
+    (selectedEl as HTMLButtonElement | null)?.scrollIntoView?.({ block: "nearest" });
+    // `list` is already attached (appended above, inside an already-unhidden card — see
+    // openChooser) by the time this runs, so the fade tell's immediate paint reads real
+    // geometry — no separate repaint-after-mount step needed here (unlike settingsPanel,
+    // whose body is built before it's attached).
+    attachScrollFade(list, fadeTop, fadeBottom);
   }
   function moveDestSel(delta: number) {
     destSel = moveSelection(destSel, delta, currentRows.length);
@@ -396,6 +428,9 @@ export function createPortals(deps: PortalsDeps): Portals {
     isDestMenuOpen: () => destMenuOpen,
     openDestinationMenu,
     closeDestinationMenu,
+    // A card-sourced jump is a PORTAL jump, not a door one: reset the source so it
+    // can't fire enter_door for a transition no door was involved in.
+    travelTo: (target, flashColor) => { destSource = "portal"; commitTransition(target, flashColor); },
     escBack,
     moveDestSel,
     selectDestination,

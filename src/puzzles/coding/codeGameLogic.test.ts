@@ -326,3 +326,52 @@ describe("evaluatedLines — the whole program (every in-area row, top-to-bottom
     expect(evaluatedLines([{ token: "print", x: 9, y: 9 }], area)).toEqual([]);
   });
 });
+
+describe("renameable names — a variable's SPELLING is the player's to choose", () => {
+  // py-code-hunt-001's answer: the palette carries both `x` and `y`, so which name holds
+  // which value is arbitrary. What must hold is CONSISTENCY, and that the printed output
+  // is unchanged — renaming can never alter what a program prints (Rule 3: still no eval).
+  const answer: AnswerLine[] = [
+    { content: ["x", "=", "5"], indent: 0 },
+    { content: ["y", "=", "2"], indent: 0 },
+    { content: ["print", "x"], indent: 0 },
+    { content: ["print", "y"], indent: 0 },
+  ];
+  const names = new Set(["x", "y"]);
+  const prog = (rows: string[][]): CodeLine[] => rows.map((content) => ({ content, indent: 0 }));
+
+  it("accepts the names swapped throughout — the program still prints 5 then 2", () => {
+    const swapped = prog([["y", "=", "5"], ["x", "=", "2"], ["print", "y"], ["print", "x"]]);
+    expect(checkProgram(swapped, answer, false, names)).toEqual({ ok: true });
+  });
+
+  it("still accepts the author's own spelling", () => {
+    const asWritten = prog([["x", "=", "5"], ["y", "=", "2"], ["print", "x"], ["print", "y"]]);
+    expect(checkProgram(asWritten, answer, false, names)).toEqual({ ok: true });
+  });
+
+  it("rejects an INCONSISTENT rename — one name cannot stand for both", () => {
+    const muddled = prog([["y", "=", "5"], ["y", "=", "2"], ["print", "y"], ["print", "y"]]);
+    expect(checkProgram(muddled, answer, false, names).ok).toBe(false);
+  });
+
+  it("renames only where it is still the right program — a swap in the wrong ORDER fails", () => {
+    const wrongOrder = prog([["y", "=", "5"], ["x", "=", "2"], ["print", "x"], ["print", "y"]]);
+    expect(checkProgram(wrongOrder, answer, false, names).ok).toBe(false);
+  });
+
+  it("without the flag nothing is renameable — the old literal behaviour, unchanged", () => {
+    const swapped = prog([["y", "=", "5"], ["x", "=", "2"], ["print", "y"], ["print", "x"]]);
+    expect(checkProgram(swapped, answer).ok).toBe(false);
+  });
+
+  it("a DECOY never becomes a legal name (it is not in the renameable set)", () => {
+    const decoyed = prog([["nope", "=", "5"], ["y", "=", "2"], ["print", "nope"], ["print", "y"]]);
+    expect(checkProgram(decoyed, answer, false, names).ok).toBe(false);
+  });
+
+  it("keeps the ORDER diagnosis when the player swapped names AND scrambled a line", () => {
+    const scrambled = prog([["=", "y", "5"], ["x", "=", "2"], ["print", "y"], ["print", "x"]]);
+    expect(checkProgram(scrambled, answer, false, names)).toMatchObject({ reason: "wrong-order" });
+  });
+});

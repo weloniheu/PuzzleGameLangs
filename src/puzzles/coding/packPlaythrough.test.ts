@@ -32,12 +32,22 @@ describe("python.code.v1 — every level is solvable from its own floor tokens",
       }
     });
 
-    it(`${p.id}: every token an accepted variant needs is available (floor pile or scaffolded)`, () => {
-      // A token can be FETCHED (a floor pile) or PROVIDED (prefilled/scaffolded in the area).
-      // Compare under the SAME normalization the checker uses (quotes stripped; punctuation kept
-      // only for mixed/explicit), so a "hi" pile satisfies an `hi` answer token and vice versa.
+    it(`${p.id}: every token an accepted variant needs is available (pile, monster loot, or scaffolded)`, () => {
+      // A token can be FETCHED (a floor pile, or the loot a monster drops when defeated) or
+      // PROVIDED (prefilled/scaffolded in the area). Compare under the SAME normalization the
+      // checker uses (quotes stripped; punctuation kept only for mixed/explicit), so a "hi"
+      // pile satisfies an `hi` answer token and vice versa.
       const prefilled = (p.room?.coding_area?.prefilled ?? []).map((t) => t.token);
-      const available = normalizeContent([...piles.map((pile) => pile.token), ...prefilled], punct);
+      // CARRIER loot only — a thief has no fixed `token` (it steals whatever it reaches;
+      // see MonsterBehavior in schema/types.ts), so it never counts as a SOURCE here. That
+      // is correct, not a gap: whatever a thief takes already came from a pile/carrier/
+      // prefilled, which this same list already has to account for.
+      const loot = (p.room?.monsters?.spawns ?? [])
+        .map((m) => m.token)
+        .filter((t): t is string => typeof t === "string");
+      const available = normalizeContent(
+        [...piles.map((pile) => pile.token), ...loot, ...prefilled], punct,
+      );
       for (const variant of accepted) for (const line of variant) {
         for (const tok of normalizeContent(line.content, punct)) expect(available).toContain(tok);
       }

@@ -198,7 +198,9 @@ function unexpectedToken(got: string[], want: string[]): string | null {
  *   otherwise each line is order-checked in turn (first failure wins).
  * A missing expected line is checked as an empty line, which falls out as wrong-word.
  */
-export function checkProgram(lines: CodeLine[], answer: AnswerLine[], requirePunctuation = false): CheckResult {
+function checkProgramLiteral(
+  lines: CodeLine[], answer: AnswerLine[], requirePunctuation: boolean,
+): CheckResult {
   // The first unexpected row is the one past the end of the answer.
   if (lines.length > answer.length) return { ok: false, reason: "extra-code", detail: { line: answer.length } };
   for (let i = 0; i < answer.length; i++) {
@@ -209,22 +211,6 @@ export function checkProgram(lines: CodeLine[], answer: AnswerLine[], requirePun
   return { ok: true };
 }
 
-/**
- * Run the program: a built (non-dirty) program is required first, then the whole
- * program is order-checked against the answer. Running while dirty/unbuilt yields
- * "build-first".
- */
-export function run(
-  state: BuildState, lines: CodeLine[], answer: AnswerLine[], requirePunctuation = false,
-): CheckResult {
-  if (!state.built) return { ok: false, reason: "build-first" };
-  return checkProgram(lines, answer, requirePunctuation);
-}
-
-// --- multiple accepted solutions (base tier: genuinely different programs can be correct) ---
-// We NEVER execute (Rule 3); "behavior matching" = order-matching against ANY author-listed
-// accepted program. On failure we report the CLOSEST variant's reason (lower rank = nearer to
-// correct) so the feedback beat is the most helpful one.
 const REASON_RANK: Record<CheckReason, number> = {
   "wrong-indent": 0, // content & order right, just the indent
   "wrong-order": 1,  // right words, wrong order
@@ -233,15 +219,95 @@ const REASON_RANK: Record<CheckReason, number> = {
   "build-first": 4,  // not built (handled before per-variant checks)
 };
 
+/** No level marked any token renameable — the default, and the old behaviour exactly. */
+const NO_NAMES: ReadonlySet<string> = new Set<string>();
+
+/**
+ * Read a consistent RENAMING out of the placed program: a bijection from the names the
+ * player used onto the names the answer uses. Only positions where BOTH sides hold a
+ * renameable name contribute, and a line whose length doesn't match is skipped (it can't
+ * be aligned, but the other lines may still pin the mapping down).
+ *
+ * Returns null when the player was INCONSISTENT — one name standing for two of the
+ * answer's (or two standing for one). Such a program is genuinely wrong, so the caller
+ * falls back to the literal comparison and the normal diagnostics fire.
+ */
+function renamingFor(
+  lines: CodeLine[], answer: AnswerLine[], names: ReadonlySet<string>, requirePunctuation: boolean,
+): Map<string, string> | null {
+  const toAnswer = new Map<string, string>(); // what the player wrote → what the answer calls it
+  const claimedBy = new Map<string, string>(); // and back, so the mapping stays one-to-one
+  for (let i = 0; i < answer.length; i++) {
+    const got = normalizeContent((lines[i] ?? { content: [] }).content, requirePunctuation);
+    const want = normalizeContent(answer[i].content, requirePunctuation);
+    if (got.length !== want.length) continue;
+    for (let j = 0; j < want.length; j++) {
+      const a = want[j];
+      const g = got[j];
+      if (!names.has(a) || !names.has(g)) continue;
+      if ((toAnswer.get(g) ?? a) !== a) return null;
+      if ((claimedBy.get(a) ?? g) !== g) return null;
+      toAnswer.set(g, a);
+      claimedBy.set(a, g);
+    }
+  }
+  return toAnswer;
+}
+
+/**
+ * Order-check the WHOLE program (every occupied in-area row) against the answer.
+ * The coding area must contain EXACTLY the answer's lines and nothing more:
+ *   more lines than the answer (e.g. the program placed twice) → "extra-code"
+ *   otherwise each line is order-checked in turn (first failure wins).
+ * A missing expected line is checked as an empty line, which falls out as wrong-word.
+ *
+ * `names` are the level's RENAMEABLE tokens (payload tokens flagged `renameable`). When the
+ * literal comparison fails, the program is re-checked under the consistent renaming the
+ * player actually used — so picking `y` where the author wrote `x` passes, as long as every
+ * other use moves with it. Whichever attempt gets closer supplies the feedback beat.
+ */
+export function checkProgram(
+  lines: CodeLine[], answer: AnswerLine[], requirePunctuation = false, names: ReadonlySet<string> = NO_NAMES,
+): CheckResult {
+  const literal = checkProgramLiteral(lines, answer, requirePunctuation);
+  if (literal.ok || names.size === 0) return literal;
+  const renaming = renamingFor(lines, answer, names, requirePunctuation);
+  if (!renaming || renaming.size === 0) return literal;
+  const renamed = lines.map((l) => ({ ...l, content: l.content.map((t) => renaming.get(t) ?? t) }));
+  const alt = checkProgramLiteral(renamed, answer, requirePunctuation);
+  if (alt.ok) return alt;
+  // Both failed: report the nearer diagnosis, so a player who swapped names AND got the
+  // order wrong is told about the order rather than accused of an unknown word.
+  return !literal.ok && REASON_RANK[alt.reason] < REASON_RANK[literal.reason] ? alt : literal;
+}
+
+/**
+ * Run the program: a built (non-dirty) program is required first, then the whole
+ * program is order-checked against the answer. Running while dirty/unbuilt yields
+ * "build-first".
+ */
+export function run(
+  state: BuildState, lines: CodeLine[], answer: AnswerLine[], requirePunctuation = false,
+  names: ReadonlySet<string> = NO_NAMES,
+): CheckResult {
+  if (!state.built) return { ok: false, reason: "build-first" };
+  return checkProgram(lines, answer, requirePunctuation, names);
+}
+
+// --- multiple accepted solutions (base tier: genuinely different programs can be correct) ---
+// We NEVER execute (Rule 3); "behavior matching" = order-matching against ANY author-listed
+// accepted program. On failure we report the CLOSEST variant's reason (lower rank = nearer to
+// correct) so the feedback beat is the most helpful one.
 /** Order-check the program against a LIST of accepted answers: ok if it matches ANY; otherwise
  *  the closest variant's failure reason. An empty list behaves like an empty answer (wrong-word). */
 export function checkProgramAny(
   lines: CodeLine[], accepted: AnswerLine[][], requirePunctuation = false,
+  names: ReadonlySet<string> = NO_NAMES,
 ): CheckResult {
   const variants = accepted.length ? accepted : [[]];
   let best: Extract<CheckResult, { ok: false }> | null = null;
   for (const answer of variants) {
-    const res = checkProgram(lines, answer, requirePunctuation);
+    const res = checkProgram(lines, answer, requirePunctuation, names);
     if (res.ok) return { ok: true };
     if (!best || REASON_RANK[res.reason] < REASON_RANK[best.reason]) best = res;
   }
@@ -251,7 +317,8 @@ export function checkProgramAny(
 /** run(), but against a set of accepted programs (see checkProgramAny). */
 export function runAny(
   state: BuildState, lines: CodeLine[], accepted: AnswerLine[][], requirePunctuation = false,
+  names: ReadonlySet<string> = NO_NAMES,
 ): CheckResult {
   if (!state.built) return { ok: false, reason: "build-first" };
-  return checkProgramAny(lines, accepted, requirePunctuation);
+  return checkProgramAny(lines, accepted, requirePunctuation, names);
 }

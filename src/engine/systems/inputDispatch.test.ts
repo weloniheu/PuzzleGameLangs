@@ -3,11 +3,13 @@ import { decide, type DispatchContext } from "./inputDispatch";
 import { defaultBindings, rebind } from "../core/keybindings";
 
 const roomCtx: DispatchContext = {
-  dialogueBlocks: false, dialogueCanSkip: true, destMenuOpen: false, taskOverlayOpen: false,
+  dialogueBlocks: false, dialogueCanSkip: true, destMenuOpen: false,
+  summaryOpen: false, taskOverlayOpen: false,
 };
 const dlgCtx: DispatchContext = { ...roomCtx, dialogueBlocks: true };
 const destCtx: DispatchContext = { ...roomCtx, destMenuOpen: true };
 const taskCtx: DispatchContext = { ...roomCtx, taskOverlayOpen: true };
+const summaryCtx: DispatchContext = { ...roomCtx, summaryOpen: true };
 const standard = defaultBindings("standard");
 const vim = defaultBindings("vim");
 
@@ -30,6 +32,38 @@ describe("decide — dialogue focus state (highest precedence)", () => {
 
   it("outranks the destination menu", () => {
     expect(decide({ ...dlgCtx, destMenuOpen: true }, "Enter", [], standard)).toEqual({ kind: "dialogue-advance" });
+  });
+});
+
+describe("decide — level-complete card open (outranks everything)", () => {
+  it("Enter / Space picks the highlighted destination", () => {
+    expect(decide(summaryCtx, "Enter", [], standard)).toEqual({ kind: "summary-select" });
+    expect(decide(summaryCtx, " ", [], standard)).toEqual({ kind: "summary-select" });
+  });
+
+  it("Escape DISMISSES it (there is nothing above a won level to back out to)", () => {
+    expect(decide(summaryCtx, "Escape", [], standard)).toEqual({ kind: "summary-dismiss" });
+  });
+
+  it("the ACTIVE scheme's movement keys move the cursor", () => {
+    expect(decide(summaryCtx, "ArrowUp", [], standard)).toEqual({ kind: "summary-move", delta: -1 });
+    expect(decide(summaryCtx, "ArrowDown", [], standard)).toEqual({ kind: "summary-move", delta: 1 });
+    expect(decide(summaryCtx, "j", [], vim)).toEqual({ kind: "summary-move", delta: 1 });
+    expect(decide(summaryCtx, "ArrowDown", [], vim)).toEqual({ kind: "swallow" }); // unbound in vim
+  });
+
+  it("swallows gameplay keys — the level is over", () => {
+    expect(decide(summaryCtx, "p", [], standard)).toEqual({ kind: "swallow" });
+    expect(decide(summaryCtx, "5", [], standard)).toEqual({ kind: "swallow" });
+  });
+
+  // It opens while the module's success beat is still playing under it, and while the
+  // chooser may be open behind it — the card owns the keyboard in both cases.
+  it("outranks BOTH the dialogue and the destination menu", () => {
+    expect(decide({ ...summaryCtx, dialogueBlocks: true }, "Enter", [], standard))
+      .toEqual({ kind: "summary-select" });
+    expect(decide({ ...summaryCtx, destMenuOpen: true }, "Escape", [], standard))
+      .toEqual({ kind: "summary-dismiss" });
   });
 });
 
@@ -117,7 +151,7 @@ describe("decide — esc + bindings (room focus)", () => {
   it("a bound single key fires its action (normalized: 'W' → up)", () => {
     expect(decide(roomCtx, "ArrowUp", [], standard)).toEqual({ kind: "fire", action: "up" });
     expect(decide(roomCtx, "W", [], standard)).toEqual({ kind: "fire", action: "up" });
-    expect(decide(roomCtx, "e", [], standard)).toEqual({ kind: "fire", action: "pickup" });
+    expect(decide(roomCtx, "i", [], standard)).toEqual({ kind: "fire", action: "pickup" });
   });
 
   it("an unbound key passes through", () => {
@@ -138,8 +172,9 @@ describe("decide — esc + bindings (room focus)", () => {
     expect(decide(roomCtx, "z", ["d"], vim)).toEqual({ kind: "pass" });
   });
 
-  it("Minecraft vocabulary: E opens the inventory, Q drops the held token", () => {
-    expect(decide(roomCtx, "e", [], standard)).toEqual({ kind: "fire", action: "pickup" });
+  it("Minecraft vocabulary: E opens the inventory, I picks up, Q drops the held token", () => {
+    expect(decide(roomCtx, "e", [], standard)).toEqual({ kind: "fire", action: "inventory" });
+    expect(decide(roomCtx, "i", [], standard)).toEqual({ kind: "fire", action: "pickup" });
     expect(decide(roomCtx, "q", [], standard)).toEqual({ kind: "fire", action: "drop" });
     expect(decide(roomCtx, "q", [], vim)).toEqual({ kind: "fire", action: "drop" });
   });

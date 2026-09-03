@@ -107,6 +107,37 @@ When you extend code puzzles, keep validation as an order/equality check against
 
 ---
 
+## Rule 6 — Design docs describe what EXISTS, not what should
+
+Design docs here are **inventories of the shipped game**, not wishlists. The docs this
+covers: `DESIGN_HANDOFF.md`, `VISUAL_CATALOG.md`, `src/STYLE_TARGET.md`, and any style
+audit, handoff, or design artifact you produce.
+
+**Every entry must name something that is in the working tree right now.** Before you
+write an entry, verify the hook it names — the CSS class, the file, the line — is
+actually there, and say where you found it. An entry you cannot point at is not an entry.
+
+**Never put these in a design doc:**
+
+- a surface you are proposing but nobody has built
+- a class hook that exists with no rule behind it, written as though it ships
+- anything from the plan docs (`MONSTER_LOOT_PLAN.md`, `MONSTER_THIEF_PLAN.md`,
+  `MODULARIZATION_PLAN.md`, `PROGRESSION.md`, `SHIPPING_PLAN.md`) that has not
+  landed in `src/` yet — those files are the plan, this is the record
+- anything a previous pass added that was never implemented
+
+If something is worth building but is not built, it does **not** go in the doc. Say it in
+your reply instead and let me decide whether it becomes work. The one exception is a
+section that is *explicitly and visibly* labelled as unbuilt — if a doc has one, an entry
+may live there, but it may never be mixed in with shipped surfaces.
+
+**Revising a design doc is an EDIT, never a regenerate.** Drop the entries I name and
+leave every other entry byte-identical. Do not rewrite wording, reorder sections, or
+re-derive the whole thing from the CSS because it seemed faster — the judgment layered
+on top of those files is the part worth keeping, and a regenerate throws it away.
+
+---
+
 ## Quick map of where things go
 
 - New **puzzle type** → enum in `src/schema/types.ts` + renderer in

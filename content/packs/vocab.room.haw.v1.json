@@ -648,58 +648,58 @@
       "payload": {
         "tiles": [
           {
-            "id": "ua",
-            "text": "ua",
+            "id": "kumu",
+            "text": "kumu",
             "pos": {
               "x": 2,
               "y": 1
             },
-            "help": "rain"
+            "help": "teacher"
           },
           {
-            "id": "rain",
-            "text": "rain",
+            "id": "teacher",
+            "text": "teacher",
             "pos": {
               "x": 8,
               "y": 1
             },
-            "help": "ua"
+            "help": "kumu"
           },
           {
-            "id": "hoku",
-            "text": "hōkū",
+            "id": "hoaaloha",
+            "text": "hoaaloha",
             "pos": {
               "x": 2,
               "y": 5
             },
-            "help": "star"
+            "help": "friend"
           },
           {
-            "id": "star",
-            "text": "star",
+            "id": "friend",
+            "text": "friend",
             "pos": {
               "x": 8,
               "y": 5
             },
-            "help": "hōkū"
+            "help": "hoaaloha"
           }
         ],
         "pairs": [
           [
-            "ua",
-            "rain"
+            "kumu",
+            "teacher"
           ],
           [
-            "hoku",
-            "star"
+            "hoaaloha",
+            "friend"
           ]
         ],
         "props": [
           {
-            "id": "sign-ua",
-            "glyph": "🌧️",
-            "label": "ua",
-            "accepts": "ua",
+            "id": "sign-kumu",
+            "glyph": "🧑‍🏫",
+            "label": "kumu",
+            "accepts": "kumu",
             "honest": true,
             "pos": {
               "x": 4,
@@ -707,10 +707,10 @@
             }
           },
           {
-            "id": "sign-hoku",
-            "glyph": "⭐",
-            "label": "hōkū",
-            "accepts": "hoku",
+            "id": "sign-hoaaloha",
+            "glyph": "🤝",
+            "label": "hoaaloha",
+            "accepts": "hoaaloha",
             "honest": true,
             "pos": {
               "x": 6,
@@ -746,7 +746,7 @@
               "tag": "step:2"
             },
             {
-              "text": "🌧️ is labelled ua. ⭐ is labelled hōkū. Present those two, then pair each with its English.",
+              "text": "🧑‍🏫 is labelled kumu. 🤝 is labelled hoaaloha. Present those two, then pair each with its English.",
               "tag": "step:3"
             }
           ]
@@ -813,29 +813,47 @@
       "payload": {
         "tiles": [
           {
-            "id": "la",
-            "text": "lā",
+            "id": "kumu",
+            "text": "kumu",
             "pos": {
               "x": 2,
               "y": 2
             },
-            "help": "sun, day"
+            "help": "teacher"
           },
           {
-            "id": "sun",
-            "text": "sun",
+            "id": "teacher",
+            "text": "teacher",
             "pos": {
               "x": 8,
               "y": 2
             },
-            "help": "lā"
+            "help": "kumu"
+          },
+          {
+            "id": "haumana",
+            "text": "haumāna",
+            "pos": {
+              "x": 2,
+              "y": 4
+            },
+            "help": "student"
+          },
+          {
+            "id": "student",
+            "text": "student",
+            "pos": {
+              "x": 8,
+              "y": 4
+            },
+            "help": "haumāna"
           },
           {
             "id": "wai",
             "text": "wai",
             "pos": {
               "x": 2,
-              "y": 4
+              "y": 6
             },
             "help": "fresh water"
           },
@@ -844,75 +862,57 @@
             "text": "water",
             "pos": {
               "x": 8,
-              "y": 4
+              "y": 6
             },
             "help": "wai"
-          },
-          {
-            "id": "pohaku",
-            "text": "pōhaku",
-            "pos": {
-              "x": 2,
-              "y": 6
-            },
-            "help": "rock, stone"
-          },
-          {
-            "id": "rock",
-            "text": "rock",
-            "pos": {
-              "x": 8,
-              "y": 6
-            },
-            "help": "pōhaku"
           }
         ],
         "pairs": [
           [
-            "la",
-            "sun"
+            "kumu",
+            "teacher"
+          ],
+          [
+            "haumana",
+            "student"
           ],
           [
             "wai",
             "water"
-          ],
-          [
-            "pohaku",
-            "rock"
           ]
         ],
         "props": [
           {
-            "id": "sign-sun",
-            "glyph": "☀️",
-            "label": "wai",
-            "accepts": "wai",
+            "id": "sign-kumu-look",
+            "glyph": "🧑‍🏫",
+            "label": "haumāna",
+            "accepts": "haumana",
             "honest": false,
             "pos": {
               "x": 2,
               "y": 0
             },
-            "wrong": "It LOOKS like lā — but the sign says wai. Wai is WATER, not the sun (✗).",
-            "exposed": "Hoʻopunipuni! The sign says wai — water. That sunny picture was lying. (+1 reveal)"
+            "wrong": "It LOOKS like a kumu — but the sign says haumāna. A haumāna is a STUDENT (✗).",
+            "exposed": "Hoʻopunipuni! The sign says haumāna — student. That teacherly picture was lying. (+1 reveal)"
           },
           {
-            "id": "sign-water",
-            "glyph": "💧",
-            "label": "lā",
-            "accepts": "la",
+            "id": "sign-haumana-look",
+            "glyph": "🎒",
+            "label": "kumu",
+            "accepts": "kumu",
             "honest": false,
             "pos": {
               "x": 0,
               "y": 4
             },
-            "wrong": "The picture shows water — but the sign says lā. Lā is the SUN (✗).",
-            "exposed": "Caught! It says lā — the sun. Don't trust the picture. (+1 reveal)"
+            "wrong": "The picture shows a haumāna's pack — but the sign says kumu. A kumu is the TEACHER (✗).",
+            "exposed": "Caught! It says kumu — the teacher. Don't trust the picture. (+1 reveal)"
           },
           {
-            "id": "sign-rock",
-            "glyph": "🪨",
-            "label": "pōhaku",
-            "accepts": "pohaku",
+            "id": "sign-wai",
+            "glyph": "💧",
+            "label": "wai",
+            "accepts": "wai",
             "honest": true,
             "pos": {
               "x": 5,
@@ -949,7 +949,7 @@
               "tag": "step:2"
             },
             {
-              "text": "☀️ is labelled wai and 💧 is labelled lā — both lie. 🪨 pōhaku is telling the truth.",
+              "text": "🧑‍🏫 is labelled haumāna and 🎒 is labelled kumu — the two of them swapped signs. 💧 wai is telling the truth.",
               "tag": "step:3"
             }
           ]
@@ -2042,58 +2042,58 @@
       "payload": {
         "tiles": [
           {
-            "id": "ua",
-            "text": "ua",
+            "id": "kumu",
+            "text": "kumu",
             "pos": {
               "x": 2,
               "y": 1
             },
-            "help": "rain"
+            "help": "teacher"
           },
           {
-            "id": "rain",
-            "text": "rain",
+            "id": "teacher",
+            "text": "teacher",
             "pos": {
               "x": 8,
               "y": 1
             },
-            "help": "ua"
+            "help": "kumu"
           },
           {
-            "id": "hoku",
-            "text": "hōkū",
+            "id": "hoaaloha",
+            "text": "hoaaloha",
             "pos": {
               "x": 2,
               "y": 5
             },
-            "help": "star"
+            "help": "friend"
           },
           {
-            "id": "star",
-            "text": "star",
+            "id": "friend",
+            "text": "friend",
             "pos": {
               "x": 8,
               "y": 5
             },
-            "help": "hōkū"
+            "help": "hoaaloha"
           }
         ],
         "pairs": [
           [
-            "ua",
-            "rain"
+            "kumu",
+            "teacher"
           ],
           [
-            "hoku",
-            "star"
+            "hoaaloha",
+            "friend"
           ]
         ],
         "props": [
           {
-            "id": "sign-ua",
-            "glyph": "🌧️",
-            "label": "ua",
-            "accepts": "ua",
+            "id": "sign-kumu",
+            "glyph": "🧑‍🏫",
+            "label": "kumu",
+            "accepts": "kumu",
             "honest": true,
             "pos": {
               "x": 4,
@@ -2101,10 +2101,10 @@
             }
           },
           {
-            "id": "sign-hoku",
-            "glyph": "⭐",
-            "label": "hōkū",
-            "accepts": "hoku",
+            "id": "sign-hoaaloha",
+            "glyph": "🤝",
+            "label": "hoaaloha",
+            "accepts": "hoaaloha",
             "honest": true,
             "pos": {
               "x": 6,
@@ -2126,7 +2126,7 @@
             {
               "id": "vocab-match-004-shuffled-enter",
               "speaker": "narrator",
-              "text": "Same words, new floor. Nothing is where you left it.",
+              "text": "The signs are labelled. Ask one whether a word belongs to it.",
               "trigger": "on_enter"
             }
           ],
@@ -2140,7 +2140,7 @@
               "tag": "step:2"
             },
             {
-              "text": "🌧️ is labelled ua. ⭐ is labelled hōkū. Present those two, then pair each with its English.",
+              "text": "🧑‍🏫 is labelled kumu. 🤝 is labelled hoaaloha. Present those two, then pair each with its English.",
               "tag": "step:3"
             }
           ]
@@ -2195,7 +2195,7 @@
       ],
       "mechanics": {
         "goalSpec": {
-          "description": "The signs name the word that belongs to them. Shove a word into a sign to test it. The words start somewhere different every visit. Two looks — but a confirmed sign gives one back."
+          "description": "The signs name the word that belongs to them. Shove a word into a sign to test it. Two looks — but a confirmed sign gives one back. The words start somewhere different every visit."
         }
       },
       "tutorial_refs": [
@@ -2213,58 +2213,58 @@
       "payload": {
         "tiles": [
           {
-            "id": "ua",
-            "text": "ua",
+            "id": "kumu",
+            "text": "kumu",
             "pos": {
               "x": 2,
               "y": 1
             },
-            "help": "rain"
+            "help": "teacher"
           },
           {
-            "id": "rain",
-            "text": "rain",
+            "id": "teacher",
+            "text": "teacher",
             "pos": {
               "x": 8,
               "y": 1
             },
-            "help": "ua"
+            "help": "kumu"
           },
           {
-            "id": "hoku",
-            "text": "hōkū",
+            "id": "hoaaloha",
+            "text": "hoaaloha",
             "pos": {
               "x": 2,
               "y": 5
             },
-            "help": "star"
+            "help": "friend"
           },
           {
-            "id": "star",
-            "text": "star",
+            "id": "friend",
+            "text": "friend",
             "pos": {
               "x": 8,
               "y": 5
             },
-            "help": "hōkū"
+            "help": "hoaaloha"
           }
         ],
         "pairs": [
           [
-            "ua",
-            "rain"
+            "kumu",
+            "teacher"
           ],
           [
-            "hoku",
-            "star"
+            "hoaaloha",
+            "friend"
           ]
         ],
         "props": [
           {
-            "id": "sign-ua",
-            "glyph": "🌧️",
-            "label": "ua",
-            "accepts": "ua",
+            "id": "sign-kumu",
+            "glyph": "🧑‍🏫",
+            "label": "kumu",
+            "accepts": "kumu",
             "honest": true,
             "pos": {
               "x": 4,
@@ -2272,10 +2272,10 @@
             }
           },
           {
-            "id": "sign-hoku",
-            "glyph": "⭐",
-            "label": "hōkū",
-            "accepts": "hoku",
+            "id": "sign-hoaaloha",
+            "glyph": "🤝",
+            "label": "hoaaloha",
+            "accepts": "hoaaloha",
             "honest": true,
             "pos": {
               "x": 6,
@@ -2297,7 +2297,7 @@
             {
               "id": "vocab-match-004-shrouded-enter",
               "speaker": "narrator",
-              "text": "Dark, and rearranged. Walk to a word before you can read it.",
+              "text": "The signs are labelled. Ask one whether a word belongs to it.",
               "trigger": "on_enter"
             }
           ],
@@ -2311,7 +2311,7 @@
               "tag": "step:2"
             },
             {
-              "text": "🌧️ is labelled ua. ⭐ is labelled hōkū. Present those two, then pair each with its English.",
+              "text": "🧑‍🏫 is labelled kumu. 🤝 is labelled hoaaloha. Present those two, then pair each with its English.",
               "tag": "step:3"
             }
           ]
@@ -2367,7 +2367,7 @@
       ],
       "mechanics": {
         "goalSpec": {
-          "description": "The signs name the word that belongs to them. Shove a word into a sign to test it. New arrangement, and you can only see what is close. Two looks — but a confirmed sign gives one back."
+          "description": "The signs name the word that belongs to them. Shove a word into a sign to test it. Two looks — but a confirmed sign gives one back. New arrangement, and you can only see what is close."
         }
       },
       "tutorial_refs": [
@@ -2385,29 +2385,47 @@
       "payload": {
         "tiles": [
           {
-            "id": "la",
-            "text": "lā",
+            "id": "kumu",
+            "text": "kumu",
             "pos": {
               "x": 2,
               "y": 2
             },
-            "help": "sun, day"
+            "help": "teacher"
           },
           {
-            "id": "sun",
-            "text": "sun",
+            "id": "teacher",
+            "text": "teacher",
             "pos": {
               "x": 8,
               "y": 2
             },
-            "help": "lā"
+            "help": "kumu"
+          },
+          {
+            "id": "haumana",
+            "text": "haumāna",
+            "pos": {
+              "x": 2,
+              "y": 4
+            },
+            "help": "student"
+          },
+          {
+            "id": "student",
+            "text": "student",
+            "pos": {
+              "x": 8,
+              "y": 4
+            },
+            "help": "haumāna"
           },
           {
             "id": "wai",
             "text": "wai",
             "pos": {
               "x": 2,
-              "y": 4
+              "y": 6
             },
             "help": "fresh water"
           },
@@ -2416,75 +2434,57 @@
             "text": "water",
             "pos": {
               "x": 8,
-              "y": 4
+              "y": 6
             },
             "help": "wai"
-          },
-          {
-            "id": "pohaku",
-            "text": "pōhaku",
-            "pos": {
-              "x": 2,
-              "y": 6
-            },
-            "help": "rock, stone"
-          },
-          {
-            "id": "rock",
-            "text": "rock",
-            "pos": {
-              "x": 8,
-              "y": 6
-            },
-            "help": "pōhaku"
           }
         ],
         "pairs": [
           [
-            "la",
-            "sun"
+            "kumu",
+            "teacher"
+          ],
+          [
+            "haumana",
+            "student"
           ],
           [
             "wai",
             "water"
-          ],
-          [
-            "pohaku",
-            "rock"
           ]
         ],
         "props": [
           {
-            "id": "sign-sun",
-            "glyph": "☀️",
-            "label": "wai",
-            "accepts": "wai",
+            "id": "sign-kumu-look",
+            "glyph": "🧑‍🏫",
+            "label": "haumāna",
+            "accepts": "haumana",
             "honest": false,
             "pos": {
               "x": 2,
               "y": 0
             },
-            "wrong": "It LOOKS like lā — but the sign says wai. Wai is WATER, not the sun (✗).",
-            "exposed": "Hoʻopunipuni! The sign says wai — water. That sunny picture was lying. (+1 reveal)"
+            "wrong": "It LOOKS like a kumu — but the sign says haumāna. A haumāna is a STUDENT (✗).",
+            "exposed": "Hoʻopunipuni! The sign says haumāna — student. That teacherly picture was lying. (+1 reveal)"
           },
           {
-            "id": "sign-water",
-            "glyph": "💧",
-            "label": "lā",
-            "accepts": "la",
+            "id": "sign-haumana-look",
+            "glyph": "🎒",
+            "label": "kumu",
+            "accepts": "kumu",
             "honest": false,
             "pos": {
               "x": 0,
               "y": 4
             },
-            "wrong": "The picture shows water — but the sign says lā. Lā is the SUN (✗).",
-            "exposed": "Caught! It says lā — the sun. Don't trust the picture. (+1 reveal)"
+            "wrong": "The picture shows a haumāna's pack — but the sign says kumu. A kumu is the TEACHER (✗).",
+            "exposed": "Caught! It says kumu — the teacher. Don't trust the picture. (+1 reveal)"
           },
           {
-            "id": "sign-rock",
-            "glyph": "🪨",
-            "label": "pōhaku",
-            "accepts": "pohaku",
+            "id": "sign-wai",
+            "glyph": "💧",
+            "label": "wai",
+            "accepts": "wai",
             "honest": true,
             "pos": {
               "x": 5,
@@ -2507,7 +2507,7 @@
             {
               "id": "vocab-match-005-shuffled-enter",
               "speaker": "narrator",
-              "text": "Same words, new floor. Nothing is where you left it.",
+              "text": "Careful. Down here the pictures have started lying.",
               "trigger": "on_enter"
             }
           ],
@@ -2521,7 +2521,7 @@
               "tag": "step:2"
             },
             {
-              "text": "☀️ is labelled wai and 💧 is labelled lā — both lie. 🪨 pōhaku is telling the truth.",
+              "text": "🧑‍🏫 is labelled haumāna and 🎒 is labelled kumu — the two of them swapped signs. 💧 wai is telling the truth.",
               "tag": "step:3"
             }
           ]
@@ -2595,29 +2595,47 @@
       "payload": {
         "tiles": [
           {
-            "id": "la",
-            "text": "lā",
+            "id": "kumu",
+            "text": "kumu",
             "pos": {
               "x": 2,
               "y": 2
             },
-            "help": "sun, day"
+            "help": "teacher"
           },
           {
-            "id": "sun",
-            "text": "sun",
+            "id": "teacher",
+            "text": "teacher",
             "pos": {
               "x": 8,
               "y": 2
             },
-            "help": "lā"
+            "help": "kumu"
+          },
+          {
+            "id": "haumana",
+            "text": "haumāna",
+            "pos": {
+              "x": 2,
+              "y": 4
+            },
+            "help": "student"
+          },
+          {
+            "id": "student",
+            "text": "student",
+            "pos": {
+              "x": 8,
+              "y": 4
+            },
+            "help": "haumāna"
           },
           {
             "id": "wai",
             "text": "wai",
             "pos": {
               "x": 2,
-              "y": 4
+              "y": 6
             },
             "help": "fresh water"
           },
@@ -2626,75 +2644,57 @@
             "text": "water",
             "pos": {
               "x": 8,
-              "y": 4
+              "y": 6
             },
             "help": "wai"
-          },
-          {
-            "id": "pohaku",
-            "text": "pōhaku",
-            "pos": {
-              "x": 2,
-              "y": 6
-            },
-            "help": "rock, stone"
-          },
-          {
-            "id": "rock",
-            "text": "rock",
-            "pos": {
-              "x": 8,
-              "y": 6
-            },
-            "help": "pōhaku"
           }
         ],
         "pairs": [
           [
-            "la",
-            "sun"
+            "kumu",
+            "teacher"
+          ],
+          [
+            "haumana",
+            "student"
           ],
           [
             "wai",
             "water"
-          ],
-          [
-            "pohaku",
-            "rock"
           ]
         ],
         "props": [
           {
-            "id": "sign-sun",
-            "glyph": "☀️",
-            "label": "wai",
-            "accepts": "wai",
+            "id": "sign-kumu-look",
+            "glyph": "🧑‍🏫",
+            "label": "haumāna",
+            "accepts": "haumana",
             "honest": false,
             "pos": {
               "x": 2,
               "y": 0
             },
-            "wrong": "It LOOKS like lā — but the sign says wai. Wai is WATER, not the sun (✗).",
-            "exposed": "Hoʻopunipuni! The sign says wai — water. That sunny picture was lying. (+1 reveal)"
+            "wrong": "It LOOKS like a kumu — but the sign says haumāna. A haumāna is a STUDENT (✗).",
+            "exposed": "Hoʻopunipuni! The sign says haumāna — student. That teacherly picture was lying. (+1 reveal)"
           },
           {
-            "id": "sign-water",
-            "glyph": "💧",
-            "label": "lā",
-            "accepts": "la",
+            "id": "sign-haumana-look",
+            "glyph": "🎒",
+            "label": "kumu",
+            "accepts": "kumu",
             "honest": false,
             "pos": {
               "x": 0,
               "y": 4
             },
-            "wrong": "The picture shows water — but the sign says lā. Lā is the SUN (✗).",
-            "exposed": "Caught! It says lā — the sun. Don't trust the picture. (+1 reveal)"
+            "wrong": "The picture shows a haumāna's pack — but the sign says kumu. A kumu is the TEACHER (✗).",
+            "exposed": "Caught! It says kumu — the teacher. Don't trust the picture. (+1 reveal)"
           },
           {
-            "id": "sign-rock",
-            "glyph": "🪨",
-            "label": "pōhaku",
-            "accepts": "pohaku",
+            "id": "sign-wai",
+            "glyph": "💧",
+            "label": "wai",
+            "accepts": "wai",
             "honest": true,
             "pos": {
               "x": 5,
@@ -2717,7 +2717,7 @@
             {
               "id": "vocab-match-005-shrouded-enter",
               "speaker": "narrator",
-              "text": "Dark, and rearranged. Walk to a word before you can read it.",
+              "text": "Careful. Down here the pictures have started lying.",
               "trigger": "on_enter"
             }
           ],
@@ -2731,7 +2731,7 @@
               "tag": "step:2"
             },
             {
-              "text": "☀️ is labelled wai and 💧 is labelled lā — both lie. 🪨 pōhaku is telling the truth.",
+              "text": "🧑‍🏫 is labelled haumāna and 🎒 is labelled kumu — the two of them swapped signs. 💧 wai is telling the truth.",
               "tag": "step:3"
             }
           ]
@@ -2794,6 +2794,1103 @@
       "tutorial_refs": [
         "tier:shrouded"
       ]
+    },
+    {
+      "id": "vocab-match-006",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "vocab_match",
+      "validator_type": "exact_match",
+      "difficulty": 4,
+      "prompt": "Three pairs — a friend, a drink, and the water you drink.",
+      "payload": {
+        "tiles": [
+          {
+            "id": "inu",
+            "text": "inu",
+            "pos": {
+              "x": 2,
+              "y": 1
+            },
+            "help": "inu = drink"
+          },
+          {
+            "id": "drink",
+            "text": "drink",
+            "pos": {
+              "x": 8,
+              "y": 1
+            },
+            "help": "drink = inu"
+          },
+          {
+            "id": "wai",
+            "text": "wai",
+            "pos": {
+              "x": 3,
+              "y": 3
+            },
+            "help": "wai = water (fresh water)"
+          },
+          {
+            "id": "water",
+            "text": "water",
+            "pos": {
+              "x": 7,
+              "y": 3
+            },
+            "help": "water = wai"
+          },
+          {
+            "id": "hoaaloha",
+            "text": "hoaaloha",
+            "pos": {
+              "x": 2,
+              "y": 5
+            },
+            "help": "hoaaloha = friend"
+          },
+          {
+            "id": "friend",
+            "text": "friend",
+            "pos": {
+              "x": 8,
+              "y": 5
+            },
+            "help": "friend = hoaaloha"
+          }
+        ],
+        "pairs": [
+          [
+            "inu",
+            "drink"
+          ],
+          [
+            "wai",
+            "water"
+          ],
+          [
+            "hoaaloha",
+            "friend"
+          ]
+        ],
+        "par": 40,
+        "reveal_charges": 3,
+        "feedback": {
+          "solved": "✦ Maikaʻi! Every pair is matched — walk back to the portal ✦",
+          "help_none": "Stand beside a tile and press ? to see its meaning.",
+          "mismatch": "ʻAʻole — those two don't belong together. Each wrong pairing you test costs a star chance (✗).",
+          "reveal_spent": "No looks left — read the words you already know and reason out the rest."
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "vocab-match-006-enter",
+              "speaker": "narrator",
+              "text": "Two new words down here — and one you have matched before.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "One of these three pairs you have already done. Start with the word you know and spend your looks on the other two.",
+              "tag": "step:1"
+            },
+            {
+              "text": "wai is the water from the rock-and-water room. inu is what you DO with it.",
+              "tag": "step:2"
+            },
+            {
+              "text": "inu = drink · hoaaloha = friend · wai = water.",
+              "tag": "step:3"
+            }
+          ]
+        }
+      },
+      "solution": {
+        "note": "the pairings are the solution"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": false,
+        "concept": "nā hoa — a friend, a drink",
+        "tags": [
+          "vocab",
+          "room",
+          "hawaiian",
+          "needs-kumu-review"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#.....#.....#",
+          "#.....#.....#",
+          "#...........#",
+          "#.....#.....#",
+          "#.....#.....#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
+        "theme": "tropical",
+        "flash_color": "#ba3d3d",
+        "grants_unlock": "vocab6.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Three pairs. Two of the Hawaiian words are new; one you have matched before. Three looks only."
+        }
+      }
+    },
+    {
+      "id": "vocab-match-007",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "vocab_match",
+      "validator_type": "exact_match",
+      "difficulty": 5,
+      "prompt": "Four pairs — every word of “go to school”.",
+      "payload": {
+        "tiles": [
+          {
+            "id": "kula",
+            "text": "kula",
+            "pos": {
+              "x": 1,
+              "y": 1
+            },
+            "help": "kula = school"
+          },
+          {
+            "id": "school",
+            "text": "school",
+            "pos": {
+              "x": 5,
+              "y": 1
+            },
+            "help": "school = kula"
+          },
+          {
+            "id": "haumana",
+            "text": "haumāna",
+            "pos": {
+              "x": 9,
+              "y": 1
+            },
+            "help": "haumāna = student"
+          },
+          {
+            "id": "student",
+            "text": "student",
+            "pos": {
+              "x": 5,
+              "y": 3
+            },
+            "help": "student = haumāna"
+          },
+          {
+            "id": "hele",
+            "text": "hele",
+            "pos": {
+              "x": 1,
+              "y": 7
+            },
+            "help": "hele = go"
+          },
+          {
+            "id": "go",
+            "text": "go",
+            "pos": {
+              "x": 5,
+              "y": 7
+            },
+            "help": "go = hele"
+          },
+          {
+            "id": "oe",
+            "text": "ʻoe",
+            "pos": {
+              "x": 9,
+              "y": 7
+            },
+            "help": "ʻoe = you"
+          },
+          {
+            "id": "you",
+            "text": "you",
+            "pos": {
+              "x": 5,
+              "y": 5
+            },
+            "help": "you = ʻoe"
+          },
+          {
+            "id": "hale",
+            "text": "hale",
+            "pos": {
+              "x": 3,
+              "y": 4
+            },
+            "help": "house — nothing on this board matches it"
+          }
+        ],
+        "pairs": [
+          [
+            "kula",
+            "school"
+          ],
+          [
+            "haumana",
+            "student"
+          ],
+          [
+            "hele",
+            "go"
+          ],
+          [
+            "oe",
+            "you"
+          ]
+        ],
+        "par": 48,
+        "reveal_charges": 4,
+        "feedback": {
+          "solved": "✦ Maikaʻi! Every pair is matched — walk back to the portal ✦",
+          "help_none": "Stand beside a tile and press ? to see its meaning.",
+          "mismatch": "ʻAʻole — those two don't belong together. Each wrong pairing you test costs a star chance (✗).",
+          "reveal_spent": "No looks left — read the words you already know and reason out the rest."
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "vocab-match-007-enter",
+              "speaker": "narrator",
+              "text": "E hele ʻoe i ke kula. Every word of that sentence is on this floor.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Four pairs, and one word that belongs to nobody here.",
+              "tag": "step:1"
+            },
+            {
+              "text": "hale is house — you know it already, and it has no partner on this floor. Leave it where it lies.",
+              "tag": "step:2"
+            },
+            {
+              "text": "kula = school · haumāna = student · hele = go · ʻoe = you.",
+              "tag": "step:3"
+            }
+          ]
+        }
+      },
+      "solution": {
+        "note": "the pairings are the solution"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": false,
+        "concept": "ke kula — go to school",
+        "tags": [
+          "vocab",
+          "room",
+          "hawaiian",
+          "needs-kumu-review"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#..#.....#..#",
+          "#..#.....#..#",
+          "#...........#",
+          "#...........#",
+          "#..#.....#..#",
+          "#..#.....#..#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 6,
+          "y": 9
+        },
+        "theme": "tropical",
+        "flash_color": "#ba3d3d",
+        "grants_unlock": "vocab7.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 9
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Four pairs. hele, ʻoe and kula are the words of “E hele ʻoe i ke kula”. One word on this floor has no partner. Four looks only."
+        }
+      }
+    },
+    {
+      "id": "vocab-match-006-shuffled",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "vocab_match",
+      "validator_type": "exact_match",
+      "difficulty": 4,
+      "prompt": "Three pairs — a friend, a drink, and the water you drink.",
+      "payload": {
+        "tiles": [
+          {
+            "id": "inu",
+            "text": "inu",
+            "pos": {
+              "x": 2,
+              "y": 1
+            },
+            "help": "inu = drink"
+          },
+          {
+            "id": "drink",
+            "text": "drink",
+            "pos": {
+              "x": 8,
+              "y": 1
+            },
+            "help": "drink = inu"
+          },
+          {
+            "id": "wai",
+            "text": "wai",
+            "pos": {
+              "x": 3,
+              "y": 3
+            },
+            "help": "wai = water (fresh water)"
+          },
+          {
+            "id": "water",
+            "text": "water",
+            "pos": {
+              "x": 7,
+              "y": 3
+            },
+            "help": "water = wai"
+          },
+          {
+            "id": "hoaaloha",
+            "text": "hoaaloha",
+            "pos": {
+              "x": 2,
+              "y": 5
+            },
+            "help": "hoaaloha = friend"
+          },
+          {
+            "id": "friend",
+            "text": "friend",
+            "pos": {
+              "x": 8,
+              "y": 5
+            },
+            "help": "friend = hoaaloha"
+          }
+        ],
+        "pairs": [
+          [
+            "inu",
+            "drink"
+          ],
+          [
+            "wai",
+            "water"
+          ],
+          [
+            "hoaaloha",
+            "friend"
+          ]
+        ],
+        "par": 54,
+        "reveal_charges": 3,
+        "feedback": {
+          "solved": "✦ Maikaʻi! Every pair is matched — walk back to the portal ✦",
+          "help_none": "Stand beside a tile and press ? to see its meaning.",
+          "mismatch": "ʻAʻole — those two don't belong together. Each wrong pairing you test costs a star chance (✗).",
+          "reveal_spent": "No looks left — read the words you already know and reason out the rest."
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "vocab-match-006-shuffled-enter",
+              "speaker": "narrator",
+              "text": "Same words, new floor. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "One of these three pairs you have already done. Start with the word you know and spend your looks on the other two.",
+              "tag": "step:1"
+            },
+            {
+              "text": "wai is the water from the rock-and-water room. inu is what you DO with it.",
+              "tag": "step:2"
+            },
+            {
+              "text": "inu = drink · hoaaloha = friend · wai = water.",
+              "tag": "step:3"
+            }
+          ]
+        }
+      },
+      "solution": {
+        "note": "the pairings are the solution"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": false,
+        "concept": "nā hoa — a friend, a drink · shuffled",
+        "tags": [
+          "vocab",
+          "room",
+          "hawaiian",
+          "needs-kumu-review"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#.....#.....#",
+          "#.....#.....#",
+          "#...........#",
+          "#.....#.....#",
+          "#.....#.....#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
+        "theme": "tropical",
+        "flash_color": "#ba3d3d",
+        "grants_unlock": "vocab6.shuffled.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Three pairs. Two of the Hawaiian words are new; one you have matched before. The words start somewhere different every visit. Three looks only."
+        }
+      },
+      "modifiers": [
+        "randomized"
+      ],
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
+    },
+    {
+      "id": "vocab-match-006-shrouded",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "vocab_match",
+      "validator_type": "exact_match",
+      "difficulty": 4,
+      "prompt": "Three pairs — a friend, a drink, and the water you drink.",
+      "payload": {
+        "tiles": [
+          {
+            "id": "inu",
+            "text": "inu",
+            "pos": {
+              "x": 2,
+              "y": 1
+            },
+            "help": "inu = drink"
+          },
+          {
+            "id": "drink",
+            "text": "drink",
+            "pos": {
+              "x": 8,
+              "y": 1
+            },
+            "help": "drink = inu"
+          },
+          {
+            "id": "wai",
+            "text": "wai",
+            "pos": {
+              "x": 3,
+              "y": 3
+            },
+            "help": "wai = water (fresh water)"
+          },
+          {
+            "id": "water",
+            "text": "water",
+            "pos": {
+              "x": 7,
+              "y": 3
+            },
+            "help": "water = wai"
+          },
+          {
+            "id": "hoaaloha",
+            "text": "hoaaloha",
+            "pos": {
+              "x": 2,
+              "y": 5
+            },
+            "help": "hoaaloha = friend"
+          },
+          {
+            "id": "friend",
+            "text": "friend",
+            "pos": {
+              "x": 8,
+              "y": 5
+            },
+            "help": "friend = hoaaloha"
+          }
+        ],
+        "pairs": [
+          [
+            "inu",
+            "drink"
+          ],
+          [
+            "wai",
+            "water"
+          ],
+          [
+            "hoaaloha",
+            "friend"
+          ]
+        ],
+        "par": 54,
+        "reveal_charges": 3,
+        "feedback": {
+          "solved": "✦ Maikaʻi! Every pair is matched — walk back to the portal ✦",
+          "help_none": "Stand beside a tile and press ? to see its meaning.",
+          "mismatch": "ʻAʻole — those two don't belong together. Each wrong pairing you test costs a star chance (✗).",
+          "reveal_spent": "No looks left — read the words you already know and reason out the rest."
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "vocab-match-006-shrouded-enter",
+              "speaker": "narrator",
+              "text": "Dark, and rearranged. Walk to a word before you can read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "One of these three pairs you have already done. Start with the word you know and spend your looks on the other two.",
+              "tag": "step:1"
+            },
+            {
+              "text": "wai is the water from the rock-and-water room. inu is what you DO with it.",
+              "tag": "step:2"
+            },
+            {
+              "text": "inu = drink · hoaaloha = friend · wai = water.",
+              "tag": "step:3"
+            }
+          ]
+        }
+      },
+      "solution": {
+        "note": "the pairings are the solution"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": false,
+        "concept": "nā hoa — a friend, a drink · shrouded",
+        "tags": [
+          "vocab",
+          "room",
+          "hawaiian",
+          "needs-kumu-review"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 9,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#.....#.....#",
+          "#.....#.....#",
+          "#...........#",
+          "#.....#.....#",
+          "#.....#.....#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 6,
+          "y": 7
+        },
+        "theme": "tropical",
+        "flash_color": "#ba3d3d",
+        "grants_unlock": "vocab6.shrouded.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 7
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Three pairs. Two of the Hawaiian words are new; one you have matched before. New arrangement, and you can only see what is close. Three looks only."
+        }
+      },
+      "modifiers": [
+        "randomized",
+        "lowlight"
+      ],
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
+    },
+    {
+      "id": "vocab-match-007-shuffled",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "vocab_match",
+      "validator_type": "exact_match",
+      "difficulty": 5,
+      "prompt": "Four pairs — every word of “go to school”.",
+      "payload": {
+        "tiles": [
+          {
+            "id": "kula",
+            "text": "kula",
+            "pos": {
+              "x": 1,
+              "y": 1
+            },
+            "help": "kula = school"
+          },
+          {
+            "id": "school",
+            "text": "school",
+            "pos": {
+              "x": 5,
+              "y": 1
+            },
+            "help": "school = kula"
+          },
+          {
+            "id": "haumana",
+            "text": "haumāna",
+            "pos": {
+              "x": 9,
+              "y": 1
+            },
+            "help": "haumāna = student"
+          },
+          {
+            "id": "student",
+            "text": "student",
+            "pos": {
+              "x": 5,
+              "y": 3
+            },
+            "help": "student = haumāna"
+          },
+          {
+            "id": "hele",
+            "text": "hele",
+            "pos": {
+              "x": 1,
+              "y": 7
+            },
+            "help": "hele = go"
+          },
+          {
+            "id": "go",
+            "text": "go",
+            "pos": {
+              "x": 5,
+              "y": 7
+            },
+            "help": "go = hele"
+          },
+          {
+            "id": "oe",
+            "text": "ʻoe",
+            "pos": {
+              "x": 9,
+              "y": 7
+            },
+            "help": "ʻoe = you"
+          },
+          {
+            "id": "you",
+            "text": "you",
+            "pos": {
+              "x": 5,
+              "y": 5
+            },
+            "help": "you = ʻoe"
+          },
+          {
+            "id": "hale",
+            "text": "hale",
+            "pos": {
+              "x": 3,
+              "y": 4
+            },
+            "help": "house — nothing on this board matches it"
+          }
+        ],
+        "pairs": [
+          [
+            "kula",
+            "school"
+          ],
+          [
+            "haumana",
+            "student"
+          ],
+          [
+            "hele",
+            "go"
+          ],
+          [
+            "oe",
+            "you"
+          ]
+        ],
+        "par": 65,
+        "reveal_charges": 4,
+        "feedback": {
+          "solved": "✦ Maikaʻi! Every pair is matched — walk back to the portal ✦",
+          "help_none": "Stand beside a tile and press ? to see its meaning.",
+          "mismatch": "ʻAʻole — those two don't belong together. Each wrong pairing you test costs a star chance (✗).",
+          "reveal_spent": "No looks left — read the words you already know and reason out the rest."
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "vocab-match-007-shuffled-enter",
+              "speaker": "narrator",
+              "text": "Same words, new floor. Nothing is where you left it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Four pairs, and one word that belongs to nobody here.",
+              "tag": "step:1"
+            },
+            {
+              "text": "hale is house — you know it already, and it has no partner on this floor. Leave it where it lies.",
+              "tag": "step:2"
+            },
+            {
+              "text": "kula = school · haumāna = student · hele = go · ʻoe = you.",
+              "tag": "step:3"
+            }
+          ]
+        }
+      },
+      "solution": {
+        "note": "the pairings are the solution"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": false,
+        "concept": "ke kula — go to school · shuffled",
+        "tags": [
+          "vocab",
+          "room",
+          "hawaiian",
+          "needs-kumu-review"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#..#.....#..#",
+          "#..#.....#..#",
+          "#...........#",
+          "#...........#",
+          "#..#.....#..#",
+          "#..#.....#..#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 6,
+          "y": 9
+        },
+        "theme": "tropical",
+        "flash_color": "#ba3d3d",
+        "grants_unlock": "vocab7.shuffled.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 9
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Four pairs. hele, ʻoe and kula are the words of “E hele ʻoe i ke kula”. One word on this floor has no partner. The words start somewhere different every visit. Four looks only."
+        }
+      },
+      "modifiers": [
+        "randomized"
+      ],
+      "tutorial_refs": [
+        "tier:shuffled"
+      ]
+    },
+    {
+      "id": "vocab-match-007-shrouded",
+      "schema_version": "1.0.0",
+      "language": "haw",
+      "puzzle_type": "vocab_match",
+      "validator_type": "exact_match",
+      "difficulty": 5,
+      "prompt": "Four pairs — every word of “go to school”.",
+      "payload": {
+        "tiles": [
+          {
+            "id": "kula",
+            "text": "kula",
+            "pos": {
+              "x": 1,
+              "y": 1
+            },
+            "help": "kula = school"
+          },
+          {
+            "id": "school",
+            "text": "school",
+            "pos": {
+              "x": 5,
+              "y": 1
+            },
+            "help": "school = kula"
+          },
+          {
+            "id": "haumana",
+            "text": "haumāna",
+            "pos": {
+              "x": 9,
+              "y": 1
+            },
+            "help": "haumāna = student"
+          },
+          {
+            "id": "student",
+            "text": "student",
+            "pos": {
+              "x": 5,
+              "y": 3
+            },
+            "help": "student = haumāna"
+          },
+          {
+            "id": "hele",
+            "text": "hele",
+            "pos": {
+              "x": 1,
+              "y": 7
+            },
+            "help": "hele = go"
+          },
+          {
+            "id": "go",
+            "text": "go",
+            "pos": {
+              "x": 5,
+              "y": 7
+            },
+            "help": "go = hele"
+          },
+          {
+            "id": "oe",
+            "text": "ʻoe",
+            "pos": {
+              "x": 9,
+              "y": 7
+            },
+            "help": "ʻoe = you"
+          },
+          {
+            "id": "you",
+            "text": "you",
+            "pos": {
+              "x": 5,
+              "y": 5
+            },
+            "help": "you = ʻoe"
+          },
+          {
+            "id": "hale",
+            "text": "hale",
+            "pos": {
+              "x": 3,
+              "y": 4
+            },
+            "help": "house — nothing on this board matches it"
+          }
+        ],
+        "pairs": [
+          [
+            "kula",
+            "school"
+          ],
+          [
+            "haumana",
+            "student"
+          ],
+          [
+            "hele",
+            "go"
+          ],
+          [
+            "oe",
+            "you"
+          ]
+        ],
+        "par": 65,
+        "reveal_charges": 4,
+        "feedback": {
+          "solved": "✦ Maikaʻi! Every pair is matched — walk back to the portal ✦",
+          "help_none": "Stand beside a tile and press ? to see its meaning.",
+          "mismatch": "ʻAʻole — those two don't belong together. Each wrong pairing you test costs a star chance (✗).",
+          "reveal_spent": "No looks left — read the words you already know and reason out the rest."
+        },
+        "dialogue": {
+          "speakers": {},
+          "on_enter": [
+            {
+              "id": "vocab-match-007-shrouded-enter",
+              "speaker": "narrator",
+              "text": "Dark, and rearranged. Walk to a word before you can read it.",
+              "trigger": "on_enter"
+            }
+          ],
+          "hints": [
+            {
+              "text": "Four pairs, and one word that belongs to nobody here.",
+              "tag": "step:1"
+            },
+            {
+              "text": "hale is house — you know it already, and it has no partner on this floor. Leave it where it lies.",
+              "tag": "step:2"
+            },
+            {
+              "text": "kula = school · haumāna = student · hele = go · ʻoe = you.",
+              "tag": "step:3"
+            }
+          ]
+        }
+      },
+      "solution": {
+        "note": "the pairings are the solution"
+      },
+      "hints": [],
+      "metadata": {
+        "reviewed": false,
+        "concept": "ke kula — go to school · shrouded",
+        "tags": [
+          "vocab",
+          "room",
+          "hawaiian",
+          "needs-kumu-review"
+        ]
+      },
+      "room": {
+        "width": 13,
+        "height": 11,
+        "tiles": [
+          "#############",
+          "#...........#",
+          "#..#.....#..#",
+          "#..#.....#..#",
+          "#...........#",
+          "#...........#",
+          "#..#.....#..#",
+          "#..#.....#..#",
+          "#...........#",
+          "#...........#",
+          "#############"
+        ],
+        "spawn": {
+          "x": 6,
+          "y": 9
+        },
+        "theme": "tropical",
+        "flash_color": "#ba3d3d",
+        "grants_unlock": "vocab7.shrouded.cleared",
+        "hint_giver": {
+          "pos": {
+            "x": 11,
+            "y": 9
+          },
+          "marker": "❓"
+        }
+      },
+      "mechanics": {
+        "goalSpec": {
+          "description": "Four pairs. hele, ʻoe and kula are the words of “E hele ʻoe i ke kula”. One word on this floor has no partner. New arrangement, and you can only see what is close. Four looks only."
+        }
+      },
+      "modifiers": [
+        "randomized",
+        "lowlight"
+      ],
+      "tutorial_refs": [
+        "tier:shrouded"
+      ]
     }
   ],
   "progression": [
@@ -2820,9 +3917,19 @@
           "unlock": "vocab2.cleared"
         },
         {
+          "id": "vocab-match-006",
+          "label": "Nā Hoa",
+          "unlock": "vocab3.cleared"
+        },
+        {
+          "id": "vocab-match-007",
+          "label": "Ke Kula",
+          "unlock": "vocab6.cleared"
+        },
+        {
           "id": "vocab-match-004",
           "label": "Hōʻailona",
-          "unlock": "vocab3.cleared"
+          "unlock": "vocab7.cleared"
         },
         {
           "id": "vocab-match-005",
@@ -2858,6 +3965,26 @@
           "id": "vocab-match-003-shrouded",
           "label": "Vocab III",
           "unlock": "vocab3.shuffled.cleared"
+        },
+        {
+          "id": "vocab-match-006-shuffled",
+          "label": "Nā Hoa",
+          "unlock": "vocab6.cleared"
+        },
+        {
+          "id": "vocab-match-006-shrouded",
+          "label": "Nā Hoa",
+          "unlock": "vocab6.shuffled.cleared"
+        },
+        {
+          "id": "vocab-match-007-shuffled",
+          "label": "Ke Kula",
+          "unlock": "vocab7.cleared"
+        },
+        {
+          "id": "vocab-match-007-shrouded",
+          "label": "Ke Kula",
+          "unlock": "vocab7.shuffled.cleared"
         },
         {
           "id": "vocab-match-004-shuffled",

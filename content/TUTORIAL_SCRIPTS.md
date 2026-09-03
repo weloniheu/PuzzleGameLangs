@@ -90,7 +90,7 @@ someone who never saw step 1. Escape ends the whole unit at once.
 1. "This is a code puzzle. Let's learn how it works." — Enter
 2. "Press T any time to see your task. The board freezes while it's open — press T
    again (or Escape) to get back to it." — Enter
-3. "Walk up to a word on the floor and press E to pick it up." — `waitFor: pickup`
+3. "Walk up to a word on the floor and press I to pick it up." — `waitFor: pickup`
 4. "Words you carry sit in the bar at the bottom. Press a number key to choose which slot
    you are holding." — Enter, `demo: pickup`
 5. "Walk to an empty tile and press P to place it down." — `waitFor: place`
@@ -120,6 +120,10 @@ carries a `demo` (see the show-the-idea rule above) and keeps its caption to one
   module, so it gets its own step and its own picture.
 - `concept:function_def` — `demo: function` — a named block, apart from its call.
 - `concept:function_call` — `demo: argument` — a value travelling into a named slot.
+- `concept:conditionals` — `demo: indent`, then a text step for `else` — an `if` is a gate,
+  and the line behind it is the indented one. It reuses the `indent` demo deliberately:
+  `TutorialDemo` is a closed engine set, and indentation genuinely IS what an `if` does to
+  the line under it — the same picture, earning its keep twice.
 
 ### One tutorial per DIFFICULTY (enforced)
 
